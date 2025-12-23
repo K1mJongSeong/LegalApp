@@ -1,0 +1,4 @@
+/// Core Theme barrel file
+export 'app_theme.dart';
+
+
