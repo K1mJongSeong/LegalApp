@@ -56,8 +56,23 @@ class AuthRepositoryImpl implements AuthRepository {
 
       // Firestore에서 사용자 정보 가져오기
       final doc = await _usersCollection.doc(user.uid).get();
+      
+      // Firestore에 사용자 정보가 없으면 자동 생성
       if (!doc.exists) {
-        throw Exception('사용자 정보를 찾을 수 없습니다');
+        final userData = {
+          'email': email,
+          'name': email.split('@').first, // 이메일에서 이름 추출
+          'phone': null,
+          'profile_image': null,
+          'is_expert': false,
+          'created_at': DateTime.now().toIso8601String(),
+        };
+        await _usersCollection.doc(user.uid).set(userData);
+        
+        return UserModel.fromJson({
+          'id': user.uid,
+          ...userData,
+        });
       }
 
       return UserModel.fromJson({
