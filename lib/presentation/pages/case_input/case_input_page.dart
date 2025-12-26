@@ -92,30 +92,30 @@ class _CaseInputPageState extends State<CaseInputPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // 카테고리 선택
-                      const Text(
-                        '어떤 분야의 문제인가요? *',
-                        style: TextStyle(
-                          fontSize: AppSizes.fontL,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: AppSizes.paddingM),
-                      Wrap(
-                        spacing: AppSizes.paddingS,
-                        runSpacing: AppSizes.paddingS,
-                        children: _categories.map((cat) {
-                          return CategoryChip(
-                            label: cat['label'],
-                            isSelected: _selectedCategory == cat['id'],
-                            selectedColor: cat['color'],
-                            onTap: () {
-                              setState(() {
-                                _selectedCategory = cat['id'];
-                              });
-                            },
-                          );
-                        }).toList(),
-                      ),
+                      // const Text(
+                      //   '어떤 분야의 문제인가요? *',
+                      //   style: TextStyle(
+                      //     fontSize: AppSizes.fontL,
+                      //     fontWeight: FontWeight.bold,
+                      //   ),
+                      // ),
+                      // const SizedBox(height: AppSizes.paddingM),
+                      // Wrap(
+                      //   spacing: AppSizes.paddingS,
+                      //   runSpacing: AppSizes.paddingS,
+                      //   children: _categories.map((cat) {
+                      //     return CategoryChip(
+                      //       label: cat['label'],
+                      //       isSelected: _selectedCategory == cat['id'],
+                      //       selectedColor: cat['color'],
+                      //       onTap: () {
+                      //         setState(() {
+                      //           _selectedCategory = cat['id'];
+                      //         });
+                      //       },
+                      //     );
+                      //   }).toList(),
+                      // ),
                       const SizedBox(height: AppSizes.paddingXL),
                       // 긴급도 선택
                       const Text(

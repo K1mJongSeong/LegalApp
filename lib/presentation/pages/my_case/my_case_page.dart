@@ -131,7 +131,7 @@ class _MyCasePageState extends State<MyCasePage>
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 70),
+        padding: const EdgeInsets.only(bottom: 70), // BottomNavBar 높이만큼 올림
         child: FloatingActionButton.extended(
           onPressed: () {
             Navigator.pushNamed(context, AppRoutes.caseInput);

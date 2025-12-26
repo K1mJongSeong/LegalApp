@@ -1,6 +1,6 @@
 import '../../domain/entities/expert.dart';
 
-/// 전문가 모델 (JSON 직렬화 포함)
+/// 전문가 모델 (JSON 포함)
 class ExpertModel extends Expert {
   const ExpertModel({
     required super.id,
