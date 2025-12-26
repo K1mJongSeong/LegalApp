@@ -1,6 +1,6 @@
 import '../../domain/entities/user.dart';
 
-/// 사용자 모델 (JSON 직렬화 포함)
+/// 사용자 모델 (JSON 포함)
 class UserModel extends User {
   const UserModel({
     required super.id,

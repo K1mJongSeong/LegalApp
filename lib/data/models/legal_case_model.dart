@@ -1,6 +1,6 @@
 import '../../domain/entities/legal_case.dart';
 
-/// 법률 사건 모델 (JSON 직렬화 포함)
+/// 법률 사건 모델 (JSON 포함)
 class LegalCaseModel extends LegalCase {
   const LegalCaseModel({
     required super.id,

@@ -1,6 +1,6 @@
 import '../../domain/entities/review.dart';
 
-/// 리뷰 모델 (JSON 직렬화 포함)
+/// 리뷰 모델 (JSON 포함)
 class ReviewModel extends Review {
   const ReviewModel({
     required super.id,
