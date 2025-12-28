@@ -10,6 +10,10 @@ import '../../presentation/pages/experts/experts_page.dart';
 import '../../presentation/pages/confirm/confirm_page.dart';
 import '../../presentation/pages/my_case/my_case_page.dart';
 import '../../presentation/pages/summary/summary_page.dart';
+import '../../presentation/pages/case_flow/category_select_page.dart';
+import '../../presentation/pages/case_flow/case_detail_input_page.dart';
+import '../../presentation/pages/case_flow/urgency_select_page.dart';
+import '../../presentation/pages/case_flow/case_summary_result_page.dart';
 
 /// 앱 라우트 이름 상수
 class AppRoutes {
@@ -26,6 +30,11 @@ class AppRoutes {
   static const String confirm = '/confirm';
   static const String myCase = '/my-case';
   static const String summary = '/summary';
+  // 새 사건 등록 플로우
+  static const String categorySelect = '/category-select';
+  static const String caseDetailInput = '/case-detail-input';
+  static const String urgencySelect = '/urgency-select';
+  static const String caseSummaryResult = '/case-summary-result';
 }
 
 /// 앱 라우터 설정
@@ -91,6 +100,42 @@ class AppRouter {
       case AppRoutes.summary:
         return _buildRoute(
           SummaryPage(caseId: queryParams['id']),
+          settings,
+        );
+
+      case AppRoutes.categorySelect:
+        return _buildRoute(const CategorySelectPage(), settings);
+
+      case '/case-detail-input':
+        final args = settings.arguments as Map<String, dynamic>?;
+        return _buildRoute(
+          CaseDetailInputPage(
+            category: args?['category'] ?? '',
+            categoryName: args?['categoryName'] ?? '',
+          ),
+          settings,
+        );
+
+      case '/urgency-select':
+        final args = settings.arguments as Map<String, dynamic>?;
+        return _buildRoute(
+          UrgencySelectPage(
+            category: args?['category'] ?? '',
+            categoryName: args?['categoryName'] ?? '',
+            description: args?['description'] ?? '',
+          ),
+          settings,
+        );
+
+      case '/case-summary-result':
+        final args = settings.arguments as Map<String, dynamic>?;
+        return _buildRoute(
+          CaseSummaryResultPage(
+            category: args?['category'] ?? '',
+            categoryName: args?['categoryName'] ?? '',
+            description: args?['description'] ?? '',
+            urgency: args?['urgency'] ?? 'normal',
+          ),
           settings,
         );
 
