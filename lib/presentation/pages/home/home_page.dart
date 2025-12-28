@@ -98,67 +98,8 @@ class HomePage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: AppSizes.paddingXL),
-                        // 카테고리
-                        const Text(
-                          '카테고리',
-                          style: TextStyle(
-                            fontSize: AppSizes.fontL,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: AppSizes.paddingM),
-                        GridView.count(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          crossAxisCount: 3,
-                          mainAxisSpacing: AppSizes.paddingM,
-                          crossAxisSpacing: AppSizes.paddingM,
-                          childAspectRatio: 1,
-                          children: [
-                            _buildCategoryCard(
-                              context,
-                              Icons.work_outline,
-                              AppStrings.categoryLabor,
-                              'labor',
-                              AppColors.categoryLabor,
-                            ),
-                            _buildCategoryCard(
-                              context,
-                              Icons.receipt_long_outlined,
-                              AppStrings.categoryTax,
-                              'tax',
-                              AppColors.categoryTax,
-                            ),
-                            _buildCategoryCard(
-                              context,
-                              Icons.gavel_outlined,
-                              AppStrings.categoryCriminal,
-                              'criminal',
-                              AppColors.categoryCriminal,
-                            ),
-                            _buildCategoryCard(
-                              context,
-                              Icons.family_restroom_outlined,
-                              AppStrings.categoryFamily,
-                              'family',
-                              AppColors.categoryFamily,
-                            ),
-                            _buildCategoryCard(
-                              context,
-                              Icons.home_work_outlined,
-                              AppStrings.categoryReal,
-                              'real',
-                              AppColors.categoryReal,
-                            ),
-                            _buildCategoryCard(
-                              context,
-                              Icons.more_horiz,
-                              '더보기',
-                              null,
-                              AppColors.textSecondary,
-                            ),
-                          ],
-                        ),
+                        // AI 사건 요약 카드
+                        _buildCaseSummaryCard(context),
                         const SizedBox(height: AppSizes.paddingXL),
                         // 빠른 상담
                         Row(
@@ -197,58 +138,116 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryCard(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String? category,
-    Color color,
-  ) {
+  Widget _buildCaseSummaryCard(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        if (category != null) {
-          Navigator.pushNamed(
-            context,
-            '${AppRoutes.caseInput}?category=$category',
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('추가 카테고리는 준비 중입니다')),
-          );
-        }
+        Navigator.pushNamed(context, AppRoutes.categorySelect);
       },
       child: Container(
+        padding: const EdgeInsets.all(AppSizes.paddingL),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusL),
+          gradient: LinearGradient(
+            colors: [
+              AppColors.primary,
+              AppColors.primary.withOpacity(0.8),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(AppSizes.radiusXL),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+              color: AppColors.primary.withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                shape: BoxShape.circle,
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'AI 분석',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: AppSizes.fontS,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSizes.paddingL),
+            const Text(
+              '사건 요약하기',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: AppSizes.fontXXL,
+                fontWeight: FontWeight.bold,
               ),
-              child: Icon(icon, color: color),
             ),
             const SizedBox(height: AppSizes.paddingS),
             Text(
-              label,
-              style: const TextStyle(
-                fontSize: AppSizes.fontS,
-                fontWeight: FontWeight.w500,
+              '법률 문제를 AI가 분석하고\n관련 법령, 판례, 전문가를 추천해드려요',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: AppSizes.fontM,
+                height: 1.5,
               ),
-              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSizes.paddingL),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.paddingM,
+                vertical: AppSizes.paddingS,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppSizes.radiusL),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '시작하기',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: AppSizes.fontM,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward,
+                    color: AppColors.primary,
+                    size: 18,
+                  ),
+                ],
+              ),
             ),
           ],
         ),

@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_strings.dart';
@@ -14,6 +15,13 @@ import 'presentation/blocs/review/review_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // 환경 변수 로드
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e) {
+    debugPrint('Warning: .env file not found. Using default configuration.');
+  }
   
   // Firebase 초기화
   try {
