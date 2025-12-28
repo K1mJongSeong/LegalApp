@@ -67,7 +67,7 @@ lib/
 
 ```bash
 # 1. 레포지토리 클론
-git clone https://github.com/your-repo/law_decode.git
+git clone https://github.com/K1mJongSeong/LegalApp.git
 cd law_decode
 
 # 2. 패키지 설치
