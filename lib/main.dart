@@ -19,8 +19,11 @@ void main() async {
   // 환경 변수 로드
   try {
     await dotenv.load(fileName: '.env');
+    final apiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
+    debugPrint('✅ .env loaded successfully');
+    debugPrint('✅ API Key loaded: ${apiKey.isNotEmpty ? "Yes (${apiKey.substring(0, 15)}...)" : "NO - EMPTY!"}');
   } catch (e) {
-    debugPrint('Warning: .env file not found. Using default configuration.');
+    debugPrint('❌ .env load error: $e');
   }
   
   // Firebase 초기화
