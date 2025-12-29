@@ -73,10 +73,17 @@ $description
         final result = jsonDecode(jsonStr);
         
         return CaseSummaryResult.fromJson(result);
+      } else if (response.statusCode == 429) {
+        // Rate Limit 초과 - 크레딧 부족 또는 요청 한도 초과
+        throw Exception('API 요청 한도 초과 (429): OpenAI 크레딧을 확인하세요. https://platform.openai.com/usage');
       } else {
-        throw Exception('API 요청 실패: ${response.statusCode}');
+        throw Exception('API 요청 실패: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
+      // 오류 디버깅
+      print('GPT API Error: $e');
+      print('API Key loaded: ${_apiKey.isNotEmpty ? "Yes (${_apiKey.substring(0, 10)}...)" : "No - EMPTY!"}');
+      
       // 오류 시 기본 응답 반환
       return CaseSummaryResult(
         summary: '사용자 설명에 따르면 법률적 검토가 필요한 상황입니다. 전문가와 상담을 권장합니다.',

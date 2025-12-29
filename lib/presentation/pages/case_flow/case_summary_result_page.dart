@@ -71,24 +71,31 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('사건 요약'),
-        centerTitle: true,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.warning,
-              shape: BoxShape.circle,
+    return PopScope(
+      canPop: false, // 뒤로가기 방지
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          _showExitDialog(context);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text('사건 요약'),
+          centerTitle: true,
+          leading: IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.home, color: Colors.white, size: 16),
             ),
-            child: const Icon(Icons.arrow_back, color: Colors.white, size: 16),
+            onPressed: () => _showExitDialog(context),
           ),
-          onPressed: () => Navigator.pop(context),
         ),
-      ),
-      body: _isLoading
+        body: _isLoading
           ? const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -99,9 +106,41 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                 ],
               ),
             )
-          : _error != null
+              : _error != null
               ? Center(child: Text('오류: $_error'))
               : _buildContent(),
+      ),
+    );
+  }
+
+  void _showExitDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('홈으로 이동'),
+        content: const Text('홈으로 이동하시겠습니까?\n분석 결과는 저장되지 않습니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                AppRoutes.home,
+                (route) => false,
+              );
+            },
+            child: const Text('홈으로'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -520,5 +559,6 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
     );
   }
 }
+
 
 

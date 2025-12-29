@@ -134,7 +134,7 @@ class _MyCasePageState extends State<MyCasePage>
         padding: const EdgeInsets.only(bottom: 70), // BottomNavBar 높이만큼 올림
         child: FloatingActionButton.extended(
           onPressed: () {
-            Navigator.pushNamed(context, AppRoutes.caseInput);
+            Navigator.pushNamed(context, AppRoutes.categorySelect);
           },
           icon: const Icon(Icons.add),
           label: const Text('새 상담'),
@@ -153,7 +153,7 @@ class _MyCasePageState extends State<MyCasePage>
       subtitle: '새로운 상담을 시작해보세요',
       buttonText: '새 상담 시작',
       onButtonPressed: () {
-        Navigator.pushNamed(context, AppRoutes.caseInput);
+        Navigator.pushNamed(context, AppRoutes.categorySelect);
       },
     );
   }

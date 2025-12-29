@@ -15,8 +15,9 @@ import '../../widgets/common/empty_state_widget.dart';
 /// 사건 요약 화면
 class SummaryPage extends StatefulWidget {
   final String? caseId;
+  final bool isNewCase; // 새로 생성된 사건인지 여부
 
-  const SummaryPage({super.key, this.caseId});
+  const SummaryPage({super.key, this.caseId, this.isNewCase = false});
 
   @override
   State<SummaryPage> createState() => _SummaryPageState();
@@ -42,22 +43,45 @@ class _SummaryPageState extends State<SummaryPage> {
           );
         }
       },
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          title: const Text('사건 요약'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.more_vert),
-              onPressed: () => _showMoreOptions(context),
+      child: PopScope(
+        canPop: !widget.isNewCase, // 새 사건인 경우 뒤로가기 방지
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop && widget.isNewCase) {
+            // 새 사건인 경우 홈으로 이동
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              AppRoutes.home,
+              (route) => false,
+            );
+          }
+        },
+        child: Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            title: const Text('사건 요약'),
+            leading: IconButton(
+              icon: Icon(widget.isNewCase ? Icons.home : Icons.arrow_back),
+              onPressed: () {
+                if (widget.isNewCase) {
+                  // 새 사건인 경우 홈으로 이동 (스택 초기화)
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    AppRoutes.home,
+                    (route) => false,
+                  );
+                } else {
+                  Navigator.pop(context);
+                }
+              },
             ),
-          ],
-        ),
-        body: SafeArea(
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.more_vert),
+                onPressed: () => _showMoreOptions(context),
+              ),
+            ],
+          ),
+          body: SafeArea(
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: AppSizes.mobileMaxWidth),
@@ -93,6 +117,7 @@ class _SummaryPageState extends State<SummaryPage> {
                     ),
             ),
           ),
+        ),
         ),
       ),
     );
