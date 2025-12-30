@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/services/gpt_service.dart';
 import '../../../core/router/app_router.dart';
+import '../../blocs/auth/auth_bloc.dart';
+import '../../blocs/auth/auth_state.dart';
+import '../../blocs/case/case_bloc.dart';
+import '../../blocs/case/case_event.dart';
+import '../../blocs/case/case_state.dart';
 
 /// 사건 요약 결과 페이지
 class CaseSummaryResultPage extends StatefulWidget {
@@ -28,11 +35,67 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
   CaseSummaryResult? _result;
   bool _isLoading = true;
   String? _error;
+  
+  // Firebase에서 가져온 실제 전문가 수
+  int _realExpertCount = 0;
+  
+  // 사건 저장 여부
+  bool _isCaseSaved = false;
+  String? _savedCaseId;
 
   @override
   void initState() {
     super.initState();
     _analyzCase();
+    _loadExpertCount();
+  }
+  
+  /// 사건을 Firebase에 저장
+  Future<void> _saveCase() async {
+    if (_isCaseSaved) {
+      debugPrint('📌 Case already saved, skipping...');
+      return;
+    }
+    
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      debugPrint('❌ User not authenticated, case not saved');
+      return;
+    }
+    
+    debugPrint('💾 Saving case to Firebase...');
+    debugPrint('   userId: ${authState.user.id}');
+    debugPrint('   category: ${widget.category}');
+    debugPrint('   urgency: ${widget.urgency}');
+    debugPrint('   title: ${widget.categoryName} 상담');
+    
+    context.read<CaseBloc>().add(CaseCreateRequested(
+      userId: authState.user.id,
+      category: widget.category,
+      urgency: widget.urgency,
+      title: '${widget.categoryName} 상담',
+      description: widget.description.isEmpty 
+          ? '${widget.categoryName} 관련 법률 상담' 
+          : widget.description,
+    ));
+  }
+
+  /// Firebase에서 해당 카테고리의 전문가 수 조회
+  Future<void> _loadExpertCount() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('experts')
+          .where('is_available', isEqualTo: true)
+          .where('categories', arrayContains: widget.category)
+          .get();
+      
+      setState(() {
+        _realExpertCount = snapshot.docs.length;
+      });
+    } catch (e) {
+      // 오류 시 0으로 유지
+      debugPrint('Expert count load error: $e');
+    }
   }
 
   Future<void> _analyzCase() async {
@@ -48,6 +111,9 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
         _result = result;
         _isLoading = false;
       });
+      
+      // 분석 완료 후 Firebase에 사건 저장
+      _saveCase();
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -71,14 +137,29 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false, // 뒤로가기 방지
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          _showExitDialog(context);
+    return BlocListener<CaseBloc, CaseState>(
+      listener: (context, state) {
+        if (state is CaseCreated) {
+          setState(() {
+            _isCaseSaved = true;
+            _savedCaseId = state.legalCase.id;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ 사건이 저장되었습니다'),
+              backgroundColor: Colors.green,
+            ),
+          );
         }
       },
-      child: Scaffold(
+      child: PopScope(
+        canPop: false, // 뒤로가기 방지
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop) {
+            _showExitDialog(context);
+          }
+        },
+        child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
           title: const Text('사건 요약'),
@@ -109,6 +190,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
               : _error != null
               ? Center(child: Text('오류: $_error'))
               : _buildContent(),
+        ),
       ),
     );
   }
@@ -118,7 +200,9 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('홈으로 이동'),
-        content: const Text('홈으로 이동하시겠습니까?\n분석 결과는 저장되지 않습니다.'),
+        content: Text(_isCaseSaved 
+            ? '홈으로 이동하시겠습니까?\n사건은 \'내 사건\'에서 확인할 수 있습니다.'
+            : '홈으로 이동하시겠습니까?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
@@ -186,7 +270,11 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.pushNamed(context, AppRoutes.experts);
+                // 카테고리 필터를 적용해서 전문가 목록으로 이동
+                Navigator.pushNamed(
+                  context, 
+                  '${AppRoutes.experts}?category=${widget.category}',
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
@@ -536,7 +624,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
               children: [
                 const TextSpan(text: '해당 분야를 전문으로 하는 전문가가 '),
                 TextSpan(
-                  text: '${_result?.expertCount ?? 0}명',
+                  text: '$_realExpertCount명',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: AppColors.primary,
@@ -548,7 +636,9 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
           ),
           const SizedBox(height: AppSizes.paddingS),
           Text(
-            _result?.expertDescription ?? '아래 전문가들이 가장 적합할 것으로 예상됩니다. 상담 여부 및 선택은 사용자의 판단에 따릅니다.',
+            _realExpertCount > 0
+                ? '${widget.categoryName} 관련 법률에 전문성을 가진 변호사 $_realExpertCount명을 추천합니다. 이들은 ${widget.categoryName} 사건 처리 경험이 풍부합니다.'
+                : '현재 해당 분야의 전문가가 등록되어 있지 않습니다.',
             style: TextStyle(
               fontSize: AppSizes.fontS,
               color: AppColors.textSecondary,

@@ -196,10 +196,12 @@ class _MyCasePageState extends State<MyCasePage>
       ),
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            Navigator.pushNamed(context, '${AppRoutes.summary}?id=${caseItem.id}');
-          },
+          child: InkWell(
+            onTap: () async {
+              await Navigator.pushNamed(context, '${AppRoutes.summary}?id=${caseItem.id}');
+              // 돌아올 때 사건 목록 새로고침
+              _loadCases();
+            },
           borderRadius: BorderRadius.circular(AppSizes.radiusL),
           child: Padding(
             padding: const EdgeInsets.all(AppSizes.paddingM),

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/expert.dart';
 import '../../domain/repositories/expert_repository.dart';
 import '../models/expert_model.dart';
@@ -22,31 +23,40 @@ class ExpertRepositoryImpl implements ExpertRepository {
     int limit = 10,
   }) async {
     try {
+      debugPrint('🔍 ExpertRepository.getExperts() called');
+      debugPrint('   category filter: $category');
+      
       Query<Map<String, dynamic>> query = _expertsCollection
-          .where('is_available', isEqualTo: true)
-          .orderBy('rating', descending: true);
+          .where('is_available', isEqualTo: true);
 
-      if (category != null) {
+      if (category != null && category.isNotEmpty) {
+        debugPrint('   Applying category filter: $category');
         query = query.where('categories', arrayContains: category);
       }
-
-      // 페이지네이션
-      query = query.limit(limit);
-
-      final snapshot = await query.get();
+      
+      // rating 정렬은 인덱스가 없을 수 있으므로 클라이언트에서 정렬
+      final snapshot = await query.limit(limit).get();
+      
+      debugPrint('   Found ${snapshot.docs.length} experts');
 
       if (snapshot.docs.isEmpty) {
         return [];
       }
 
-      return snapshot.docs.map((doc) {
+      final experts = snapshot.docs.map((doc) {
         return ExpertModel.fromJson({
           'id': int.tryParse(doc.id) ?? doc.id.hashCode,
           ...doc.data(),
         });
       }).toList();
+      
+      // 클라이언트에서 rating 정렬
+      experts.sort((a, b) => b.rating.compareTo(a.rating));
+      
+      return experts;
     } catch (e) {
       // Firestore 인덱스 오류 등의 경우 빈 목록 반환
+      debugPrint('❌ ExpertRepository error: $e');
       return [];
     }
   }
