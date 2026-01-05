@@ -20,122 +20,120 @@ class HomePage extends StatelessWidget {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: AppSizes.mobileMaxWidth),
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSizes.paddingM),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // 헤더
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              AppStrings.appName,
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontSize: AppSizes.fontXXL,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.notifications_outlined),
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('알림 기능은 준비 중입니다')),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSizes.paddingS),
-                        // 환영 메시지
-                        BlocBuilder<AuthBloc, AuthState>(
-                          builder: (context, state) {
-                            final name = state is AuthAuthenticated
-                                ? state.user.name
-                                : '회원';
-                            return Text(
-                              '안녕하세요, $name님!',
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: AppSizes.fontM,
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: AppSizes.paddingL),
-                        // 검색바
-                        Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(AppSizes.radiusL),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: TextField(
-                            decoration: const InputDecoration(
-                              hintText: '어떤 법률 문제가 있으신가요?',
-                              prefixIcon: Icon(Icons.search),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: AppSizes.paddingM,
-                                vertical: AppSizes.paddingM,
-                              ),
-                            ),
-                            onSubmitted: (value) {
-                              if (value.trim().isNotEmpty) {
-                                Navigator.pushNamed(context, AppRoutes.caseInput);
-                              }
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: AppSizes.paddingXL),
-                        // AI 사건 요약 카드
-                        _buildCaseSummaryCard(context),
-                        const SizedBox(height: AppSizes.paddingXL),
-                        // 빠른 상담
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              '빠른 상담',
-                              style: TextStyle(
-                                fontSize: AppSizes.fontL,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  '${AppRoutes.experts}?urgency=simple',
-                                );
-                              },
-                              child: const Text('전체보기'),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSizes.paddingM),
-                        _buildQuickConsultCard(context),
-                      ],
-                    ),
-                  ),
-                ),
-                const BottomNavBar(currentIndex: 0),
-              ],
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSizes.paddingM),
+              child: _HomeBody(context),
             ),
           ),
         ),
       ),
+      bottomNavigationBar: const BottomNavBar(currentIndex: 0),
     );
+  }
+
+  Widget _HomeBody(BuildContext context) {
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 헤더
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                AppStrings.appName,
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: AppSizes.fontXXL,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('알림 기능은 준비 중입니다')),
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.paddingS),
+          // 환영 메시지
+          BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              final name = state is AuthAuthenticated
+                  ? state.user.name
+                  : '회원';
+              return Text(
+                '안녕하세요, $name님!',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: AppSizes.fontM,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: AppSizes.paddingL),
+          // 검색바
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppSizes.radiusL),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              decoration: const InputDecoration(
+                hintText: '어떤 법률 문제가 있으신가요?',
+                prefixIcon: Icon(Icons.search),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: AppSizes.paddingM,
+                  vertical: AppSizes.paddingM,
+                ),
+              ),
+              onSubmitted: (value) {
+                if (value.trim().isNotEmpty) {
+                  Navigator.pushNamed(context, AppRoutes.caseInput);
+                }
+              },
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingXL),
+          // AI 사건 요약 카드
+          _buildCaseSummaryCard(context),
+          const SizedBox(height: AppSizes.paddingXL),
+          // 빠른 상담
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                '빠른 상담',
+                style: TextStyle(
+                  fontSize: AppSizes.fontL,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(
+                    context,
+                    '${AppRoutes.experts}?urgency=simple',
+                  );
+                },
+                child: const Text('전체보기'),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.paddingM),
+          _buildQuickConsultCard(context),
+        ]
+      );
   }
 
   Widget _buildCaseSummaryCard(BuildContext context) {
