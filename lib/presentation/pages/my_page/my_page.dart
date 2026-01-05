@@ -63,183 +63,177 @@ class _MyPageState extends State<MyPage> {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: AppSizes.mobileMaxWidth),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: BlocBuilder<AuthBloc, AuthState>(
-                      builder: (context, state) {
-                        if (state is AuthLoading) {
-                          return const LoadingWidget();
-                        }
+              child: BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, state) {
+                  if (state is AuthLoading) {
+                    return const LoadingWidget();
+                  }
 
-                        if (state is! AuthAuthenticated) {
-                          return EmptyStateWidget(
-                            icon: Icons.person_off_outlined,
-                            title: '로그인이 필요합니다',
-                            subtitle: '로그인하고 더 많은 서비스를 이용해보세요',
-                            buttonText: '로그인',
-                            onButtonPressed: () {
-                              Navigator.pushReplacementNamed(context, AppRoutes.login);
-                            },
-                          );
-                        }
+                  if (state is! AuthAuthenticated) {
+                    return EmptyStateWidget(
+                      icon: Icons.person_off_outlined,
+                      title: '로그인이 필요합니다',
+                      subtitle: '로그인하고 더 많은 서비스를 이용해보세요',
+                      buttonText: '로그인',
+                      onButtonPressed: () {
+                        Navigator.pushReplacementNamed(context, AppRoutes.login);
+                      },
+                    );
+                  }
 
-                        final user = state.user;
-                        return SingleChildScrollView(
-                          padding: const EdgeInsets.all(AppSizes.paddingM),
-                          child: Column(
-                            children: [
-                              // 프로필 카드
-                              Container(
-                                padding: const EdgeInsets.all(AppSizes.paddingL),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surface,
-                                  borderRadius: BorderRadius.circular(AppSizes.radiusL),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 32,
-                                      backgroundColor: AppColors.primary.withOpacity(0.1),
-                                      backgroundImage: user.profileImage != null
-                                          ? NetworkImage(user.profileImage!)
-                                          : null,
-                                      child: user.profileImage == null
-                                          ? Text(
-                                              user.name.isNotEmpty ? user.name[0] : '?',
-                                              style: const TextStyle(
-                                                fontSize: 24,
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.primary,
-                                              ),
-                                            )
-                                          : null,
-                                    ),
-                                    const SizedBox(width: AppSizes.paddingM),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            user.name,
-                                            style: const TextStyle(
-                                              fontSize: AppSizes.fontXL,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            user.email,
-                                            style: const TextStyle(
-                                              color: AppColors.textSecondary,
-                                              fontSize: AppSizes.fontM,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.edit_outlined),
-                                      onPressed: () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('프로필 수정 기능은 준비 중입니다')),
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: AppSizes.paddingL),
-                              // 메뉴 섹션
-                              _buildMenuSection(
-                                title: '나의 활동',
-                                items: [
-                                  _MenuItem(
-                                    icon: Icons.folder_outlined,
-                                    title: '내 사건',
-                                    onTap: () {
-                                      Navigator.pushNamed(context, AppRoutes.myCase);
-                                    },
-                                  ),
-                                  _MenuItem(
-                                    icon: Icons.history,
-                                    title: '상담 내역',
-                                    onTap: () {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('상담 내역 기능은 준비 중입니다')),
-                                      );
-                                    },
-                                  ),
-                                  _MenuItem(
-                                    icon: Icons.star_outline,
-                                    title: '리뷰 관리',
-                                    onTap: () => _showReviewsSheet(context),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: AppSizes.paddingM),
-                              _buildMenuSection(
-                                title: '고객 지원',
-                                items: [
-                                  _MenuItem(
-                                    icon: Icons.help_outline,
-                                    title: '자주 묻는 질문',
-                                    onTap: () {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('FAQ는 준비 중입니다')),
-                                      );
-                                    },
-                                  ),
-                                  _MenuItem(
-                                    icon: Icons.headset_mic_outlined,
-                                    title: '고객센터',
-                                    onTap: () {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('고객센터 연결은 준비 중입니다')),
-                                      );
-                                    },
-                                  ),
-                                  _MenuItem(
-                                    icon: Icons.description_outlined,
-                                    title: '이용약관',
-                                    onTap: () {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('이용약관 페이지는 준비 중입니다')),
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: AppSizes.paddingM),
-                              _buildMenuSection(
-                                title: '계정',
-                                items: [
-                                  _MenuItem(
-                                    icon: Icons.logout,
-                                    title: '로그아웃',
-                                    onTap: () => _handleLogout(context),
-                                  ),
-                                ],
+                  final user = state.user;
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSizes.paddingM),
+                    child: Column(
+                      children: [
+                        // 프로필 카드
+                        Container(
+                          padding: const EdgeInsets.all(AppSizes.paddingL),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(AppSizes.radiusL),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
                               ),
                             ],
                           ),
-                        );
-                      },
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 32,
+                                backgroundColor: AppColors.primary.withOpacity(0.1),
+                                backgroundImage: user.profileImage != null
+                                    ? NetworkImage(user.profileImage!)
+                                    : null,
+                                child: user.profileImage == null
+                                    ? Text(
+                                        user.name.isNotEmpty ? user.name[0] : '?',
+                                        style: const TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.primary,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: AppSizes.paddingM),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      user.name,
+                                      style: const TextStyle(
+                                        fontSize: AppSizes.fontXL,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      user.email,
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: AppSizes.fontM,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined),
+                                onPressed: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('프로필 수정 기능은 준비 중입니다')),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppSizes.paddingL),
+                        // 메뉴 섹션
+                        _buildMenuSection(
+                          title: '나의 활동',
+                          items: [
+                            _MenuItem(
+                              icon: Icons.folder_outlined,
+                              title: '내 사건',
+                              onTap: () {
+                                Navigator.pushNamed(context, AppRoutes.myCase);
+                              },
+                            ),
+                            _MenuItem(
+                              icon: Icons.history,
+                              title: '상담 내역',
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('상담 내역 기능은 준비 중입니다')),
+                                );
+                              },
+                            ),
+                            _MenuItem(
+                              icon: Icons.star_outline,
+                              title: '리뷰 관리',
+                              onTap: () => _showReviewsSheet(context),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSizes.paddingM),
+                        _buildMenuSection(
+                          title: '고객 지원',
+                          items: [
+                            _MenuItem(
+                              icon: Icons.help_outline,
+                              title: '자주 묻는 질문',
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('FAQ는 준비 중입니다')),
+                                );
+                              },
+                            ),
+                            _MenuItem(
+                              icon: Icons.headset_mic_outlined,
+                              title: '고객센터',
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('고객센터 연결은 준비 중입니다')),
+                                );
+                              },
+                            ),
+                            _MenuItem(
+                              icon: Icons.description_outlined,
+                              title: '이용약관',
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('이용약관 페이지는 준비 중입니다')),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSizes.paddingM),
+                        _buildMenuSection(
+                          title: '계정',
+                          items: [
+                            _MenuItem(
+                              icon: Icons.logout,
+                              title: '로그아웃',
+                              onTap: () => _handleLogout(context),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ),
-                  const BottomNavBar(currentIndex: 2),
-                ],
+                  );
+                },
               ),
             ),
           ),
         ),
+        bottomNavigationBar: const BottomNavBar(currentIndex: 2),
       ),
     );
   }

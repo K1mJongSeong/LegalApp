@@ -82,54 +82,48 @@ class _MyCasePageState extends State<MyCasePage>
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: AppSizes.mobileMaxWidth),
-            child: Column(
-              children: [
-                Expanded(
-                  child: BlocBuilder<CaseBloc, CaseState>(
-                    builder: (context, state) {
-                      if (state is CaseLoading) {
-                        return const LoadingWidget(message: '사건을 불러오는 중...');
-                      }
+            child: BlocBuilder<CaseBloc, CaseState>(
+              builder: (context, state) {
+                if (state is CaseLoading) {
+                  return const LoadingWidget(message: '사건을 불러오는 중...');
+                }
 
-                      if (state is CaseError) {
-                        return ErrorStateWidget(
-                          message: state.message,
-                          onRetry: _loadCases,
-                        );
-                      }
+                if (state is CaseError) {
+                  return ErrorStateWidget(
+                    message: state.message,
+                    onRetry: _loadCases,
+                  );
+                }
 
-                      if (state is CaseEmpty) {
-                        return TabBarView(
-                          controller: _tabController,
-                          children: [
-                            _buildEmptyList(),
-                            _buildEmptyList(),
-                            _buildEmptyList(),
-                          ],
-                        );
-                      }
+                if (state is CaseEmpty) {
+                  return TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildEmptyList(),
+                      _buildEmptyList(),
+                      _buildEmptyList(),
+                    ],
+                  );
+                }
 
-                      if (state is CaseListLoaded) {
-                        return TabBarView(
-                          controller: _tabController,
-                          children: [
-                            _buildCaseList(state.inProgressCases),
-                            _buildCaseList(state.pendingCases),
-                            _buildCaseList(state.completedCases),
-                          ],
-                        );
-                      }
+                if (state is CaseListLoaded) {
+                  return TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildCaseList(state.inProgressCases),
+                      _buildCaseList(state.pendingCases),
+                      _buildCaseList(state.completedCases),
+                    ],
+                  );
+                }
 
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                ),
-                const BottomNavBar(currentIndex: 1),
-              ],
+                return const SizedBox.shrink();
+              },
             ),
           ),
         ),
       ),
+      bottomNavigationBar: const BottomNavBar(currentIndex: 1),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 70), // BottomNavBar 높이만큼 올림
         child: FloatingActionButton.extended(
