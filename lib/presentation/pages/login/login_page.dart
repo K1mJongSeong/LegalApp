@@ -24,11 +24,17 @@ class _LoginPageState extends State<LoginPage>
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
+  bool _isExpertTab = false; // 전문가 탭 상태 추적
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+        _isExpertTab = _tabController.index == 1;
+      });
+    });
   }
 
   @override
@@ -180,10 +186,19 @@ class _LoginPageState extends State<LoginPage>
                       ),
                       const SizedBox(height: AppSizes.paddingM),
                       PrimaryButton(
-                        text: AppStrings.userSignup,
+                        text: _isExpertTab ? '전문가 회원가입' : AppStrings.userSignup,
                         isOutlined: true,
                         onPressed: () {
-                          Navigator.pushNamed(context, AppRoutes.signupPrompt);
+                          if (_isExpertTab) {
+                            // 전문가 회원가입
+                            Navigator.pushNamed(
+                              context,
+                              '${AppRoutes.signup}?expert=true',
+                            );
+                          } else {
+                            // 일반 회원가입
+                            Navigator.pushNamed(context, AppRoutes.signupPrompt);
+                          }
                         },
                       ),
                       const SizedBox(height: AppSizes.paddingXL),
