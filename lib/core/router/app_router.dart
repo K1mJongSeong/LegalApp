@@ -14,6 +14,8 @@ import '../../presentation/pages/case_flow/category_select_page.dart';
 import '../../presentation/pages/case_flow/case_detail_input_page.dart';
 import '../../presentation/pages/case_flow/urgency_select_page.dart';
 import '../../presentation/pages/case_flow/case_summary_result_page.dart';
+import '../../presentation/pages/expert/expert_dashboard_page.dart';
+import '../../presentation/pages/expert/expert_certification_page.dart';
 
 /// 앱 라우트 이름 상수
 class AppRoutes {
@@ -35,6 +37,9 @@ class AppRoutes {
   static const String caseDetailInput = '/case-detail-input';
   static const String urgencySelect = '/urgency-select';
   static const String caseSummaryResult = '/case-summary-result';
+  // 전문가 관련
+  static const String expertDashboard = '/expert-dashboard';
+  static const String expertCertification = '/expert-certification';
 }
 
 /// 앱 라우터 설정
@@ -138,6 +143,12 @@ class AppRouter {
           ),
           settings,
         );
+
+      case AppRoutes.expertDashboard:
+        return _buildRoute(const ExpertDashboardPage(), settings);
+
+      case AppRoutes.expertCertification:
+        return _buildRoute(const ExpertCertificationPage(), settings);
 
       default:
         return _buildRoute(const SplashPage(), settings);

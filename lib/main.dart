@@ -12,6 +12,23 @@ import 'presentation/blocs/auth/auth_event.dart';
 import 'presentation/blocs/case/case_bloc.dart';
 import 'presentation/blocs/expert/expert_bloc.dart';
 import 'presentation/blocs/review/review_bloc.dart';
+import 'presentation/blocs/expert_dashboard/expert_dashboard_bloc.dart';
+import 'presentation/blocs/expert_certification/expert_certification_bloc.dart';
+// Data Sources
+import 'data/datasources/expert_account_remote_datasource.dart';
+import 'data/datasources/expert_certification_remote_datasource.dart';
+import 'data/datasources/consultation_request_remote_datasource.dart';
+// Repositories
+import 'data/repositories/expert_account_repository_impl.dart';
+import 'data/repositories/expert_certification_repository_impl.dart';
+import 'data/repositories/consultation_request_repository_impl.dart';
+import 'data/repositories/expert_repository_impl.dart';
+// Use Cases
+import 'domain/usecases/get_expert_account_usecase.dart';
+import 'domain/usecases/create_expert_account_usecase.dart';
+import 'domain/usecases/submit_document_certification_usecase.dart';
+import 'domain/usecases/submit_instant_certification_usecase.dart';
+import 'domain/usecases/get_consultation_requests_usecase.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,6 +69,24 @@ class LegalApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // DataSources
+    final expertAccountDataSource = ExpertAccountRemoteDataSource();
+    final expertCertificationDataSource = ExpertCertificationRemoteDataSource();
+    final consultationRequestDataSource = ConsultationRequestRemoteDataSource();
+
+    // Repositories
+    final expertAccountRepository = ExpertAccountRepositoryImpl(expertAccountDataSource);
+    final expertCertificationRepository = ExpertCertificationRepositoryImpl(expertCertificationDataSource);
+    final consultationRequestRepository = ConsultationRequestRepositoryImpl(consultationRequestDataSource);
+    final expertRepository = ExpertRepositoryImpl();
+
+    // Use Cases
+    final getExpertAccountUseCase = GetExpertAccountUseCase(expertAccountRepository);
+    final createExpertAccountUseCase = CreateExpertAccountUseCase(expertAccountRepository);
+    final submitDocumentCertificationUseCase = SubmitDocumentCertificationUseCase(expertCertificationRepository);
+    final submitInstantCertificationUseCase = SubmitInstantCertificationUseCase(expertCertificationRepository);
+    final getConsultationRequestsUseCase = GetConsultationRequestsUseCase(consultationRequestRepository);
+
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthBloc>(
@@ -65,6 +100,21 @@ class LegalApp extends StatelessWidget {
         ),
         BlocProvider<ReviewBloc>(
           create: (_) => ReviewBloc(),
+        ),
+        BlocProvider<ExpertDashboardBloc>(
+          create: (_) => ExpertDashboardBloc(
+            getExpertAccountUseCase: getExpertAccountUseCase,
+            getConsultationRequestsUseCase: getConsultationRequestsUseCase,
+            expertRepository: expertRepository,
+          ),
+        ),
+        BlocProvider<ExpertCertificationBloc>(
+          create: (_) => ExpertCertificationBloc(
+            submitDocumentCertificationUseCase: submitDocumentCertificationUseCase,
+            submitInstantCertificationUseCase: submitInstantCertificationUseCase,
+            createExpertAccountUseCase: createExpertAccountUseCase,
+            getExpertAccountUseCase: getExpertAccountUseCase,
+          ),
         ),
       ],
       child: MaterialApp(
