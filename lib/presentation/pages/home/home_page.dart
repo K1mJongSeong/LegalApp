@@ -32,6 +32,67 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _HomeBody(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final isExpert = state is AuthAuthenticated && state.user.isExpert;
+        final name = state is AuthAuthenticated ? state.user.name : '회원';
+
+        // 전문가 사용자용 UI
+        if (isExpert) {
+          return _buildExpertHomeBody(context, name);
+        }
+
+        // 일반 사용자용 UI
+        return _buildUserHomeBody(context, name);
+      },
+    );
+  }
+
+  /// 전문가 사용자 홈 화면
+  Widget _buildExpertHomeBody(BuildContext context, String name) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 헤더
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              AppStrings.appName,
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: AppSizes.fontXXL,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.notifications_outlined),
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('알림 기능은 준비 중입니다')),
+                );
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSizes.paddingS),
+        // 환영 메시지
+        Text(
+          '안녕하세요, $name 전문가님!',
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: AppSizes.fontM,
+          ),
+        ),
+        const SizedBox(height: AppSizes.paddingXL),
+        // 전문가 대시보드 카드
+        _buildExpertCertificationCard(context),
+      ],
+    );
+  }
+
+  /// 일반 사용자 홈 화면
+  Widget _buildUserHomeBody(BuildContext context, String name) {
     return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -59,19 +120,12 @@ class HomePage extends StatelessWidget {
           ),
           const SizedBox(height: AppSizes.paddingS),
           // 환영 메시지
-          BlocBuilder<AuthBloc, AuthState>(
-            builder: (context, state) {
-              final name = state is AuthAuthenticated
-                  ? state.user.name
-                  : '회원';
-              return Text(
-                '안녕하세요, $name님!',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: AppSizes.fontM,
-                ),
-              );
-            },
+          Text(
+            '안녕하세요, $name님!',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: AppSizes.fontM,
+            ),
           ),
           const SizedBox(height: AppSizes.paddingL),
           // 검색바
