@@ -16,6 +16,12 @@ import '../../presentation/pages/case_flow/urgency_select_page.dart';
 import '../../presentation/pages/case_flow/case_summary_result_page.dart';
 import '../../presentation/pages/expert/expert_dashboard_page.dart';
 import '../../presentation/pages/expert/expert_certification_page.dart';
+import '../../presentation/pages/expert/intro/expert_intro_page.dart';
+import '../../presentation/pages/expert/consult/expert_consult_page.dart';
+import '../../presentation/pages/expert/ad/expert_ad_page.dart';
+import '../../presentation/pages/expert/post/expert_post_page.dart';
+import '../../presentation/pages/expert/video/expert_video_page.dart';
+import '../../presentation/pages/expert/notice/expert_notice_page.dart';
 
 /// 앱 라우트 이름 상수
 class AppRoutes {
@@ -40,6 +46,13 @@ class AppRoutes {
   // 전문가 관련
   static const String expertDashboard = '/expert-dashboard';
   static const String expertCertification = '/expert-certification';
+  // 전문가 메뉴 페이지
+  static const String expertIntro = '/expert-intro';
+  static const String expertConsult = '/expert-consult';
+  static const String expertAd = '/expert-ad';
+  static const String expertPost = '/expert-post';
+  static const String expertVideo = '/expert-video';
+  static const String expertNotice = '/expert-notice';
 }
 
 /// 앱 라우터 설정
@@ -149,6 +162,25 @@ class AppRouter {
 
       case AppRoutes.expertCertification:
         return _buildRoute(const ExpertCertificationPage(), settings);
+
+      // 전문가 메뉴 페이지
+      case AppRoutes.expertIntro:
+        return _buildRoute(const ExpertIntroPage(), settings);
+
+      case AppRoutes.expertConsult:
+        return _buildRoute(const ExpertConsultPage(), settings);
+
+      case AppRoutes.expertAd:
+        return _buildRoute(const ExpertAdPage(), settings);
+
+      case AppRoutes.expertPost:
+        return _buildRoute(const ExpertPostPage(), settings);
+
+      case AppRoutes.expertVideo:
+        return _buildRoute(const ExpertVideoPage(), settings);
+
+      case AppRoutes.expertNotice:
+        return _buildRoute(const ExpertNoticePage(), settings);
 
       default:
         return _buildRoute(const SplashPage(), settings);
