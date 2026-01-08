@@ -80,3 +80,4 @@ class NoticeCard extends StatelessWidget {
   }
 }
 
+
