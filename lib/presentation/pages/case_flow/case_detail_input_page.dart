@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
+import '../../../core/router/app_router.dart';
 
 /// 사건 상세 입력 페이지
 class CaseDetailInputPage extends StatefulWidget {
   final String category;
   final String categoryName;
+  final List<String> progressItems;
 
   const CaseDetailInputPage({
     super.key,
     required this.category,
     required this.categoryName,
+    this.progressItems = const [],
   });
 
   @override
@@ -194,10 +197,11 @@ class _CaseDetailInputPageState extends State<CaseDetailInputPage> {
                   onPressed: () {
                     Navigator.pushNamed(
                       context,
-                      '/urgency-select',
+                      AppRoutes.consultationGoal,
                       arguments: {
                         'category': widget.category,
                         'categoryName': widget.categoryName,
+                        'progressItems': widget.progressItems,
                         'description': _descriptionController.text,
                       },
                     );
@@ -250,6 +254,7 @@ class _CaseDetailInputPageState extends State<CaseDetailInputPage> {
     );
   }
 }
+
 
 
 

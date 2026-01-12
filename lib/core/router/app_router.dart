@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../presentation/pages/splash/splash_page.dart';
+import '../../presentation/pages/entry/entry_page.dart';
 import '../../presentation/pages/login/login_page.dart';
 import '../../presentation/pages/signup/signup_prompt_page.dart';
 import '../../presentation/pages/signup/signup_page.dart';
@@ -11,7 +12,10 @@ import '../../presentation/pages/confirm/confirm_page.dart';
 import '../../presentation/pages/my_case/my_case_page.dart';
 import '../../presentation/pages/summary/summary_page.dart';
 import '../../presentation/pages/case_flow/category_select_page.dart';
+import '../../presentation/pages/case_flow/case_progress_page.dart';
 import '../../presentation/pages/case_flow/case_detail_input_page.dart';
+import '../../presentation/pages/case_flow/consultation_goal_page.dart';
+import '../../presentation/pages/case_flow/consultation_condition_page.dart';
 import '../../presentation/pages/case_flow/urgency_select_page.dart';
 import '../../presentation/pages/case_flow/case_summary_result_page.dart';
 import '../../presentation/pages/expert/expert_dashboard_page.dart';
@@ -28,6 +32,7 @@ class AppRoutes {
   AppRoutes._();
 
   static const String splash = '/';
+  static const String entry = '/entry';
   static const String login = '/login';
   static const String signup = '/signup';
   static const String signupPrompt = '/signup-prompt';
@@ -40,7 +45,10 @@ class AppRoutes {
   static const String summary = '/summary';
   // 새 사건 등록 플로우
   static const String categorySelect = '/category-select';
+  static const String caseProgress = '/case-progress';
   static const String caseDetailInput = '/case-detail-input';
+  static const String consultationGoal = '/consultation-goal';
+  static const String consultationCondition = '/consultation-condition';
   static const String urgencySelect = '/urgency-select';
   static const String caseSummaryResult = '/case-summary-result';
   // 전문가 관련
@@ -67,6 +75,9 @@ class AppRouter {
     switch (uri.path) {
       case AppRoutes.splash:
         return _buildRoute(const SplashPage(), settings);
+
+      case AppRoutes.entry:
+        return _buildRoute(const EntryPage(), settings);
 
       case AppRoutes.login:
         return _buildRoute(const LoginPage(), settings);
@@ -124,28 +135,72 @@ class AppRouter {
       case AppRoutes.categorySelect:
         return _buildRoute(const CategorySelectPage(), settings);
 
-      case '/case-detail-input':
+      case AppRoutes.caseProgress:
         final args = settings.arguments as Map<String, dynamic>?;
         return _buildRoute(
-          CaseDetailInputPage(
+          CaseProgressPage(
             category: args?['category'] ?? '',
             categoryName: args?['categoryName'] ?? '',
           ),
           settings,
         );
 
-      case '/urgency-select':
+      case AppRoutes.caseDetailInput:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return _buildRoute(
+          CaseDetailInputPage(
+            category: args?['category'] ?? '',
+            categoryName: args?['categoryName'] ?? '',
+            progressItems: (args?['progressItems'] as List<String>?) ?? [],
+          ),
+          settings,
+        );
+
+      case AppRoutes.consultationGoal:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return _buildRoute(
+          ConsultationGoalPage(
+            category: args?['category'] ?? '',
+            categoryName: args?['categoryName'] ?? '',
+            progressItems: (args?['progressItems'] as List<String>?) ?? [],
+            description: args?['description'] ?? '',
+          ),
+          settings,
+        );
+
+      case AppRoutes.consultationCondition:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return _buildRoute(
+          ConsultationConditionPage(
+            category: args?['category'] ?? '',
+            categoryName: args?['categoryName'] ?? '',
+            progressItems: (args?['progressItems'] as List<String>?) ?? [],
+            description: args?['description'] ?? '',
+            goal: args?['goal'] ?? '',
+          ),
+          settings,
+        );
+
+      case AppRoutes.urgencySelect:
         final args = settings.arguments as Map<String, dynamic>?;
         return _buildRoute(
           UrgencySelectPage(
             category: args?['category'] ?? '',
             categoryName: args?['categoryName'] ?? '',
             description: args?['description'] ?? '',
+            progressItems: (args?['progressItems'] as List<String>?) ?? [],
+            goal: args?['goal'] ?? '',
+            consultationMethod: args?['consultationMethod'] as List<String>?,
+            preferredRegion: args?['preferredRegion'] as String?,
+            expertExperience: args?['expertExperience'] as String?,
+            consultationFee: args?['consultationFee'] as String?,
+            freeConsultation: args?['freeConsultation'] as bool? ?? false,
+            availableTime: args?['availableTime'] as String?,
           ),
           settings,
         );
 
-      case '/case-summary-result':
+      case AppRoutes.caseSummaryResult:
         final args = settings.arguments as Map<String, dynamic>?;
         return _buildRoute(
           CaseSummaryResultPage(
@@ -153,6 +208,14 @@ class AppRouter {
             categoryName: args?['categoryName'] ?? '',
             description: args?['description'] ?? '',
             urgency: args?['urgency'] ?? 'normal',
+            progressItems: (args?['progressItems'] as List<String>?) ?? [],
+            goal: args?['goal'] ?? '',
+            consultationMethod: args?['consultationMethod'] as List<String>?,
+            preferredRegion: args?['preferredRegion'] as String?,
+            expertExperience: args?['expertExperience'] as String?,
+            consultationFee: args?['consultationFee'] as String?,
+            freeConsultation: args?['freeConsultation'] as bool? ?? false,
+            availableTime: args?['availableTime'] as String?,
           ),
           settings,
         );
