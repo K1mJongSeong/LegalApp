@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
+import '../../../core/router/app_router.dart';
 
 /// 법률 분야 선택 페이지
 class CategorySelectPage extends StatelessWidget {
@@ -97,7 +98,7 @@ class CategorySelectPage extends StatelessWidget {
         onTap: () {
           Navigator.pushNamed(
             context,
-            '/case-detail-input',
+            AppRoutes.caseProgress,
             arguments: {'category': category, 'categoryName': title},
           );
         },
@@ -139,6 +140,7 @@ class CategorySelectPage extends StatelessWidget {
     );
   }
 }
+
 
 
 

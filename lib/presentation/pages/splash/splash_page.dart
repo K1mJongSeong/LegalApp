@@ -42,10 +42,10 @@ class _SplashPageState extends State<SplashPage>
 
     _controller.forward();
 
-    // 2초 후 로그인 페이지로 이동
+    // 2초 후 진입 페이지로 이동
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.login);
+        Navigator.pushReplacementNamed(context, AppRoutes.entry);
       }
     });
   }

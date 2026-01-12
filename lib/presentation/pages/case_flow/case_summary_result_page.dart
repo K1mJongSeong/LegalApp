@@ -10,6 +10,7 @@ import '../../blocs/auth/auth_state.dart';
 import '../../blocs/case/case_bloc.dart';
 import '../../blocs/case/case_event.dart';
 import '../../blocs/case/case_state.dart';
+import '../../widgets/common/signup_prompt_dialog.dart';
 
 /// 사건 요약 결과 페이지
 class CaseSummaryResultPage extends StatefulWidget {
@@ -17,6 +18,14 @@ class CaseSummaryResultPage extends StatefulWidget {
   final String categoryName;
   final String description;
   final String urgency;
+  final List<String> progressItems;
+  final String goal;
+  final List<String>? consultationMethod;
+  final String? preferredRegion;
+  final String? expertExperience;
+  final String? consultationFee;
+  final bool freeConsultation;
+  final String? availableTime;
 
   const CaseSummaryResultPage({
     super.key,
@@ -24,6 +33,14 @@ class CaseSummaryResultPage extends StatefulWidget {
     required this.categoryName,
     required this.description,
     required this.urgency,
+    this.progressItems = const [],
+    this.goal = '',
+    this.consultationMethod,
+    this.preferredRegion,
+    this.expertExperience,
+    this.consultationFee,
+    this.freeConsultation = false,
+    this.availableTime,
   });
 
   @override
@@ -46,8 +63,29 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
   @override
   void initState() {
     super.initState();
-    _analyzCase();
-    _loadExpertCount();
+    // 비회원인 경우 회원가입 유도 팝업 표시
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authState = context.read<AuthBloc>().state;
+      if (authState is! AuthAuthenticated) {
+        _showSignupPrompt();
+      } else {
+        _analyzCase();
+        _loadExpertCount();
+      }
+    });
+  }
+
+  /// 회원가입 유도 팝업 표시
+  void _showSignupPrompt() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const SignupPromptDialog(),
+    ).then((value) {
+      // 팝업이 닫힌 후 분석 시작
+      _analyzCase();
+      _loadExpertCount();
+    });
   }
   
   /// 사건을 Firebase에 저장
@@ -100,12 +138,38 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
 
   Future<void> _analyzCase() async {
     try {
+      // 상담 목표 텍스트 변환
+      String goalText = '';
+      switch (widget.goal) {
+        case 'recover_damages':
+          goalText = '손해를 최대한 회복하고 싶어요';
+          break;
+        case 'legal_judgment':
+          goalText = '법적 판단을 받아보고 싶어요';
+          break;
+        case 'amicable_resolution':
+          goalText = '원만하게 정리하고 싶어요';
+          break;
+        case 'consultation_only':
+          goalText = '상황 설명과 상담만 원해요';
+          break;
+        default:
+          goalText = '';
+      }
+
+      // 사건 진행 상황 텍스트
+      String progressText = widget.progressItems.isNotEmpty
+          ? '사건 진행 상황: ${widget.progressItems.join(', ')}'
+          : '';
+
       final result = await _gptService.analyzeLegalCase(
         category: widget.categoryName,
         description: widget.description.isEmpty 
             ? '${widget.categoryName} 관련 법률 상담이 필요합니다.' 
             : widget.description,
         urgency: _getUrgencyText(widget.urgency),
+        progressItems: progressText,
+        goal: goalText,
       );
       setState(() {
         _result = result;

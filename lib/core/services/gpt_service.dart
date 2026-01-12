@@ -11,12 +11,14 @@ class GptService {
     required String category,
     required String description,
     required String urgency,
+    String progressItems = '',
+    String goal = '',
   }) async {
     final prompt = '''
 당신은 한국 법률 전문가입니다. 다음 법률 사건을 분석해주세요.
 
 [사건 분야]: $category
-[긴급도]: $urgency
+[긴급도]: $urgency${progressItems.isNotEmpty ? '\n$progressItems' : ''}${goal.isNotEmpty ? '\n[상담 목표]: $goal' : ''}
 [사건 내용]: 
 $description
 

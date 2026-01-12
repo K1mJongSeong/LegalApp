@@ -1127,6 +1127,7 @@ class _ExpertPostPageState extends State<ExpertPostPage> {
   /// CTA 배너
   Widget _buildCTABanner() {
     return Container(
+      width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
       padding: const EdgeInsets.all(AppSizes.paddingL),
       decoration: BoxDecoration(

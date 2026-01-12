@@ -46,13 +46,14 @@ class UserHomeSliver extends StatelessWidget {
           const SizedBox(height: AppSizes.paddingXL),
 
           // 전문가 인증 유도 카드
-          const ExpertCertificationCard(),
-          const SizedBox(height: AppSizes.paddingL),
+          // const ExpertCertificationCard(),
+          // const SizedBox(height: AppSizes.paddingL),
         ]),
       ),
     );
   }
 }
+
 
 
 

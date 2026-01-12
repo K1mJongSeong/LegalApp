@@ -3,53 +3,89 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/router/app_router.dart';
 
-/// 긴급도 선택 페이지
-class UrgencySelectPage extends StatefulWidget {
+/// 상담 목표 선택 페이지
+class ConsultationGoalPage extends StatefulWidget {
   final String category;
   final String categoryName;
-  final String description;
   final List<String> progressItems;
-  final String goal;
-  final List<String>? consultationMethod;
-  final String? preferredRegion;
-  final String? expertExperience;
-  final String? consultationFee;
-  final bool freeConsultation;
-  final String? availableTime;
+  final String description;
 
-  const UrgencySelectPage({
+  const ConsultationGoalPage({
     super.key,
     required this.category,
     required this.categoryName,
-    required this.description,
     this.progressItems = const [],
-    required this.goal,
-    this.consultationMethod,
-    this.preferredRegion,
-    this.expertExperience,
-    this.consultationFee,
-    this.freeConsultation = false,
-    this.availableTime,
+    this.description = '',
   });
 
   @override
-  State<UrgencySelectPage> createState() => _UrgencySelectPageState();
+  State<ConsultationGoalPage> createState() => _ConsultationGoalPageState();
 }
 
-class _UrgencySelectPageState extends State<UrgencySelectPage> {
-  String? _selectedUrgency;
+class _ConsultationGoalPageState extends State<ConsultationGoalPage> {
+  String? _selectedGoal;
+
+  final List<Map<String, dynamic>> _goals = [
+    {
+      'id': 'recover_damages',
+      'title': '손해를 최대한 회복하고 싶어요',
+      'subtitle': '금전적 손해배상, 보상금 회수 등',
+      'icon': Icons.favorite_outline,
+    },
+    {
+      'id': 'legal_judgment',
+      'title': '법적 판단을 받아보고 싶어요',
+      'subtitle': '법리적 판단, 권리 여부 검토',
+      'icon': Icons.balance_outlined,
+    },
+    {
+      'id': 'amicable_resolution',
+      'title': '원만하게 정리하고 싶어요',
+      'subtitle': '합의, 조정, 원만한 종결',
+      'icon': Icons.handshake_outlined,
+    },
+    {
+      'id': 'consultation_only',
+      'title': '상황 설명과 상담만 원해요',
+      'subtitle': '전문가 의견 청취, 정보 수집',
+      'icon': Icons.chat_bubble_outline,
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('긴급도 선택'),
-        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text('상담 목표 선택'),
+        centerTitle: false,
       ),
       body: SafeArea(
         child: Column(
           children: [
+            // 진행 단계 표시
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.paddingM,
+                vertical: AppSizes.paddingS,
+              ),
+              color: AppColors.surface,
+              child: Row(
+                children: [
+                  Text(
+                    '4/7단계',
+                    style: TextStyle(
+                      fontSize: AppSizes.fontS,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(AppSizes.paddingM),
@@ -57,44 +93,23 @@ class _UrgencySelectPageState extends State<UrgencySelectPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      '얼마나 급하신가요?',
+                      '현재 상황에서 가장 중요하게 생각하는 방향을 선택해주세요',
                       style: TextStyle(
-                        fontSize: AppSizes.fontXL,
+                        fontSize: AppSizes.fontXXL,
                         fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: AppSizes.paddingS),
                     Text(
-                      '상황의 긴급도를 선택하시면 적합한 전문가를 우선적으로 추천해드려요',
+                      '이에 따라 적절한 전문가를 선택할 수 있습니다',
                       style: TextStyle(
                         fontSize: AppSizes.fontM,
                         color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: AppSizes.paddingXL),
-                    _buildUrgencyOption(
-                      'urgent',
-                      Icons.error_outline,
-                      '매우 급함',
-                      '즉시 대응이 필요한 상황',
-                      AppColors.error,
-                    ),
-                    const SizedBox(height: AppSizes.paddingM),
-                    _buildUrgencyOption(
-                      'normal',
-                      Icons.access_time,
-                      '보통',
-                      '1-2주 내 상담이 필요함',
-                      AppColors.warning,
-                    ),
-                    const SizedBox(height: AppSizes.paddingM),
-                    _buildUrgencyOption(
-                      'simple',
-                      Icons.chat_bubble_outline,
-                      '단순 상담',
-                      '정보만 알아보고 싶음',
-                      AppColors.textSecondary,
-                    ),
+                    ..._goals.map((goal) => _buildGoalCard(goal)),
                   ],
                 ),
               ),
@@ -115,32 +130,25 @@ class _UrgencySelectPageState extends State<UrgencySelectPage> {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _selectedUrgency != null
-                      ? () {
+                  onPressed: _selectedGoal == null
+                      ? null
+                      : () {
                           Navigator.pushNamed(
                             context,
-                            AppRoutes.caseSummaryResult,
+                            AppRoutes.consultationCondition,
                             arguments: {
                               'category': widget.category,
                               'categoryName': widget.categoryName,
-                              'description': widget.description,
-                              'urgency': _selectedUrgency!,
                               'progressItems': widget.progressItems,
-                              'goal': widget.goal,
-                              'consultationMethod': widget.consultationMethod,
-                              'preferredRegion': widget.preferredRegion,
-                              'expertExperience': widget.expertExperience,
-                              'consultationFee': widget.consultationFee,
-                              'freeConsultation': widget.freeConsultation,
-                              'availableTime': widget.availableTime,
+                              'description': widget.description,
+                              'goal': _selectedGoal!,
                             },
                           );
-                        }
-                      : null,
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppColors.primary.withOpacity(0.5),
+                    disabledBackgroundColor: Colors.grey[300],
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppSizes.radiusL),
@@ -162,25 +170,19 @@ class _UrgencySelectPageState extends State<UrgencySelectPage> {
     );
   }
 
-  Widget _buildUrgencyOption(
-    String value,
-    IconData icon,
-    String title,
-    String subtitle,
-    Color color,
-  ) {
-    final isSelected = _selectedUrgency == value;
-    
+  Widget _buildGoalCard(Map<String, dynamic> goal) {
+    final isSelected = _selectedGoal == goal['id'];
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedUrgency = value;
+          _selectedGoal = goal['id'] as String;
         });
       },
       child: Container(
-        padding: const EdgeInsets.all(AppSizes.paddingM),
+        margin: const EdgeInsets.only(bottom: AppSizes.paddingM),
+        padding: const EdgeInsets.all(AppSizes.paddingL),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.surface,
           borderRadius: BorderRadius.circular(AppSizes.radiusL),
           border: Border.all(
             color: isSelected ? AppColors.primary : AppColors.border,
@@ -193,10 +195,16 @@ class _UrgencySelectPageState extends State<UrgencySelectPage> {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: isSelected
+                    ? AppColors.primary
+                    : AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(AppSizes.radiusM),
               ),
-              child: Icon(icon, color: color),
+              child: Icon(
+                goal['icon'] as IconData,
+                color: isSelected ? Colors.white : AppColors.primary,
+                size: 24,
+              ),
             ),
             const SizedBox(width: AppSizes.paddingM),
             Expanded(
@@ -204,15 +212,16 @@ class _UrgencySelectPageState extends State<UrgencySelectPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
-                    style: const TextStyle(
+                    goal['title'] as String,
+                    style: TextStyle(
                       fontSize: AppSizes.fontM,
                       fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    subtitle,
+                    goal['subtitle'] as String,
                     style: TextStyle(
                       fontSize: AppSizes.fontS,
                       color: AppColors.textSecondary,
@@ -222,27 +231,15 @@ class _UrgencySelectPageState extends State<UrgencySelectPage> {
               ),
             ),
             if (isSelected)
-              Icon(Icons.check_circle, color: AppColors.primary),
+              const Icon(
+                Icons.check_circle,
+                color: AppColors.primary,
+                size: 24,
+              ),
           ],
         ),
       ),
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
