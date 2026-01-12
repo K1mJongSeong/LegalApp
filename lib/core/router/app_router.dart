@@ -20,6 +20,7 @@ import '../../presentation/pages/case_flow/urgency_select_page.dart';
 import '../../presentation/pages/case_flow/case_summary_result_page.dart';
 import '../../presentation/pages/expert/expert_dashboard_page.dart';
 import '../../presentation/pages/expert/expert_certification_page.dart';
+import '../../presentation/pages/expert/profile/expert_profile_manage_page.dart';
 import '../../presentation/pages/expert/intro/expert_intro_page.dart';
 import '../../presentation/pages/expert/consult/expert_consult_page.dart';
 import '../../presentation/pages/expert/ad/expert_ad_page.dart';
@@ -54,6 +55,7 @@ class AppRoutes {
   // 전문가 관련
   static const String expertDashboard = '/expert-dashboard';
   static const String expertCertification = '/expert-certification';
+  static const String expertProfileManage = '/expert-profile-manage';
   // 전문가 메뉴 페이지
   static const String expertIntro = '/expert-intro';
   static const String expertConsult = '/expert-consult';
@@ -225,6 +227,9 @@ class AppRouter {
 
       case AppRoutes.expertCertification:
         return _buildRoute(const ExpertCertificationPage(), settings);
+
+      case AppRoutes.expertProfileManage:
+        return _buildRoute(const ExpertProfileManagePage(), settings);
 
       // 전문가 메뉴 페이지
       case AppRoutes.expertIntro:
