@@ -1,5 +1,6 @@
 /// Domain Entities barrel file
 export 'expert.dart';
+export 'expert_profile.dart';
 export 'legal_case.dart';
 export 'review.dart';
 export 'user.dart';

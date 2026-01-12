@@ -62,7 +62,7 @@ class ProfileTipCard extends StatelessWidget {
           const SizedBox(height: AppSizes.paddingM),
           ElevatedButton(
             onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.expertDashboard);
+              Navigator.pushNamed(context, AppRoutes.expertProfileManage);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
