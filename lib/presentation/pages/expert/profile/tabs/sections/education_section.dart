@@ -21,3 +21,5 @@ class EducationSection extends StatelessWidget {
   }
 }
 
+
+
