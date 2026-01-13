@@ -1,4 +1,5 @@
 import 'education.dart';
+import 'career.dart';
 
 /// 전문가 프로필 정보 엔티티
 class ExpertProfile {
@@ -62,6 +63,9 @@ class ExpertProfile {
   final List<String> languages; // 외국어 목록
   final String? otherLanguage; // 기타 외국어
   
+  // 추가정보
+  final List<Career> careers; // 경력사항 목록
+  
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -111,6 +115,7 @@ class ExpertProfile {
     this.experiences = const [],
     this.languages = const [],
     this.otherLanguage,
+    this.careers = const [],
     this.createdAt,
     this.updatedAt,
   });
@@ -161,6 +166,7 @@ class ExpertProfile {
     List<String>? experiences,
     List<String>? languages,
     String? otherLanguage,
+    List<Career>? careers,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -210,6 +216,7 @@ class ExpertProfile {
       experiences: experiences ?? this.experiences,
       languages: languages ?? this.languages,
       otherLanguage: otherLanguage ?? this.otherLanguage,
+      careers: careers ?? this.careers,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
