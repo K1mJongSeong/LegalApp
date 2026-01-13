@@ -1,3 +1,5 @@
+import 'education.dart';
+
 /// 전문가 프로필 정보 엔티티
 class ExpertProfile {
   final String id; // Firestore document ID
@@ -27,6 +29,10 @@ class ExpertProfile {
   final String? auxiliaryEmail; // 보조 메일주소
   final String? oneLineIntro; // 한 줄 소개
   
+  // 학력사항
+  final List<Education> educations; // 학력사항 목록
+  final bool isEducationPublic; // 학력사항 공개 여부
+  
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -51,6 +57,8 @@ class ExpertProfile {
     this.email,
     this.auxiliaryEmail,
     this.oneLineIntro,
+    this.educations = const [],
+    this.isEducationPublic = true,
     this.createdAt,
     this.updatedAt,
   });
@@ -76,6 +84,8 @@ class ExpertProfile {
     String? email,
     String? auxiliaryEmail,
     String? oneLineIntro,
+    List<Education>? educations,
+    bool? isEducationPublic,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -100,6 +110,8 @@ class ExpertProfile {
       email: email ?? this.email,
       auxiliaryEmail: auxiliaryEmail ?? this.auxiliaryEmail,
       oneLineIntro: oneLineIntro ?? this.oneLineIntro,
+      educations: educations ?? this.educations,
+      isEducationPublic: isEducationPublic ?? this.isEducationPublic,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
