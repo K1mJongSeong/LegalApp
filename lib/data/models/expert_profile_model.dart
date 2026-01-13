@@ -44,6 +44,12 @@ class ExpertProfileModel extends ExpertProfile {
     super.isOperatingEndTimeAM,
     super.holidays,
     super.serviceDetails,
+    super.isKbaSpecializationRegistered,
+    super.kbaSpecializations,
+    super.specialQualifications,
+    super.experiences,
+    super.languages,
+    super.otherLanguage,
     super.createdAt,
     super.updatedAt,
   });
@@ -157,6 +163,34 @@ class ExpertProfileModel extends ExpertProfile {
               ?.map((e) => e as String)
               .toList() ??
           [],
+      // 강조정보
+      isKbaSpecializationRegistered: json['isKbaSpecializationRegistered'] as bool? ??
+          json['is_kba_specialization_registered'] as bool? ??
+          false,
+      kbaSpecializations: (json['kbaSpecializations'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          (json['kba_specializations'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      specialQualifications: (json['specialQualifications'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          (json['special_qualifications'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      experiences: (json['experiences'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      languages: (json['languages'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      otherLanguage: json['otherLanguage'] as String? ??
+          json['other_language'] as String?,
       createdAt: (json['createdAt'] as Timestamp?)?.toDate() ??
           (json['created_at'] as Timestamp?)?.toDate(),
       updatedAt: (json['updatedAt'] as Timestamp?)?.toDate() ??
@@ -216,6 +250,13 @@ class ExpertProfileModel extends ExpertProfile {
       'isOperatingEndTimeAM': isOperatingEndTimeAM,
       'holidays': holidays,
       'serviceDetails': serviceDetails,
+      // 강조정보
+      'isKbaSpecializationRegistered': isKbaSpecializationRegistered,
+      'kbaSpecializations': kbaSpecializations,
+      'specialQualifications': specialQualifications,
+      'experiences': experiences,
+      'languages': languages,
+      if (otherLanguage != null) 'otherLanguage': otherLanguage,
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
       if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
     };
@@ -263,6 +304,12 @@ class ExpertProfileModel extends ExpertProfile {
       isOperatingEndTimeAM: entity.isOperatingEndTimeAM,
       holidays: entity.holidays,
       serviceDetails: entity.serviceDetails,
+      isKbaSpecializationRegistered: entity.isKbaSpecializationRegistered,
+      kbaSpecializations: entity.kbaSpecializations,
+      specialQualifications: entity.specialQualifications,
+      experiences: entity.experiences,
+      languages: entity.languages,
+      otherLanguage: entity.otherLanguage,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );
