@@ -1,4 +1,5 @@
 /// Data Models barrel file
+export 'education_model.dart';
 export 'expert_model.dart';
 export 'expert_post_model.dart';
 export 'expert_video_model.dart';

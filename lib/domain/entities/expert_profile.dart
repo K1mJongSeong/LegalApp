@@ -33,6 +33,27 @@ class ExpertProfile {
   final List<Education> educations; // 학력사항 목록
   final bool isEducationPublic; // 학력사항 공개 여부
   
+  // 주요분야
+  final List<String> mainFields; // 주요분야 목록 (최대 7개)
+  
+  // 사무실 정보
+  final String? officeName; // 사무실이름
+  final String? officeRegion1; // 사무실지역1 (시/도)
+  final String? officeRegion2; // 사무실지역2 (시/군/구)
+  final String? affiliatedBranch; // 소속 지회 (필수)
+  final String? officeAddressSearch; // 사무실주소 검색어
+  final String? postalCode; // 우편번호
+  final String? lotNumberAddress; // 지번 주소
+  final String? roadNameAddress; // 도로명 주소
+  final String? detailedAddress; // 상세 주소
+  final String? homepageUrl; // 홈페이지 주소
+  final String? operatingStartTime; // 운영 시작시간 (HH:mm 형식)
+  final String? operatingEndTime; // 운영 종료시간 (HH:mm 형식)
+  final bool isOperatingTimeAM; // 시작시간 AM/PM
+  final bool isOperatingEndTimeAM; // 종료시간 AM/PM
+  final List<String> holidays; // 휴일 목록 (월요일, 화요일, ...)
+  final List<String> serviceDetails; // 서비스사항 목록
+  
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -59,6 +80,23 @@ class ExpertProfile {
     this.oneLineIntro,
     this.educations = const [],
     this.isEducationPublic = true,
+    this.mainFields = const [],
+    this.officeName,
+    this.officeRegion1,
+    this.officeRegion2,
+    this.affiliatedBranch,
+    this.officeAddressSearch,
+    this.postalCode,
+    this.lotNumberAddress,
+    this.roadNameAddress,
+    this.detailedAddress,
+    this.homepageUrl,
+    this.operatingStartTime,
+    this.operatingEndTime,
+    this.isOperatingTimeAM = true,
+    this.isOperatingEndTimeAM = true,
+    this.holidays = const [],
+    this.serviceDetails = const [],
     this.createdAt,
     this.updatedAt,
   });
@@ -86,6 +124,23 @@ class ExpertProfile {
     String? oneLineIntro,
     List<Education>? educations,
     bool? isEducationPublic,
+    List<String>? mainFields,
+    String? officeName,
+    String? officeRegion1,
+    String? officeRegion2,
+    String? affiliatedBranch,
+    String? officeAddressSearch,
+    String? postalCode,
+    String? lotNumberAddress,
+    String? roadNameAddress,
+    String? detailedAddress,
+    String? homepageUrl,
+    String? operatingStartTime,
+    String? operatingEndTime,
+    bool? isOperatingTimeAM,
+    bool? isOperatingEndTimeAM,
+    List<String>? holidays,
+    List<String>? serviceDetails,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -112,6 +167,23 @@ class ExpertProfile {
       oneLineIntro: oneLineIntro ?? this.oneLineIntro,
       educations: educations ?? this.educations,
       isEducationPublic: isEducationPublic ?? this.isEducationPublic,
+      mainFields: mainFields ?? this.mainFields,
+      officeName: officeName ?? this.officeName,
+      officeRegion1: officeRegion1 ?? this.officeRegion1,
+      officeRegion2: officeRegion2 ?? this.officeRegion2,
+      affiliatedBranch: affiliatedBranch ?? this.affiliatedBranch,
+      officeAddressSearch: officeAddressSearch ?? this.officeAddressSearch,
+      postalCode: postalCode ?? this.postalCode,
+      lotNumberAddress: lotNumberAddress ?? this.lotNumberAddress,
+      roadNameAddress: roadNameAddress ?? this.roadNameAddress,
+      detailedAddress: detailedAddress ?? this.detailedAddress,
+      homepageUrl: homepageUrl ?? this.homepageUrl,
+      operatingStartTime: operatingStartTime ?? this.operatingStartTime,
+      operatingEndTime: operatingEndTime ?? this.operatingEndTime,
+      isOperatingTimeAM: isOperatingTimeAM ?? this.isOperatingTimeAM,
+      isOperatingEndTimeAM: isOperatingEndTimeAM ?? this.isOperatingEndTimeAM,
+      holidays: holidays ?? this.holidays,
+      serviceDetails: serviceDetails ?? this.serviceDetails,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
