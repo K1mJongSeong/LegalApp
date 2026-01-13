@@ -1,4 +1,5 @@
 /// Data Models barrel file
+export 'award_model.dart';
 export 'career_model.dart';
 export 'education_model.dart';
 export 'expert_model.dart';
@@ -6,6 +7,7 @@ export 'expert_post_model.dart';
 export 'expert_video_model.dart';
 export 'expert_profile_model.dart';
 export 'legal_case_model.dart';
+export 'qualification_model.dart';
 export 'review_model.dart';
 export 'user_model.dart';
 

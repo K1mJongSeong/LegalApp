@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_sizes.dart';
 import 'sections/career_section.dart';
+import 'sections/qualification_section.dart';
+import 'sections/award_section.dart';
 
 /// 추가정보 탭
 class AdditionalInfoTab extends StatefulWidget {
@@ -184,8 +186,8 @@ class _AdditionalInfoTabState extends State<AdditionalInfoTab>
               controller: _subTabController,
               children: const [
                 CareerSection(),
-                Center(child: Text('자격사항 섹션 준비 중')),
-                Center(child: Text('수상내역 섹션 준비 중')),
+                QualificationSection(),
+                AwardSection(),
                 Center(child: Text('논문/출판 섹션 준비 중')),
                 Center(child: Text('보도자료 섹션 준비 중')),
                 Center(child: Text('세금계산서 정보 섹션 준비 중')),

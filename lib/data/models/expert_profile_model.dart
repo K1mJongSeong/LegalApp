@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/expert_profile.dart';
 import 'education_model.dart';
 import 'career_model.dart';
+import 'qualification_model.dart';
+import 'award_model.dart';
 
 /// 전문가 프로필 모델 (Firestore JSON 변환)
 class ExpertProfileModel extends ExpertProfile {
@@ -77,6 +79,30 @@ class ExpertProfileModel extends ExpertProfile {
       if (careersList != null) {
         careers = careersList
             .map((e) => CareerModel.fromJson(
+                e as Map<String, dynamic>, id: e['id'] as String?))
+            .toList();
+      }
+    }
+
+    // 자격사항 파싱
+    List<Qualification> qualifications = [];
+    if (json['qualifications'] != null) {
+      final qualificationsList = json['qualifications'] as List<dynamic>?;
+      if (qualificationsList != null) {
+        qualifications = qualificationsList
+            .map((e) => QualificationModel.fromJson(
+                e as Map<String, dynamic>, id: e['id'] as String?))
+            .toList();
+      }
+    }
+
+    // 수상내역 파싱
+    List<Award> awards = [];
+    if (json['awards'] != null) {
+      final awardsList = json['awards'] as List<dynamic>?;
+      if (awardsList != null) {
+        awards = awardsList
+            .map((e) => AwardModel.fromJson(
                 e as Map<String, dynamic>, id: e['id'] as String?))
             .toList();
       }
@@ -207,6 +233,10 @@ class ExpertProfileModel extends ExpertProfile {
           json['other_language'] as String?,
       // 경력사항
       careers: careers,
+      // 자격사항
+      qualifications: qualifications,
+      // 수상내역
+      awards: awards,
       createdAt: (json['createdAt'] as Timestamp?)?.toDate() ??
           (json['created_at'] as Timestamp?)?.toDate(),
       updatedAt: (json['updatedAt'] as Timestamp?)?.toDate() ??
@@ -277,6 +307,14 @@ class ExpertProfileModel extends ExpertProfile {
       'careers': careers
           .map((e) => CareerModel.fromEntity(e).toJson())
           .toList(),
+      // 자격사항
+      'qualifications': qualifications
+          .map((e) => QualificationModel.fromEntity(e).toJson())
+          .toList(),
+      // 수상내역
+      'awards': awards
+          .map((e) => AwardModel.fromEntity(e).toJson())
+          .toList(),
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
       if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
     };
@@ -331,6 +369,8 @@ class ExpertProfileModel extends ExpertProfile {
       languages: entity.languages,
       otherLanguage: entity.otherLanguage,
       careers: entity.careers,
+      qualifications: entity.qualifications,
+      awards: entity.awards,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );
