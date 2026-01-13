@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/expert_profile.dart';
 import 'education_model.dart';
+import 'career_model.dart';
+import 'qualification_model.dart';
+import 'award_model.dart';
 
 /// 전문가 프로필 모델 (Firestore JSON 변환)
 class ExpertProfileModel extends ExpertProfile {
@@ -44,6 +47,13 @@ class ExpertProfileModel extends ExpertProfile {
     super.isOperatingEndTimeAM,
     super.holidays,
     super.serviceDetails,
+    super.isKbaSpecializationRegistered,
+    super.kbaSpecializations,
+    super.specialQualifications,
+    super.experiences,
+    super.languages,
+    super.otherLanguage,
+    super.careers,
     super.createdAt,
     super.updatedAt,
   });
@@ -57,6 +67,42 @@ class ExpertProfileModel extends ExpertProfile {
       if (educationsList != null) {
         educations = educationsList
             .map((e) => EducationModel.fromJson(
+                e as Map<String, dynamic>, id: e['id'] as String?))
+            .toList();
+      }
+    }
+
+    // 경력사항 파싱
+    List<Career> careers = [];
+    if (json['careers'] != null) {
+      final careersList = json['careers'] as List<dynamic>?;
+      if (careersList != null) {
+        careers = careersList
+            .map((e) => CareerModel.fromJson(
+                e as Map<String, dynamic>, id: e['id'] as String?))
+            .toList();
+      }
+    }
+
+    // 자격사항 파싱
+    List<Qualification> qualifications = [];
+    if (json['qualifications'] != null) {
+      final qualificationsList = json['qualifications'] as List<dynamic>?;
+      if (qualificationsList != null) {
+        qualifications = qualificationsList
+            .map((e) => QualificationModel.fromJson(
+                e as Map<String, dynamic>, id: e['id'] as String?))
+            .toList();
+      }
+    }
+
+    // 수상내역 파싱
+    List<Award> awards = [];
+    if (json['awards'] != null) {
+      final awardsList = json['awards'] as List<dynamic>?;
+      if (awardsList != null) {
+        awards = awardsList
+            .map((e) => AwardModel.fromJson(
                 e as Map<String, dynamic>, id: e['id'] as String?))
             .toList();
       }
@@ -157,6 +203,40 @@ class ExpertProfileModel extends ExpertProfile {
               ?.map((e) => e as String)
               .toList() ??
           [],
+      // 강조정보
+      isKbaSpecializationRegistered: json['isKbaSpecializationRegistered'] as bool? ??
+          json['is_kba_specialization_registered'] as bool? ??
+          false,
+      kbaSpecializations: (json['kbaSpecializations'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          (json['kba_specializations'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      specialQualifications: (json['specialQualifications'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          (json['special_qualifications'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      experiences: (json['experiences'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      languages: (json['languages'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      otherLanguage: json['otherLanguage'] as String? ??
+          json['other_language'] as String?,
+      // 경력사항
+      careers: careers,
+      // 자격사항
+      qualifications: qualifications,
+      // 수상내역
+      awards: awards,
       createdAt: (json['createdAt'] as Timestamp?)?.toDate() ??
           (json['created_at'] as Timestamp?)?.toDate(),
       updatedAt: (json['updatedAt'] as Timestamp?)?.toDate() ??
@@ -216,6 +296,25 @@ class ExpertProfileModel extends ExpertProfile {
       'isOperatingEndTimeAM': isOperatingEndTimeAM,
       'holidays': holidays,
       'serviceDetails': serviceDetails,
+      // 강조정보
+      'isKbaSpecializationRegistered': isKbaSpecializationRegistered,
+      'kbaSpecializations': kbaSpecializations,
+      'specialQualifications': specialQualifications,
+      'experiences': experiences,
+      'languages': languages,
+      if (otherLanguage != null) 'otherLanguage': otherLanguage,
+      // 경력사항
+      'careers': careers
+          .map((e) => CareerModel.fromEntity(e).toJson())
+          .toList(),
+      // 자격사항
+      'qualifications': qualifications
+          .map((e) => QualificationModel.fromEntity(e).toJson())
+          .toList(),
+      // 수상내역
+      'awards': awards
+          .map((e) => AwardModel.fromEntity(e).toJson())
+          .toList(),
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
       if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
     };
@@ -263,6 +362,15 @@ class ExpertProfileModel extends ExpertProfile {
       isOperatingEndTimeAM: entity.isOperatingEndTimeAM,
       holidays: entity.holidays,
       serviceDetails: entity.serviceDetails,
+      isKbaSpecializationRegistered: entity.isKbaSpecializationRegistered,
+      kbaSpecializations: entity.kbaSpecializations,
+      specialQualifications: entity.specialQualifications,
+      experiences: entity.experiences,
+      languages: entity.languages,
+      otherLanguage: entity.otherLanguage,
+      careers: entity.careers,
+      qualifications: entity.qualifications,
+      awards: entity.awards,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );

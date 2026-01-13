@@ -1,4 +1,7 @@
 import 'education.dart';
+import 'career.dart';
+import 'award.dart';
+import 'qualification.dart';
 
 /// 전문가 프로필 정보 엔티티
 class ExpertProfile {
@@ -54,6 +57,19 @@ class ExpertProfile {
   final List<String> holidays; // 휴일 목록 (월요일, 화요일, ...)
   final List<String> serviceDetails; // 서비스사항 목록
   
+  // 강조정보
+  final bool isKbaSpecializationRegistered; // 대한변호사협회 전문분야 등록 여부
+  final List<String> kbaSpecializations; // 등록된 전문분야 목록 (최대 2개)
+  final List<String> specialQualifications; // 특수자격 목록
+  final List<String> experiences; // 경험 목록
+  final List<String> languages; // 외국어 목록
+  final String? otherLanguage; // 기타 외국어
+  
+  // 추가정보
+  final List<Career> careers; // 경력사항 목록
+  final List<Qualification> qualifications; // 자격사항 목록
+  final List<Award> awards; // 수상내역 목록
+  
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -97,6 +113,15 @@ class ExpertProfile {
     this.isOperatingEndTimeAM = true,
     this.holidays = const [],
     this.serviceDetails = const [],
+    this.isKbaSpecializationRegistered = false,
+    this.kbaSpecializations = const [],
+    this.specialQualifications = const [],
+    this.experiences = const [],
+    this.languages = const [],
+    this.otherLanguage,
+    this.careers = const [],
+    this.qualifications = const [],
+    this.awards = const [],
     this.createdAt,
     this.updatedAt,
   });
@@ -141,6 +166,15 @@ class ExpertProfile {
     bool? isOperatingEndTimeAM,
     List<String>? holidays,
     List<String>? serviceDetails,
+    bool? isKbaSpecializationRegistered,
+    List<String>? kbaSpecializations,
+    List<String>? specialQualifications,
+    List<String>? experiences,
+    List<String>? languages,
+    String? otherLanguage,
+    List<Career>? careers,
+    List<Qualification>? qualifications,
+    List<Award>? awards,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -184,6 +218,15 @@ class ExpertProfile {
       isOperatingEndTimeAM: isOperatingEndTimeAM ?? this.isOperatingEndTimeAM,
       holidays: holidays ?? this.holidays,
       serviceDetails: serviceDetails ?? this.serviceDetails,
+      isKbaSpecializationRegistered: isKbaSpecializationRegistered ?? this.isKbaSpecializationRegistered,
+      kbaSpecializations: kbaSpecializations ?? this.kbaSpecializations,
+      specialQualifications: specialQualifications ?? this.specialQualifications,
+      experiences: experiences ?? this.experiences,
+      languages: languages ?? this.languages,
+      otherLanguage: otherLanguage ?? this.otherLanguage,
+      careers: careers ?? this.careers,
+      qualifications: qualifications ?? this.qualifications,
+      awards: awards ?? this.awards,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

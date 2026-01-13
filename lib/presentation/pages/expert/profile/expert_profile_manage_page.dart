@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import 'tabs/required_info_tab.dart';
+import 'tabs/highlight_info_tab.dart';
+import 'tabs/additional_info_tab.dart';
 
 /// 전문가 프로필 관리 페이지
 class ExpertProfileManagePage extends StatefulWidget {
@@ -88,8 +90,8 @@ class _ExpertProfileManagePageState extends State<ExpertProfileManagePage>
         controller: _tabController,
         children: const [
           RequiredInfoTab(),
-          Center(child: Text('강조정보 탭 준비 중')),
-          Center(child: Text('추가정보 탭 준비 중')),
+          HighlightInfoTab(),
+          AdditionalInfoTab(),
           Center(child: Text('간편 문의 탭 준비 중')),
         ],
       ),
