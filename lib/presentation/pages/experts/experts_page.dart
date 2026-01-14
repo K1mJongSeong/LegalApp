@@ -7,6 +7,7 @@ import '../../blocs/expert/expert_bloc.dart';
 import '../../blocs/expert/expert_event.dart';
 import '../../blocs/expert/expert_state.dart';
 import '../../widgets/common/expert_card.dart';
+import '../../widgets/common/expert_card_new.dart';
 import '../../widgets/common/empty_state_widget.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
@@ -69,6 +70,8 @@ class _ExpertsPageState extends State<ExpertsPage> {
             constraints: const BoxConstraints(maxWidth: AppSizes.mobileMaxWidth),
             child: Column(
               children: [
+                // 정보 배너
+                _buildInfoBanner(),
                 // 검색 바
                 Padding(
                   padding: const EdgeInsets.all(AppSizes.paddingM),
@@ -134,12 +137,24 @@ class _ExpertsPageState extends State<ExpertsPage> {
                             itemCount: state.experts.length,
                             itemBuilder: (context, index) {
                               final expert = state.experts[index];
-                              return ExpertCard(
+                              return ExpertCardNew(
                                 expert: expert,
                                 onTap: () {
                                   Navigator.pushNamed(
                                     context,
                                     '${AppRoutes.confirm}?expertId=${expert.id}',
+                                  );
+                                },
+                                onPhoneConsultation: () {
+                                  // TODO: 전화 상담 기능 구현
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('전화 상담 기능은 준비 중입니다')),
+                                  );
+                                },
+                                onVisitConsultation: () {
+                                  // TODO: 방문 상담 기능 구현
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('방문 상담 기능은 준비 중입니다')),
                                   );
                                 },
                               );
@@ -222,6 +237,38 @@ class _ExpertsPageState extends State<ExpertsPage> {
           ),
         );
       },
+    );
+  }
+
+  /// 정보 배너 위젯
+  Widget _buildInfoBanner() {
+    return Container(
+      margin: const EdgeInsets.all(AppSizes.paddingM),
+      padding: const EdgeInsets.all(AppSizes.paddingM),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE3F2FD), // 연한 파란색
+        borderRadius: BorderRadius.circular(AppSizes.radiusL),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.lightbulb_outline,
+            color: Colors.orange,
+            size: 24,
+          ),
+          const SizedBox(width: AppSizes.paddingM),
+          Expanded(
+            child: Text(
+              '아래 전문가들은 해당 분야를 등록한 전문가들입니다. 상담 여부 및 선택은 사용자님의 판단에 따릅니다.',
+              style: TextStyle(
+                fontSize: AppSizes.fontS,
+                color: AppColors.textPrimary,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

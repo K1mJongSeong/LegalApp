@@ -1,5 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../domain/entities/award.dart';
+import '../../domain/entities/career.dart';
+import '../../domain/entities/education.dart';
 import '../../domain/entities/expert_profile.dart';
+import '../../domain/entities/other_activity.dart';
+import '../../domain/entities/press_release.dart';
+import '../../domain/entities/publication.dart';
+import '../../domain/entities/qualification.dart';
+import '../../domain/entities/retainer_fee.dart';
+import '../../domain/entities/service_fee.dart';
 import 'education_model.dart';
 import 'career_model.dart';
 import 'qualification_model.dart';

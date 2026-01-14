@@ -35,6 +35,12 @@ class ExpertAccountRepositoryImpl implements ExpertAccountRepository {
   Future<void> approveExpertAccount(String accountId) async {
     return await _remoteDataSource.approveExpertAccount(accountId);
   }
+
+  @override
+  Future<List<ExpertAccount>> getVerifiedExpertAccounts() async {
+    final models = await _remoteDataSource.getVerifiedExpertAccounts();
+    return models;
+  }
 }
 
 

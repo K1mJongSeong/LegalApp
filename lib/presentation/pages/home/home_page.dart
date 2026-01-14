@@ -39,7 +39,6 @@ class HomePage extends StatelessWidget {
                       ExpertHomeSliver(
                         name: name,
                         isVerified: false, // TODO: 실제 데이터 연동 필요
-                        profileCompletion: 10, // TODO: 실제 데이터 연동 필요
                       )
                     else
                       UserHomeSliver(name: name),

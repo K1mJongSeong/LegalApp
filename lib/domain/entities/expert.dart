@@ -1,6 +1,7 @@
 /// 전문가 엔티티
 class Expert {
   final int id;
+  final String? userId; // Firebase Auth UID (ExpertProfile과 연결)
   final String name;
   final String? profileImage;
   final String specialty; // 전문 분야
@@ -13,9 +14,11 @@ class Expert {
   final String? lawFirm; // 소속 법무법인
   final List<String>? certifications; // 자격증
   final bool isAvailable; // 상담 가능 여부
+  final String? profession; // 직업 타입 (변호사, 노무사 등)
 
   const Expert({
     required this.id,
+    this.userId,
     required this.name,
     this.profileImage,
     required this.specialty,
@@ -28,10 +31,12 @@ class Expert {
     this.lawFirm,
     this.certifications,
     this.isAvailable = true,
+    this.profession,
   });
 
   Expert copyWith({
     int? id,
+    String? userId,
     String? name,
     String? profileImage,
     String? specialty,
@@ -44,9 +49,11 @@ class Expert {
     String? lawFirm,
     List<String>? certifications,
     bool? isAvailable,
+    String? profession,
   }) {
     return Expert(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       name: name ?? this.name,
       profileImage: profileImage ?? this.profileImage,
       specialty: specialty ?? this.specialty,
@@ -59,6 +66,7 @@ class Expert {
       lawFirm: lawFirm ?? this.lawFirm,
       certifications: certifications ?? this.certifications,
       isAvailable: isAvailable ?? this.isAvailable,
+      profession: profession ?? this.profession,
     );
   }
 }

@@ -3,13 +3,60 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/utils/profile_completion_calculator.dart';
+import '../../../domain/entities/expert_profile.dart';
+import '../../../domain/repositories/expert_profile_repository.dart';
+import '../../../data/repositories/expert_profile_repository_impl.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
 
 /// 전문가용 드로어 메뉴
-class ExpertDrawer extends StatelessWidget {
+class ExpertDrawer extends StatefulWidget {
   const ExpertDrawer({super.key});
+
+  @override
+  State<ExpertDrawer> createState() => _ExpertDrawerState();
+}
+
+class _ExpertDrawerState extends State<ExpertDrawer> {
+  final ExpertProfileRepository _profileRepository = ExpertProfileRepositoryImpl();
+  ExpertProfile? _profile;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  /// 프로필 데이터 로드
+  Future<void> _loadProfile() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      final profile = await _profileRepository.getProfileByUserId(authState.user.id);
+      if (mounted) {
+        setState(() {
+          _profile = profile;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('프로필 로드 오류: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -125,7 +172,8 @@ class ExpertDrawer extends StatelessWidget {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         final name = state is AuthAuthenticated ? state.user.name : '전문가';
-        const profileCompletion = 10; // TODO: 실제 데이터 연동
+        final profileCompletion = ProfileCompletionCalculator
+            .calculateRequiredInfoCompletion(_profile);
 
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
@@ -193,9 +241,13 @@ class ExpertDrawer extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.expertDashboard);
+                    await Navigator.pushNamed(context, AppRoutes.expertProfileManage);
+                    // 프로필 관리 페이지에서 돌아올 때 프로필 다시 로드
+                    if (mounted) {
+                      _loadProfile();
+                    }
                   },
                   icon: const Icon(Icons.edit, size: 18),
                   label: const Text('내 프로필 수정'),

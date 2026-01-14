@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../../../core/constants/app_colors.dart';
 import '../../../../../../core/constants/app_sizes.dart';
+import '../../../../../../domain/entities/expert_profile.dart';
+import '../../../../../../domain/repositories/expert_profile_repository.dart';
+import '../../../../../../data/repositories/expert_profile_repository_impl.dart';
+import '../../../../../blocs/auth/auth_bloc.dart';
+import '../../../../../blocs/auth/auth_state.dart';
 
 /// 인적사항 섹션
 class PersonalInfoSection extends StatefulWidget {
@@ -29,6 +35,58 @@ class _PersonalInfoSectionState extends State<PersonalInfoSection> {
   // 추가 정보
   final TextEditingController _auxiliaryEmailController = TextEditingController();
   final TextEditingController _oneLineIntroController = TextEditingController();
+
+  // Repository
+  final ExpertProfileRepository _profileRepository = ExpertProfileRepositoryImpl();
+  
+  bool _isLoading = false;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  /// 기존 프로필 데이터 로드
+  Future<void> _loadProfile() async {
+    if (_isInitialized) return;
+
+    try {
+      final authState = context.read<AuthBloc>().state;
+      if (authState is! AuthAuthenticated) {
+        return;
+      }
+
+      final userId = authState.user.id;
+      final profile = await _profileRepository.getProfileByUserId(userId);
+
+      if (profile != null && mounted) {
+        setState(() {
+          _nameController.text = profile.name ?? '';
+          if (profile.birthDate != null) {
+            _birthDateController.text = DateFormat('yyyy.MM.dd').format(profile.birthDate!);
+          }
+          _gender = profile.gender ?? 'male';
+          _phoneController.text = profile.phoneNumber ?? '';
+          _officePhoneController.text = profile.officePhoneNumber ?? '';
+          _representativePhoneType = profile.representativePhoneType ?? 'mobile';
+          _customPhoneController.text = profile.customPhoneNumber ?? '';
+          _isPhonePublic = profile.isPhonePublic;
+          _convertTo050 = profile.convertTo050;
+          _emailController.text = profile.email ?? '';
+          _auxiliaryEmailController.text = profile.auxiliaryEmail ?? '';
+          _oneLineIntroController.text = profile.oneLineIntro ?? '';
+          _isInitialized = true;
+        });
+      } else {
+        _isInitialized = true;
+      }
+    } catch (e) {
+      debugPrint('프로필 로드 오류: $e');
+      _isInitialized = true;
+    }
+  }
 
   @override
   void dispose() {
@@ -178,21 +236,31 @@ class _PersonalInfoSectionState extends State<PersonalInfoSection> {
             width: double.infinity,
             height: AppSizes.buttonHeight,
             child: ElevatedButton(
-              onPressed: _handleSave,
+              onPressed: _isLoading ? null : _handleSave,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSizes.radiusM),
                 ),
+                disabledBackgroundColor: AppColors.textSecondary,
               ),
-              child: const Text(
-                '저장하기',
-                style: TextStyle(
-                  fontSize: AppSizes.fontL,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text(
+                      '저장하기',
+                      style: TextStyle(
+                        fontSize: AppSizes.fontL,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
             ),
           ),
         ],
@@ -721,13 +789,195 @@ class _PersonalInfoSectionState extends State<PersonalInfoSection> {
   }
 
   /// 저장하기 핸들러
-  void _handleSave() {
-    // TODO: 데이터 저장 로직 구현
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('저장되었습니다'),
-        backgroundColor: AppColors.success,
-      ),
-    );
+  Future<void> _handleSave() async {
+    // 유효성 검증
+    if (_nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('이름을 입력해주세요'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    if (_birthDateController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('생년월일을 입력해주세요'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    if (_phoneController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('휴대폰 번호를 입력해주세요'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    // 이메일 또는 대표 전화번호 타입이 설정되어 있어야 함
+    if (_emailController.text.trim().isEmpty && 
+        (_representativePhoneType == null || _representativePhoneType.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('이메일 또는 대표 전화번호를 설정해주세요'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // 현재 사용자 ID 가져오기
+      final authState = context.read<AuthBloc>().state;
+      if (authState is! AuthAuthenticated) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('로그인이 필요합니다'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
+      final userId = authState.user.id;
+
+      // 기존 프로필 가져오기
+      ExpertProfile? existingProfile = await _profileRepository.getProfileByUserId(userId);
+
+      // 생년월일 파싱 (YYYY.MM.DD 형식)
+      DateTime? birthDate;
+      try {
+        if (_birthDateController.text.trim().isNotEmpty) {
+          birthDate = DateFormat('yyyy.MM.dd').parse(_birthDateController.text.trim());
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('생년월일 형식이 올바르지 않습니다'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
+      // 대표 전화번호 결정
+      String? representativePhone;
+      if (_representativePhoneType == 'office') {
+        representativePhone = _officePhoneController.text.trim().isEmpty
+            ? null
+            : _officePhoneController.text.trim();
+      } else if (_representativePhoneType == 'mobile') {
+        representativePhone = _phoneController.text.trim().isEmpty
+            ? null
+            : _phoneController.text.trim();
+      } else if (_representativePhoneType == 'custom') {
+        representativePhone = _customPhoneController.text.trim().isEmpty
+            ? null
+            : _customPhoneController.text.trim();
+      }
+
+      // ExpertProfile 생성 또는 업데이트
+      final profile = existingProfile != null
+          ? existingProfile.copyWith(
+              name: _nameController.text.trim().isEmpty
+                  ? null
+                  : _nameController.text.trim(),
+              birthDate: birthDate,
+              gender: _gender,
+              phoneNumber: _phoneController.text.trim().isEmpty
+                  ? null
+                  : _phoneController.text.trim(),
+              officePhoneNumber: _officePhoneController.text.trim().isEmpty
+                  ? null
+                  : _officePhoneController.text.trim(),
+              representativePhoneType: _representativePhoneType,
+              customPhoneNumber: _representativePhoneType == 'custom'
+                  ? (_customPhoneController.text.trim().isEmpty
+                      ? null
+                      : _customPhoneController.text.trim())
+                  : null,
+              isPhonePublic: _isPhonePublic,
+              convertTo050: _convertTo050,
+              email: _emailController.text.trim().isEmpty
+                  ? null
+                  : _emailController.text.trim(),
+              auxiliaryEmail: _auxiliaryEmailController.text.trim().isEmpty
+                  ? null
+                  : _auxiliaryEmailController.text.trim(),
+              oneLineIntro: _oneLineIntroController.text.trim().isEmpty
+                  ? null
+                  : _oneLineIntroController.text.trim(),
+            )
+          : ExpertProfile(
+              id: '', // 새 프로필인 경우 Firestore에서 자동 생성
+              userId: userId,
+              name: _nameController.text.trim().isEmpty
+                  ? null
+                  : _nameController.text.trim(),
+              birthDate: birthDate,
+              gender: _gender,
+              phoneNumber: _phoneController.text.trim().isEmpty
+                  ? null
+                  : _phoneController.text.trim(),
+              officePhoneNumber: _officePhoneController.text.trim().isEmpty
+                  ? null
+                  : _officePhoneController.text.trim(),
+              representativePhoneType: _representativePhoneType,
+              customPhoneNumber: _representativePhoneType == 'custom'
+                  ? (_customPhoneController.text.trim().isEmpty
+                      ? null
+                      : _customPhoneController.text.trim())
+                  : null,
+              isPhonePublic: _isPhonePublic,
+              convertTo050: _convertTo050,
+              email: _emailController.text.trim().isEmpty
+                  ? null
+                  : _emailController.text.trim(),
+              auxiliaryEmail: _auxiliaryEmailController.text.trim().isEmpty
+                  ? null
+                  : _auxiliaryEmailController.text.trim(),
+              oneLineIntro: _oneLineIntroController.text.trim().isEmpty
+                  ? null
+                  : _oneLineIntroController.text.trim(),
+            );
+
+      // 프로필 저장
+      await _profileRepository.saveProfile(profile);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('저장되었습니다'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('저장 중 오류가 발생했습니다: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 }

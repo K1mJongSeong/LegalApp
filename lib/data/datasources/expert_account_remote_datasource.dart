@@ -98,6 +98,28 @@ class ExpertAccountRemoteDataSource {
       rethrow;
     }
   }
+
+  /// 인증된 전문가 계정 목록 조회 (isVerified: true, status: "active")
+  Future<List<ExpertAccountModel>> getVerifiedExpertAccounts() async {
+    try {
+      debugPrint('🔍 ExpertAccountDataSource: getVerifiedExpertAccounts()');
+      final snapshot = await _collection
+          .where('isVerified', isEqualTo: true)
+          .where('status', isEqualTo: 'active')
+          .get();
+
+      debugPrint('   → ${snapshot.docs.length}건 발견');
+      return snapshot.docs.map((doc) {
+        return ExpertAccountModel.fromJson({
+          'id': doc.id,
+          ...doc.data(),
+        });
+      }).toList();
+    } catch (e) {
+      debugPrint('❌ ExpertAccountDataSource.getVerifiedExpertAccounts error: $e');
+      rethrow;
+    }
+  }
 }
 
 

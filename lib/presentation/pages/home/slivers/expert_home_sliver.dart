@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../domain/entities/expert_profile.dart';
+import '../../../../domain/repositories/expert_profile_repository.dart';
+import '../../../../data/repositories/expert_profile_repository_impl.dart';
+import '../../../blocs/auth/auth_bloc.dart';
+import '../../../blocs/auth/auth_state.dart';
 import '../../../widgets/home/expert/expert_home_header.dart';
 import '../../../widgets/home/expert/expert_profile_card.dart';
 import '../../../widgets/home/expert/profile_tip_card.dart';
@@ -18,15 +23,11 @@ import '../../../widgets/home/expert/expert_quick_menu.dart';
 class ExpertHomeSliver extends StatelessWidget {
   final String name;
   final bool isVerified;
-  final int? profileCompletion; // null이면 profile에서 계산
-  final ExpertProfile? profile; // 완성률 계산을 위한 프로필 데이터
 
   const ExpertHomeSliver({
     super.key,
     required this.name,
     this.isVerified = false,
-    this.profileCompletion,
-    this.profile,
   });
 
   @override
@@ -40,11 +41,27 @@ class ExpertHomeSliver extends StatelessWidget {
           const SizedBox(height: AppSizes.paddingM),
 
           // 프로필 카드
-          ExpertProfileCard(
-            name: name,
-            completion: profileCompletion,
-            isVerified: isVerified,
-            profile: profile,
+          BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, authState) {
+              if (authState is! AuthAuthenticated) {
+                return ExpertProfileCard(
+                  name: name,
+                  isVerified: isVerified,
+                );
+              }
+
+              return FutureBuilder<ExpertProfile?>(
+                future: ExpertProfileRepositoryImpl()
+                    .getProfileByUserId(authState.user.id),
+                builder: (context, snapshot) {
+                  return ExpertProfileCard(
+                    name: name,
+                    isVerified: isVerified,
+                    profile: snapshot.data,
+                  );
+                },
+              );
+            },
           ),
           const SizedBox(height: AppSizes.paddingM),
 
