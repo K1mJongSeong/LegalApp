@@ -3,6 +3,7 @@ import 'career.dart';
 import 'award.dart';
 import 'qualification.dart';
 import 'publication.dart';
+import 'press_release.dart';
 
 /// 전문가 프로필 정보 엔티티
 class ExpertProfile {
@@ -71,6 +72,15 @@ class ExpertProfile {
   final List<Qualification> qualifications; // 자격사항 목록
   final List<Award> awards; // 수상내역 목록
   final List<Publication> publications; // 논문/출판 목록
+  final List<PressRelease> pressReleases; // 보도자료 목록
+  
+  // 세금계산서 정보
+  final String? taxInvoiceType; // 세금계산서 타입 ('taxInvoice' or 'cashReceipt')
+  final String? businessRegistrationNumber; // 사업자 등록번호
+  final String? companyName; // 상호명
+  final String? representativeName; // 대표자명
+  final String? taxInvoiceEmail; // 기본 이메일 (필수)
+  final String? additionalTaxInvoiceEmail; // 추가 이메일 (선택)
   
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -125,6 +135,13 @@ class ExpertProfile {
     this.qualifications = const [],
     this.awards = const [],
     this.publications = const [],
+    this.pressReleases = const [],
+    this.taxInvoiceType,
+    this.businessRegistrationNumber,
+    this.companyName,
+    this.representativeName,
+    this.taxInvoiceEmail,
+    this.additionalTaxInvoiceEmail,
     this.createdAt,
     this.updatedAt,
   });
@@ -179,6 +196,7 @@ class ExpertProfile {
     List<Qualification>? qualifications,
     List<Award>? awards,
     List<Publication>? publications,
+    List<PressRelease>? pressReleases,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -232,6 +250,13 @@ class ExpertProfile {
       qualifications: qualifications ?? this.qualifications,
       awards: awards ?? this.awards,
       publications: publications ?? this.publications,
+      pressReleases: pressReleases ?? this.pressReleases,
+      taxInvoiceType: taxInvoiceType ?? this.taxInvoiceType,
+      businessRegistrationNumber: businessRegistrationNumber ?? this.businessRegistrationNumber,
+      companyName: companyName ?? this.companyName,
+      representativeName: representativeName ?? this.representativeName,
+      taxInvoiceEmail: taxInvoiceEmail ?? this.taxInvoiceEmail,
+      additionalTaxInvoiceEmail: additionalTaxInvoiceEmail ?? this.additionalTaxInvoiceEmail,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

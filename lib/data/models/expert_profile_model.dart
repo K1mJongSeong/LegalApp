@@ -5,6 +5,7 @@ import 'career_model.dart';
 import 'qualification_model.dart';
 import 'award_model.dart';
 import 'publication_model.dart';
+import 'press_release_model.dart';
 
 /// 전문가 프로필 모델 (Firestore JSON 변환)
 class ExpertProfileModel extends ExpertProfile {
@@ -58,6 +59,13 @@ class ExpertProfileModel extends ExpertProfile {
     super.qualifications,
     super.awards,
     super.publications,
+    super.pressReleases,
+    super.taxInvoiceType,
+    super.businessRegistrationNumber,
+    super.companyName,
+    super.representativeName,
+    super.taxInvoiceEmail,
+    super.additionalTaxInvoiceEmail,
     super.createdAt,
     super.updatedAt,
   });
@@ -119,6 +127,18 @@ class ExpertProfileModel extends ExpertProfile {
       if (publicationsList != null) {
         publications = publicationsList
             .map((e) => PublicationModel.fromJson(
+                e as Map<String, dynamic>, id: e['id'] as String?))
+            .toList();
+      }
+    }
+
+    // 보도자료 파싱
+    List<PressRelease> pressReleases = [];
+    if (json['pressReleases'] != null || json['press_releases'] != null) {
+      final pressReleasesList = (json['pressReleases'] ?? json['press_releases']) as List<dynamic>?;
+      if (pressReleasesList != null) {
+        pressReleases = pressReleasesList
+            .map((e) => PressReleaseModel.fromJson(
                 e as Map<String, dynamic>, id: e['id'] as String?))
             .toList();
       }
@@ -255,6 +275,21 @@ class ExpertProfileModel extends ExpertProfile {
       awards: awards,
       // 논문/출판
       publications: publications,
+      // 보도자료
+      pressReleases: pressReleases,
+      // 세금계산서 정보
+      taxInvoiceType: json['taxInvoiceType'] as String? ??
+          json['tax_invoice_type'] as String?,
+      businessRegistrationNumber: json['businessRegistrationNumber'] as String? ??
+          json['business_registration_number'] as String?,
+      companyName: json['companyName'] as String? ??
+          json['company_name'] as String?,
+      representativeName: json['representativeName'] as String? ??
+          json['representative_name'] as String?,
+      taxInvoiceEmail: json['taxInvoiceEmail'] as String? ??
+          json['tax_invoice_email'] as String?,
+      additionalTaxInvoiceEmail: json['additionalTaxInvoiceEmail'] as String? ??
+          json['additional_tax_invoice_email'] as String?,
       createdAt: (json['createdAt'] as Timestamp?)?.toDate() ??
           (json['created_at'] as Timestamp?)?.toDate(),
       updatedAt: (json['updatedAt'] as Timestamp?)?.toDate() ??
@@ -337,6 +372,17 @@ class ExpertProfileModel extends ExpertProfile {
       'publications': publications
           .map((e) => PublicationModel.fromEntity(e).toJson())
           .toList(),
+      // 보도자료
+      'pressReleases': pressReleases
+          .map((e) => PressReleaseModel.fromEntity(e).toJson())
+          .toList(),
+      // 세금계산서 정보
+      if (taxInvoiceType != null) 'taxInvoiceType': taxInvoiceType,
+      if (businessRegistrationNumber != null) 'businessRegistrationNumber': businessRegistrationNumber,
+      if (companyName != null) 'companyName': companyName,
+      if (representativeName != null) 'representativeName': representativeName,
+      if (taxInvoiceEmail != null) 'taxInvoiceEmail': taxInvoiceEmail,
+      if (additionalTaxInvoiceEmail != null) 'additionalTaxInvoiceEmail': additionalTaxInvoiceEmail,
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
       if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
     };
@@ -394,6 +440,13 @@ class ExpertProfileModel extends ExpertProfile {
       qualifications: entity.qualifications,
       awards: entity.awards,
       publications: entity.publications,
+      pressReleases: entity.pressReleases,
+      taxInvoiceType: entity.taxInvoiceType,
+      businessRegistrationNumber: entity.businessRegistrationNumber,
+      companyName: entity.companyName,
+      representativeName: entity.representativeName,
+      taxInvoiceEmail: entity.taxInvoiceEmail,
+      additionalTaxInvoiceEmail: entity.additionalTaxInvoiceEmail,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );
