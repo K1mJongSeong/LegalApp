@@ -4,6 +4,7 @@ import '../../../../../core/constants/app_sizes.dart';
 import 'sections/career_section.dart';
 import 'sections/qualification_section.dart';
 import 'sections/award_section.dart';
+import 'sections/publication_section.dart';
 
 /// 추가정보 탭
 class AdditionalInfoTab extends StatefulWidget {
@@ -188,7 +189,7 @@ class _AdditionalInfoTabState extends State<AdditionalInfoTab>
                 CareerSection(),
                 QualificationSection(),
                 AwardSection(),
-                Center(child: Text('논문/출판 섹션 준비 중')),
+                PublicationSection(),
                 Center(child: Text('보도자료 섹션 준비 중')),
                 Center(child: Text('세금계산서 정보 섹션 준비 중')),
                 Center(child: Text('기타활동 섹션 준비 중')),
