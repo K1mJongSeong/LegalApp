@@ -12,6 +12,16 @@ abstract class ConsultationRequestRepository {
     required String requestId,
     required String status,
   });
+
+  /// 상담 요청 생성
+  Future<ConsultationRequest> createConsultationRequest({
+    required String expertAccountId,
+    String? expertPublicId,
+    required String userId,
+    required String title,
+    required DateTime scheduledAt,
+    String status = 'waiting',
+  });
 }
 
 

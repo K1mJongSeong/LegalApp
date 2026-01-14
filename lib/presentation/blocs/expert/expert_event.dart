@@ -29,6 +29,16 @@ class ExpertDetailRequested extends ExpertEvent {
   List<Object?> get props => [expertId];
 }
 
+/// userId로 전문가 상세 로드
+class ExpertDetailByUserIdRequested extends ExpertEvent {
+  final String userId;
+
+  const ExpertDetailByUserIdRequested(this.userId);
+
+  @override
+  List<Object?> get props => [userId];
+}
+
 /// 전문가 검색
 class ExpertSearchRequested extends ExpertEvent {
   final String query;

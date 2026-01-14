@@ -1,11 +1,18 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 /// GPT API
+///
+/// - 모바일(Android/iOS): .env 에서 OPENAI_API_KEY를 읽어 OpenAI API를 직접 호출
+/// - 웹(Flutter Web): Supabase Edge Function / 서버 프록시 엔드포인트로만 호출
 class GptService {
   static String get _apiKey => dotenv.env['OPENAI_API_KEY'] ?? '';
-  static const String _baseUrl = 'https://api.openai.com/v1/chat/completions';
+  static const String _openAiBaseUrl =
+      'https://api.openai.com/v1/chat/completions';
+  static const String _webProxyUrl =
+      'https://nbzchnwqlfthzfcfkgbz.supabase.co/functions/v1/ai-proxy';
 
   Future<CaseSummaryResult> analyzeLegalCase({
     required String category,
@@ -14,6 +21,8 @@ class GptService {
     String progressItems = '',
     String goal = '',
   }) async {
+    print('IS WEB: $kIsWeb');
+    print('WEB PROXY URL: $_webProxyUrl');
     final prompt = '''
 당신은 한국 법률 전문가입니다. 다음 법률 사건을 분석해주세요.
 
@@ -46,46 +55,54 @@ $description
 
 반드시 유효한 JSON 형식으로만 응답하세요.
 ''';
-
     try {
-      final response = await http.post(
-        Uri.parse(_baseUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_apiKey',
-        },
-        body: jsonEncode({
-          'model': 'gpt-4o-mini',
-          'messages': [
-            {'role': 'user', 'content': prompt}
-          ],
-          'temperature': 0.7,
-          'max_tokens': 2000,
-        }),
-      );
+      final response = kIsWeb
+          ? await _callWebProxy(
+              category: category,
+              description: description,
+              urgency: urgency,
+              progressItems: progressItems,
+              goal: goal,
+            )
+          : await _callOpenAiDirect(prompt);
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final body = response.body;
+        final data = jsonDecode(body);
+
+        // 웹 프록시에서는 바로 JSON을 반환한다고 가정
+        if (kIsWeb) {
+          return CaseSummaryResult.fromJson(data as Map<String, dynamic>);
+        }
+        debugPrint('WEB RAW RESPONSE: ${response.body}');
+
+
+        // 모바일(OpenAI 직접 호출) 응답 파싱
         final content = data['choices'][0]['message']['content'] as String;
-        
+
         // JSON 파싱
         final jsonStart = content.indexOf('{');
         final jsonEnd = content.lastIndexOf('}') + 1;
         final jsonStr = content.substring(jsonStart, jsonEnd);
         final result = jsonDecode(jsonStr);
-        
+
         return CaseSummaryResult.fromJson(result);
       } else if (response.statusCode == 429) {
         // Rate Limit 초과 - 크레딧 부족 또는 요청 한도 초과
-        throw Exception('API 요청 한도 초과 (429): OpenAI 크레딧을 확인하세요. https://platform.openai.com/usage');
+        throw Exception(
+            'API 요청 한도 초과 (429): OpenAI 크레딧을 확인하세요. https://platform.openai.com/usage');
       } else {
-        throw Exception('API 요청 실패: ${response.statusCode} - ${response.body}');
+        throw Exception(
+            'API 요청 실패: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       // 오류 디버깅
       print('GPT API Error: $e');
-      print('API Key loaded: ${_apiKey.isNotEmpty ? "Yes (${_apiKey.substring(0, 10)}...)" : "No - EMPTY!"}');
-      
+      if (!kIsWeb) {
+        print(
+            'API Key loaded: ${_apiKey.isNotEmpty ? "Yes (${_apiKey.substring(0, 10)}...)" : "No - EMPTY!"}');
+      }
+
       // 오류 시 기본 응답 반환
       return CaseSummaryResult(
         summary: '사용자 설명에 따르면 법률적 검토가 필요한 상황입니다. 전문가와 상담을 권장합니다.',
@@ -109,6 +126,51 @@ $description
       );
     }
   }
+
+  /// 모바일에서 OpenAI API를 직접 호출
+  Future<http.Response> _callOpenAiDirect(String prompt) {
+    return http.post(
+      Uri.parse(_openAiBaseUrl),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_apiKey',
+      },
+      body: jsonEncode({
+        'model': 'gpt-4o-mini',
+        'messages': [
+          {'role': 'user', 'content': prompt}
+        ],
+        'temperature': 0.7,
+        'max_tokens': 2000,
+      }),
+    );
+  }
+
+  /// 웹에서 Supabase Edge Function / 서버 프록시를 호출
+  Future<http.Response> _callWebProxy({
+    required String category,
+    required String description,
+    required String urgency,
+    required String progressItems,
+    required String goal,
+  }) {
+    // 서버/프록시에서는 category, description 등만 받아서
+    // 서버 쪽에서 OpenAI Prompt를 구성하도록 위임하는 것이 이상적이지만,
+    // 현재는 클라이언트와 동일한 필드를 전달하는 형태로 구현
+    return http.post(
+      Uri.parse(_webProxyUrl),
+      headers: const {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'category': category,
+        'description': description,
+        'urgency': urgency,
+        'progressItems': progressItems,
+        'goal': goal,
+      }),
+    );
+  }
 }
 
 /// 사건 요약 결과
@@ -127,19 +189,43 @@ class CaseSummaryResult {
     required this.expertDescription,
   });
 
+  // factory CaseSummaryResult.fromJson(Map<String, dynamic> json) {
+  //   return CaseSummaryResult(
+  //     summary: json['summary'] ?? '',
+  //     relatedLaws: (json['relatedLaws'] as List?)
+  //             ?.map((e) => RelatedLaw.fromJson(e))
+  //             .toList() ??
+  //         [],
+  //     similarCases: (json['similarCases'] as List?)
+  //             ?.map((e) => SimilarCase.fromJson(e))
+  //             .toList() ??
+  //         [],
+  //     expertCount: json['expertCount'] ?? 0,
+  //     expertDescription: json['expertDescription'] ?? '',
+  //   );
+  // }
   factory CaseSummaryResult.fromJson(Map<String, dynamic> json) {
+    final relatedLawsRaw = json['relatedLaws'];
+    final similarCasesRaw = json['similarCases'];
+
     return CaseSummaryResult(
-      summary: json['summary'] ?? '',
-      relatedLaws: (json['relatedLaws'] as List?)
-              ?.map((e) => RelatedLaw.fromJson(e))
-              .toList() ??
-          [],
-      similarCases: (json['similarCases'] as List?)
-              ?.map((e) => SimilarCase.fromJson(e))
-              .toList() ??
-          [],
-      expertCount: json['expertCount'] ?? 0,
-      expertDescription: json['expertDescription'] ?? '',
+      summary: json['summary']?.toString() ?? '',
+      relatedLaws: relatedLawsRaw is List
+          ? relatedLawsRaw
+          .whereType<Map<String, dynamic>>()
+          .map((e) => RelatedLaw.fromJson(e))
+          .toList()
+          : [],
+      similarCases: similarCasesRaw is List
+          ? similarCasesRaw
+          .whereType<Map<String, dynamic>>()
+          .map((e) => SimilarCase.fromJson(e))
+          .toList()
+          : [],
+      expertCount: json['expertCount'] is int
+          ? json['expertCount']
+          : int.tryParse(json['expertCount']?.toString() ?? '') ?? 0,
+      expertDescription: json['expertDescription']?.toString() ?? '',
     );
   }
 }

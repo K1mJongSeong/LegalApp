@@ -52,6 +52,41 @@ class ConsultationRequestRemoteDataSource {
       rethrow;
     }
   }
+
+  /// 상담 요청 생성
+  Future<ConsultationRequestModel> createConsultationRequest({
+    required String expertAccountId,
+    String? expertPublicId,
+    required String userId,
+    required String title,
+    required DateTime scheduledAt,
+    String status = 'waiting',
+  }) async {
+    try {
+      debugPrint('📝 ConsultationRequestDataSource: create');
+      final now = DateTime.now();
+      final data = {
+        'expertAccountId': expertAccountId,
+        'expertPublicId': expertPublicId,
+        'userId': userId,
+        'title': title,
+        'status': status,
+        'scheduledAt': Timestamp.fromDate(scheduledAt),
+        'createdAt': Timestamp.fromDate(now),
+      };
+
+      final docRef = await _collection.add(data);
+      debugPrint('   → 생성 완료: ${docRef.id}');
+
+      return ConsultationRequestModel.fromJson({
+        'id': docRef.id,
+        ...data,
+      });
+    } catch (e) {
+      debugPrint('❌ ConsultationRequestDataSource.create error: $e');
+      rethrow;
+    }
+  }
 }
 
 

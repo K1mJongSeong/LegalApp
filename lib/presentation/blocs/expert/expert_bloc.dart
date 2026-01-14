@@ -12,6 +12,7 @@ class ExpertBloc extends Bloc<ExpertEvent, ExpertState> {
         super(ExpertInitial()) {
     on<ExpertListRequested>(_onListRequested);
     on<ExpertDetailRequested>(_onDetailRequested);
+    on<ExpertDetailByUserIdRequested>(_onDetailByUserIdRequested);
     on<ExpertSearchRequested>(_onSearchRequested);
     on<ExpertErrorCleared>(_onErrorCleared);
   }
@@ -44,6 +45,23 @@ class ExpertBloc extends Bloc<ExpertEvent, ExpertState> {
     try {
       final expert = await _expertRepository.getExpertById(event.expertId);
       emit(ExpertDetailLoaded(expert));
+    } catch (e) {
+      emit(ExpertError(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onDetailByUserIdRequested(
+    ExpertDetailByUserIdRequested event,
+    Emitter<ExpertState> emit,
+  ) async {
+    emit(ExpertLoading());
+    try {
+      final expert = await _expertRepository.getExpertByUserId(event.userId);
+      if (expert != null) {
+        emit(ExpertDetailLoaded(expert));
+      } else {
+        emit(ExpertError('전문가를 찾을 수 없습니다'));
+      }
     } catch (e) {
       emit(ExpertError(e.toString().replaceFirst('Exception: ', '')));
     }

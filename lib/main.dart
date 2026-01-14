@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -33,15 +34,21 @@ import 'domain/usecases/get_consultation_requests_usecase.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // 환경 변수 로드
-  try {
-    await dotenv.load(fileName: '.env');
-    final apiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
-    debugPrint('✅ .env loaded successfully');
-    debugPrint('✅ API Key loaded: ${apiKey.isNotEmpty ? "Yes (${apiKey.substring(0, 15)}...)" : "NO - EMPTY!"}');
-  } catch (e) {
-    debugPrint('❌ .env load error: $e');
+
+  // 환경 변수 로드 (모바일 전용)
+  // 웹에서는 .env를 사용하지 않고 서버/프록시(Supabase 등)를 통해 GPT를 호출
+  if (!kIsWeb) {
+    try {
+      await dotenv.load(fileName: '.env');
+      final apiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
+      debugPrint('✅ .env loaded successfully');
+      debugPrint(
+          '✅ API Key loaded: ${apiKey.isNotEmpty ? "Yes (${apiKey.substring(0, 15)}...)" : "NO - EMPTY!"}');
+    } catch (e) {
+      debugPrint('❌ .env load error: $e');
+    }
+  } else {
+    debugPrint('ℹ️ Web 환경: .env는 로드하지 않고 서버/프록시를 통해 GPT를 호출합니다.');
   }
   
   // Firebase 초기화

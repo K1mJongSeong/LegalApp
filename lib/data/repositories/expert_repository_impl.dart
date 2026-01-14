@@ -96,6 +96,33 @@ class ExpertRepositoryImpl implements ExpertRepository {
   }
 
   @override
+  Future<Expert?> getExpertByUserId(String userId) async {
+    try {
+      // expert_accounts에서 인증된 계정 확인
+      final accountDataSource = ExpertAccountRemoteDataSource();
+      final account = await accountDataSource.getExpertAccountByUserId(userId);
+      
+      if (account == null || !account.isVerified || account.status != 'active') {
+        return null;
+      }
+
+      // expert_profiles에서 프로필 조회
+      final profileDataSource = ExpertProfileRemoteDataSource();
+      final profile = await profileDataSource.getProfileByUserId(userId);
+      
+      if (profile == null) {
+        return null;
+      }
+
+      // ExpertProfile을 Expert로 변환
+      return _convertProfileToExpert(profile, userId);
+    } catch (e) {
+      debugPrint('❌ ExpertRepository.getExpertByUserId error: $e');
+      return null;
+    }
+  }
+
+  @override
   Future<List<Expert>> searchExperts(String query) async {
     try {
       // Firestore는 full-text search를 지원하지 않으므로

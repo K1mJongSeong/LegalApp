@@ -14,8 +14,9 @@ import '../../widgets/common/empty_state_widget.dart';
 /// 전문가 선택 확인 화면
 class ConfirmPage extends StatefulWidget {
   final int? expertId;
+  final String? userId;
 
-  const ConfirmPage({super.key, this.expertId});
+  const ConfirmPage({super.key, this.expertId, this.userId});
 
   @override
   State<ConfirmPage> createState() => _ConfirmPageState();
@@ -25,7 +26,9 @@ class _ConfirmPageState extends State<ConfirmPage> {
   @override
   void initState() {
     super.initState();
-    if (widget.expertId != null) {
+    if (widget.userId != null) {
+      context.read<ExpertBloc>().add(ExpertDetailByUserIdRequested(widget.userId!));
+    } else if (widget.expertId != null) {
       context.read<ExpertBloc>().add(ExpertDetailRequested(widget.expertId!));
     }
   }
@@ -55,7 +58,9 @@ class _ConfirmPageState extends State<ConfirmPage> {
                   return ErrorStateWidget(
                     message: state.message,
                     onRetry: () {
-                      if (widget.expertId != null) {
+                      if (widget.userId != null) {
+                        context.read<ExpertBloc>().add(ExpertDetailByUserIdRequested(widget.userId!));
+                      } else if (widget.expertId != null) {
                         context.read<ExpertBloc>().add(ExpertDetailRequested(widget.expertId!));
                       }
                     },
