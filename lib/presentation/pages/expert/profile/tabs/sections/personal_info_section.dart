@@ -438,7 +438,6 @@ class _PersonalInfoSectionState extends State<PersonalInfoSection> {
 
         Row(
           children: [
-            /// 🔹 Expanded 제거 → Flexible 사용
             Flexible(
               child: TextField(
                 controller: _phoneController,
@@ -472,7 +471,6 @@ class _PersonalInfoSectionState extends State<PersonalInfoSection> {
 
             const SizedBox(width: AppSizes.paddingS),
 
-            /// 🔹 버튼은 고정 width + height
             SizedBox(
               width: 88,
               height: AppSizes.buttonHeight,

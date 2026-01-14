@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../domain/entities/expert_profile.dart';
 import '../../../widgets/home/expert/expert_home_header.dart';
 import '../../../widgets/home/expert/expert_profile_card.dart';
 import '../../../widgets/home/expert/profile_tip_card.dart';
@@ -17,13 +18,15 @@ import '../../../widgets/home/expert/expert_quick_menu.dart';
 class ExpertHomeSliver extends StatelessWidget {
   final String name;
   final bool isVerified;
-  final int profileCompletion;
+  final int? profileCompletion; // null이면 profile에서 계산
+  final ExpertProfile? profile; // 완성률 계산을 위한 프로필 데이터
 
   const ExpertHomeSliver({
     super.key,
     required this.name,
     this.isVerified = false,
-    this.profileCompletion = 10,
+    this.profileCompletion,
+    this.profile,
   });
 
   @override
@@ -41,6 +44,7 @@ class ExpertHomeSliver extends StatelessWidget {
             name: name,
             completion: profileCompletion,
             isVerified: isVerified,
+            profile: profile,
           ),
           const SizedBox(height: AppSizes.paddingM),
 

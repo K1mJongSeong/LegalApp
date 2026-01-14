@@ -3,6 +3,10 @@ import 'career.dart';
 import 'award.dart';
 import 'qualification.dart';
 import 'publication.dart';
+import 'press_release.dart';
+import 'other_activity.dart';
+import 'retainer_fee.dart';
+import 'service_fee.dart';
 
 /// 전문가 프로필 정보 엔티티
 class ExpertProfile {
@@ -71,6 +75,29 @@ class ExpertProfile {
   final List<Qualification> qualifications; // 자격사항 목록
   final List<Award> awards; // 수상내역 목록
   final List<Publication> publications; // 논문/출판 목록
+  final List<PressRelease> pressReleases; // 보도자료 목록
+  final List<OtherActivity> otherActivities; // 기타활동 목록
+  final List<RetainerFee> retainerFees; // 수임료 정보 목록
+  final List<ServiceFee> serviceFees; // 서비스 요금 목록
+  
+  // 지불정보
+  final List<String> paymentMethods; // 지불방법 목록 ('freeConsultation', 'installment', 'postPayment', 'cardPayment')
+  
+  // 간편 문의
+  final bool isPhoneInquiryEnabled; // 전화 문의 활성화 여부
+  final String? phoneInquiryNumber; // 전화 문의 번호
+  final bool isEmailInquiryEnabled; // 이메일 문의 활성화 여부
+  final String? emailInquiryAddress; // 이메일 문의 주소
+  final bool isKakaoTalkInquiryEnabled; // 카카오톡 문의 활성화 여부
+  final String? kakaoTalkInquiryLink; // 카카오톡 문의 링크
+  
+  // 세금계산서 정보
+  final String? taxInvoiceType; // 세금계산서 타입 ('taxInvoice' or 'cashReceipt')
+  final String? businessRegistrationNumber; // 사업자 등록번호
+  final String? companyName; // 상호명
+  final String? representativeName; // 대표자명
+  final String? taxInvoiceEmail; // 기본 이메일 (필수)
+  final String? additionalTaxInvoiceEmail; // 추가 이메일 (선택)
   
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -125,6 +152,23 @@ class ExpertProfile {
     this.qualifications = const [],
     this.awards = const [],
     this.publications = const [],
+    this.pressReleases = const [],
+    this.otherActivities = const [],
+    this.retainerFees = const [],
+    this.serviceFees = const [],
+    this.paymentMethods = const [],
+    this.isPhoneInquiryEnabled = false,
+    this.phoneInquiryNumber,
+    this.isEmailInquiryEnabled = false,
+    this.emailInquiryAddress,
+    this.isKakaoTalkInquiryEnabled = false,
+    this.kakaoTalkInquiryLink,
+    this.taxInvoiceType,
+    this.businessRegistrationNumber,
+    this.companyName,
+    this.representativeName,
+    this.taxInvoiceEmail,
+    this.additionalTaxInvoiceEmail,
     this.createdAt,
     this.updatedAt,
   });
@@ -179,6 +223,17 @@ class ExpertProfile {
     List<Qualification>? qualifications,
     List<Award>? awards,
     List<Publication>? publications,
+    List<PressRelease>? pressReleases,
+    List<OtherActivity>? otherActivities,
+    List<RetainerFee>? retainerFees,
+    List<ServiceFee>? serviceFees,
+    List<String>? paymentMethods,
+    bool? isPhoneInquiryEnabled,
+    String? phoneInquiryNumber,
+    bool? isEmailInquiryEnabled,
+    String? emailInquiryAddress,
+    bool? isKakaoTalkInquiryEnabled,
+    String? kakaoTalkInquiryLink,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -232,6 +287,23 @@ class ExpertProfile {
       qualifications: qualifications ?? this.qualifications,
       awards: awards ?? this.awards,
       publications: publications ?? this.publications,
+      pressReleases: pressReleases ?? this.pressReleases,
+      otherActivities: otherActivities ?? this.otherActivities,
+      retainerFees: retainerFees ?? this.retainerFees,
+      serviceFees: serviceFees ?? this.serviceFees,
+      paymentMethods: paymentMethods ?? this.paymentMethods,
+      isPhoneInquiryEnabled: isPhoneInquiryEnabled ?? this.isPhoneInquiryEnabled,
+      phoneInquiryNumber: phoneInquiryNumber ?? this.phoneInquiryNumber,
+      isEmailInquiryEnabled: isEmailInquiryEnabled ?? this.isEmailInquiryEnabled,
+      emailInquiryAddress: emailInquiryAddress ?? this.emailInquiryAddress,
+      isKakaoTalkInquiryEnabled: isKakaoTalkInquiryEnabled ?? this.isKakaoTalkInquiryEnabled,
+      kakaoTalkInquiryLink: kakaoTalkInquiryLink ?? this.kakaoTalkInquiryLink,
+      taxInvoiceType: taxInvoiceType ?? this.taxInvoiceType,
+      businessRegistrationNumber: businessRegistrationNumber ?? this.businessRegistrationNumber,
+      companyName: companyName ?? this.companyName,
+      representativeName: representativeName ?? this.representativeName,
+      taxInvoiceEmail: taxInvoiceEmail ?? this.taxInvoiceEmail,
+      additionalTaxInvoiceEmail: additionalTaxInvoiceEmail ?? this.additionalTaxInvoiceEmail,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

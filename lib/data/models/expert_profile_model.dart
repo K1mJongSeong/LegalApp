@@ -5,6 +5,10 @@ import 'career_model.dart';
 import 'qualification_model.dart';
 import 'award_model.dart';
 import 'publication_model.dart';
+import 'press_release_model.dart';
+import 'other_activity_model.dart';
+import 'retainer_fee_model.dart';
+import 'service_fee_model.dart';
 
 /// 전문가 프로필 모델 (Firestore JSON 변환)
 class ExpertProfileModel extends ExpertProfile {
@@ -58,6 +62,23 @@ class ExpertProfileModel extends ExpertProfile {
     super.qualifications,
     super.awards,
     super.publications,
+    super.pressReleases,
+    super.otherActivities,
+    super.retainerFees,
+    super.serviceFees,
+    super.paymentMethods,
+    super.isPhoneInquiryEnabled,
+    super.phoneInquiryNumber,
+    super.isEmailInquiryEnabled,
+    super.emailInquiryAddress,
+    super.isKakaoTalkInquiryEnabled,
+    super.kakaoTalkInquiryLink,
+    super.taxInvoiceType,
+    super.businessRegistrationNumber,
+    super.companyName,
+    super.representativeName,
+    super.taxInvoiceEmail,
+    super.additionalTaxInvoiceEmail,
     super.createdAt,
     super.updatedAt,
   });
@@ -120,6 +141,65 @@ class ExpertProfileModel extends ExpertProfile {
         publications = publicationsList
             .map((e) => PublicationModel.fromJson(
                 e as Map<String, dynamic>, id: e['id'] as String?))
+            .toList();
+      }
+    }
+
+    // 보도자료 파싱
+    List<PressRelease> pressReleases = [];
+    if (json['pressReleases'] != null || json['press_releases'] != null) {
+      final pressReleasesList = (json['pressReleases'] ?? json['press_releases']) as List<dynamic>?;
+      if (pressReleasesList != null) {
+        pressReleases = pressReleasesList
+            .map((e) => PressReleaseModel.fromJson(
+                e as Map<String, dynamic>, id: e['id'] as String?))
+            .toList();
+      }
+    }
+
+    // 기타활동 파싱
+    List<OtherActivity> otherActivities = [];
+    if (json['otherActivities'] != null || json['other_activities'] != null) {
+      final otherActivitiesList = (json['otherActivities'] ?? json['other_activities']) as List<dynamic>?;
+      if (otherActivitiesList != null) {
+        otherActivities = otherActivitiesList
+            .map((e) => OtherActivityModel.fromJson(
+                e as Map<String, dynamic>, id: e['id'] as String?))
+            .toList();
+      }
+    }
+
+    // 수임료 정보 파싱
+    List<RetainerFee> retainerFees = [];
+    if (json['retainerFees'] != null || json['retainer_fees'] != null) {
+      final retainerFeesList = (json['retainerFees'] ?? json['retainer_fees']) as List<dynamic>?;
+      if (retainerFeesList != null) {
+        retainerFees = retainerFeesList
+            .map((e) => RetainerFeeModel.fromJson(
+                e as Map<String, dynamic>, id: e['id'] as String?))
+            .toList();
+      }
+    }
+
+    // 서비스 요금 파싱
+    List<ServiceFee> serviceFees = [];
+    if (json['serviceFees'] != null || json['service_fees'] != null) {
+      final serviceFeesList = (json['serviceFees'] ?? json['service_fees']) as List<dynamic>?;
+      if (serviceFeesList != null) {
+        serviceFees = serviceFeesList
+            .map((e) => ServiceFeeModel.fromJson(
+                e as Map<String, dynamic>, id: e['id'] as String?))
+            .toList();
+      }
+    }
+
+    // 지불방법 파싱
+    List<String> paymentMethods = [];
+    if (json['paymentMethods'] != null || json['payment_methods'] != null) {
+      final paymentMethodsList = (json['paymentMethods'] ?? json['payment_methods']) as List<dynamic>?;
+      if (paymentMethodsList != null) {
+        paymentMethods = paymentMethodsList
+            .map((e) => e.toString())
             .toList();
       }
     }
@@ -255,6 +335,45 @@ class ExpertProfileModel extends ExpertProfile {
       awards: awards,
       // 논문/출판
       publications: publications,
+      // 보도자료
+      pressReleases: pressReleases,
+      // 기타활동
+      otherActivities: otherActivities,
+      // 수임료 정보
+      retainerFees: retainerFees,
+      // 서비스 요금
+      serviceFees: serviceFees,
+      // 지불방법
+      paymentMethods: paymentMethods,
+      // 간편 문의
+      isPhoneInquiryEnabled: json['isPhoneInquiryEnabled'] as bool? ??
+          json['is_phone_inquiry_enabled'] as bool? ??
+          false,
+      phoneInquiryNumber: json['phoneInquiryNumber'] as String? ??
+          json['phone_inquiry_number'] as String?,
+      isEmailInquiryEnabled: json['isEmailInquiryEnabled'] as bool? ??
+          json['is_email_inquiry_enabled'] as bool? ??
+          false,
+      emailInquiryAddress: json['emailInquiryAddress'] as String? ??
+          json['email_inquiry_address'] as String?,
+      isKakaoTalkInquiryEnabled: json['isKakaoTalkInquiryEnabled'] as bool? ??
+          json['is_kakao_talk_inquiry_enabled'] as bool? ??
+          false,
+      kakaoTalkInquiryLink: json['kakaoTalkInquiryLink'] as String? ??
+          json['kakao_talk_inquiry_link'] as String?,
+      // 세금계산서 정보
+      taxInvoiceType: json['taxInvoiceType'] as String? ??
+          json['tax_invoice_type'] as String?,
+      businessRegistrationNumber: json['businessRegistrationNumber'] as String? ??
+          json['business_registration_number'] as String?,
+      companyName: json['companyName'] as String? ??
+          json['company_name'] as String?,
+      representativeName: json['representativeName'] as String? ??
+          json['representative_name'] as String?,
+      taxInvoiceEmail: json['taxInvoiceEmail'] as String? ??
+          json['tax_invoice_email'] as String?,
+      additionalTaxInvoiceEmail: json['additionalTaxInvoiceEmail'] as String? ??
+          json['additional_tax_invoice_email'] as String?,
       createdAt: (json['createdAt'] as Timestamp?)?.toDate() ??
           (json['created_at'] as Timestamp?)?.toDate(),
       updatedAt: (json['updatedAt'] as Timestamp?)?.toDate() ??
@@ -337,6 +456,38 @@ class ExpertProfileModel extends ExpertProfile {
       'publications': publications
           .map((e) => PublicationModel.fromEntity(e).toJson())
           .toList(),
+      // 보도자료
+      'pressReleases': pressReleases
+          .map((e) => PressReleaseModel.fromEntity(e).toJson())
+          .toList(),
+      // 기타활동
+      'otherActivities': otherActivities
+          .map((e) => OtherActivityModel.fromEntity(e).toJson())
+          .toList(),
+      // 수임료 정보
+      'retainerFees': retainerFees
+          .map((e) => RetainerFeeModel.fromEntity(e).toJson())
+          .toList(),
+      // 서비스 요금
+      'serviceFees': serviceFees
+          .map((e) => ServiceFeeModel.fromEntity(e).toJson())
+          .toList(),
+      // 지불방법
+      'paymentMethods': paymentMethods,
+      // 간편 문의
+      'isPhoneInquiryEnabled': isPhoneInquiryEnabled,
+      if (phoneInquiryNumber != null) 'phoneInquiryNumber': phoneInquiryNumber,
+      'isEmailInquiryEnabled': isEmailInquiryEnabled,
+      if (emailInquiryAddress != null) 'emailInquiryAddress': emailInquiryAddress,
+      'isKakaoTalkInquiryEnabled': isKakaoTalkInquiryEnabled,
+      if (kakaoTalkInquiryLink != null) 'kakaoTalkInquiryLink': kakaoTalkInquiryLink,
+      // 세금계산서 정보
+      if (taxInvoiceType != null) 'taxInvoiceType': taxInvoiceType,
+      if (businessRegistrationNumber != null) 'businessRegistrationNumber': businessRegistrationNumber,
+      if (companyName != null) 'companyName': companyName,
+      if (representativeName != null) 'representativeName': representativeName,
+      if (taxInvoiceEmail != null) 'taxInvoiceEmail': taxInvoiceEmail,
+      if (additionalTaxInvoiceEmail != null) 'additionalTaxInvoiceEmail': additionalTaxInvoiceEmail,
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
       if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
     };
@@ -394,6 +545,23 @@ class ExpertProfileModel extends ExpertProfile {
       qualifications: entity.qualifications,
       awards: entity.awards,
       publications: entity.publications,
+      pressReleases: entity.pressReleases,
+      otherActivities: entity.otherActivities,
+      retainerFees: entity.retainerFees,
+      serviceFees: entity.serviceFees,
+      paymentMethods: entity.paymentMethods,
+      isPhoneInquiryEnabled: entity.isPhoneInquiryEnabled,
+      phoneInquiryNumber: entity.phoneInquiryNumber,
+      isEmailInquiryEnabled: entity.isEmailInquiryEnabled,
+      emailInquiryAddress: entity.emailInquiryAddress,
+      isKakaoTalkInquiryEnabled: entity.isKakaoTalkInquiryEnabled,
+      kakaoTalkInquiryLink: entity.kakaoTalkInquiryLink,
+      taxInvoiceType: entity.taxInvoiceType,
+      businessRegistrationNumber: entity.businessRegistrationNumber,
+      companyName: entity.companyName,
+      representativeName: entity.representativeName,
+      taxInvoiceEmail: entity.taxInvoiceEmail,
+      additionalTaxInvoiceEmail: entity.additionalTaxInvoiceEmail,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );

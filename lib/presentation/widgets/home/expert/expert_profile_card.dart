@@ -2,19 +2,29 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/utils/profile_completion_calculator.dart';
+import '../../../../domain/entities/expert_profile.dart';
 
 /// 전문가 프로필 카드 위젯
 class ExpertProfileCard extends StatelessWidget {
   final String name;
-  final int completion;
+  final int? completion; // null이면 profile에서 계산
   final bool isVerified;
+  final ExpertProfile? profile; // 완성률 계산을 위한 프로필 데이터
 
   const ExpertProfileCard({
     super.key,
     required this.name,
-    required this.completion,
+    this.completion,
     required this.isVerified,
+    this.profile,
   });
+
+  /// 완성률 계산
+  int get _calculatedCompletion {
+    if (completion != null) return completion!;
+    return ProfileCompletionCalculator.calculateRequiredInfoCompletion(profile);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +99,7 @@ class ExpertProfileCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                '$completion%',
+                '${_calculatedCompletion}%',
                 style: TextStyle(
                   fontSize: AppSizes.fontS,
                   fontWeight: FontWeight.bold,
@@ -103,7 +113,7 @@ class ExpertProfileCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: completion / 100,
+              value: _calculatedCompletion / 100,
               backgroundColor: Colors.grey[200],
               valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               minHeight: 6,
@@ -113,7 +123,7 @@ class ExpertProfileCard extends StatelessWidget {
           // 완성하기 버튼
           ElevatedButton(
             onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.expertDashboard);
+              Navigator.pushNamed(context, AppRoutes.expertProfileManage);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
