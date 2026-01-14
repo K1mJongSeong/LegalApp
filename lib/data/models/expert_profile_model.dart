@@ -6,6 +6,9 @@ import 'qualification_model.dart';
 import 'award_model.dart';
 import 'publication_model.dart';
 import 'press_release_model.dart';
+import 'other_activity_model.dart';
+import 'retainer_fee_model.dart';
+import 'service_fee_model.dart';
 
 /// 전문가 프로필 모델 (Firestore JSON 변환)
 class ExpertProfileModel extends ExpertProfile {
@@ -60,6 +63,10 @@ class ExpertProfileModel extends ExpertProfile {
     super.awards,
     super.publications,
     super.pressReleases,
+    super.otherActivities,
+    super.retainerFees,
+    super.serviceFees,
+    super.paymentMethods,
     super.taxInvoiceType,
     super.businessRegistrationNumber,
     super.companyName,
@@ -140,6 +147,53 @@ class ExpertProfileModel extends ExpertProfile {
         pressReleases = pressReleasesList
             .map((e) => PressReleaseModel.fromJson(
                 e as Map<String, dynamic>, id: e['id'] as String?))
+            .toList();
+      }
+    }
+
+    // 기타활동 파싱
+    List<OtherActivity> otherActivities = [];
+    if (json['otherActivities'] != null || json['other_activities'] != null) {
+      final otherActivitiesList = (json['otherActivities'] ?? json['other_activities']) as List<dynamic>?;
+      if (otherActivitiesList != null) {
+        otherActivities = otherActivitiesList
+            .map((e) => OtherActivityModel.fromJson(
+                e as Map<String, dynamic>, id: e['id'] as String?))
+            .toList();
+      }
+    }
+
+    // 수임료 정보 파싱
+    List<RetainerFee> retainerFees = [];
+    if (json['retainerFees'] != null || json['retainer_fees'] != null) {
+      final retainerFeesList = (json['retainerFees'] ?? json['retainer_fees']) as List<dynamic>?;
+      if (retainerFeesList != null) {
+        retainerFees = retainerFeesList
+            .map((e) => RetainerFeeModel.fromJson(
+                e as Map<String, dynamic>, id: e['id'] as String?))
+            .toList();
+      }
+    }
+
+    // 서비스 요금 파싱
+    List<ServiceFee> serviceFees = [];
+    if (json['serviceFees'] != null || json['service_fees'] != null) {
+      final serviceFeesList = (json['serviceFees'] ?? json['service_fees']) as List<dynamic>?;
+      if (serviceFeesList != null) {
+        serviceFees = serviceFeesList
+            .map((e) => ServiceFeeModel.fromJson(
+                e as Map<String, dynamic>, id: e['id'] as String?))
+            .toList();
+      }
+    }
+
+    // 지불방법 파싱
+    List<String> paymentMethods = [];
+    if (json['paymentMethods'] != null || json['payment_methods'] != null) {
+      final paymentMethodsList = (json['paymentMethods'] ?? json['payment_methods']) as List<dynamic>?;
+      if (paymentMethodsList != null) {
+        paymentMethods = paymentMethodsList
+            .map((e) => e.toString())
             .toList();
       }
     }
@@ -277,6 +331,14 @@ class ExpertProfileModel extends ExpertProfile {
       publications: publications,
       // 보도자료
       pressReleases: pressReleases,
+      // 기타활동
+      otherActivities: otherActivities,
+      // 수임료 정보
+      retainerFees: retainerFees,
+      // 서비스 요금
+      serviceFees: serviceFees,
+      // 지불방법
+      paymentMethods: paymentMethods,
       // 세금계산서 정보
       taxInvoiceType: json['taxInvoiceType'] as String? ??
           json['tax_invoice_type'] as String?,
@@ -376,6 +438,20 @@ class ExpertProfileModel extends ExpertProfile {
       'pressReleases': pressReleases
           .map((e) => PressReleaseModel.fromEntity(e).toJson())
           .toList(),
+      // 기타활동
+      'otherActivities': otherActivities
+          .map((e) => OtherActivityModel.fromEntity(e).toJson())
+          .toList(),
+      // 수임료 정보
+      'retainerFees': retainerFees
+          .map((e) => RetainerFeeModel.fromEntity(e).toJson())
+          .toList(),
+      // 서비스 요금
+      'serviceFees': serviceFees
+          .map((e) => ServiceFeeModel.fromEntity(e).toJson())
+          .toList(),
+      // 지불방법
+      'paymentMethods': paymentMethods,
       // 세금계산서 정보
       if (taxInvoiceType != null) 'taxInvoiceType': taxInvoiceType,
       if (businessRegistrationNumber != null) 'businessRegistrationNumber': businessRegistrationNumber,
@@ -441,6 +517,10 @@ class ExpertProfileModel extends ExpertProfile {
       awards: entity.awards,
       publications: entity.publications,
       pressReleases: entity.pressReleases,
+      otherActivities: entity.otherActivities,
+      retainerFees: entity.retainerFees,
+      serviceFees: entity.serviceFees,
+      paymentMethods: entity.paymentMethods,
       taxInvoiceType: entity.taxInvoiceType,
       businessRegistrationNumber: entity.businessRegistrationNumber,
       companyName: entity.companyName,

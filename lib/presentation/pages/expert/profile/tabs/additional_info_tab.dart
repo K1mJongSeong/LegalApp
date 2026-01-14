@@ -7,6 +7,9 @@ import 'sections/award_section.dart';
 import 'sections/publication_section.dart';
 import 'sections/press_release_section.dart';
 import 'sections/tax_invoice_info_section.dart';
+import 'sections/other_activity_section.dart';
+import 'sections/retainer_fee_section.dart';
+import 'sections/service_fee_section.dart';
 
 /// 추가정보 탭
 class AdditionalInfoTab extends StatefulWidget {
@@ -194,9 +197,9 @@ class _AdditionalInfoTabState extends State<AdditionalInfoTab>
                 PublicationSection(),
                 PressReleaseSection(),
                 TaxInvoiceInfoSection(),
-                Center(child: Text('기타활동 섹션 준비 중')),
-                Center(child: Text('수임료 정보 섹션 준비 중')),
-                Center(child: Text('서비스 요금 섹션 준비 중')),
+                OtherActivitySection(),
+                RetainerFeeSection(),
+                ServiceFeeSection(),
               ],
             ),
           ),

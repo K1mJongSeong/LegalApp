@@ -4,6 +4,9 @@ import 'award.dart';
 import 'qualification.dart';
 import 'publication.dart';
 import 'press_release.dart';
+import 'other_activity.dart';
+import 'retainer_fee.dart';
+import 'service_fee.dart';
 
 /// 전문가 프로필 정보 엔티티
 class ExpertProfile {
@@ -73,6 +76,12 @@ class ExpertProfile {
   final List<Award> awards; // 수상내역 목록
   final List<Publication> publications; // 논문/출판 목록
   final List<PressRelease> pressReleases; // 보도자료 목록
+  final List<OtherActivity> otherActivities; // 기타활동 목록
+  final List<RetainerFee> retainerFees; // 수임료 정보 목록
+  final List<ServiceFee> serviceFees; // 서비스 요금 목록
+  
+  // 지불정보
+  final List<String> paymentMethods; // 지불방법 목록 ('freeConsultation', 'installment', 'postPayment', 'cardPayment')
   
   // 세금계산서 정보
   final String? taxInvoiceType; // 세금계산서 타입 ('taxInvoice' or 'cashReceipt')
@@ -136,6 +145,10 @@ class ExpertProfile {
     this.awards = const [],
     this.publications = const [],
     this.pressReleases = const [],
+    this.otherActivities = const [],
+    this.retainerFees = const [],
+    this.serviceFees = const [],
+    this.paymentMethods = const [],
     this.taxInvoiceType,
     this.businessRegistrationNumber,
     this.companyName,
@@ -197,6 +210,10 @@ class ExpertProfile {
     List<Award>? awards,
     List<Publication>? publications,
     List<PressRelease>? pressReleases,
+    List<OtherActivity>? otherActivities,
+    List<RetainerFee>? retainerFees,
+    List<ServiceFee>? serviceFees,
+    List<String>? paymentMethods,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -251,6 +268,10 @@ class ExpertProfile {
       awards: awards ?? this.awards,
       publications: publications ?? this.publications,
       pressReleases: pressReleases ?? this.pressReleases,
+      otherActivities: otherActivities ?? this.otherActivities,
+      retainerFees: retainerFees ?? this.retainerFees,
+      serviceFees: serviceFees ?? this.serviceFees,
+      paymentMethods: paymentMethods ?? this.paymentMethods,
       taxInvoiceType: taxInvoiceType ?? this.taxInvoiceType,
       businessRegistrationNumber: businessRegistrationNumber ?? this.businessRegistrationNumber,
       companyName: companyName ?? this.companyName,
