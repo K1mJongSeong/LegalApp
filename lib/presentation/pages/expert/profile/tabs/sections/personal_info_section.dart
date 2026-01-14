@@ -470,7 +470,7 @@ class _PersonalInfoSectionState extends State<PersonalInfoSection> {
             ),
 
             const SizedBox(width: AppSizes.paddingS),
-            
+
             SizedBox(
               width: 88,
               height: AppSizes.buttonHeight,
