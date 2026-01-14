@@ -13,6 +13,9 @@ abstract class ExpertRepository {
   /// 전문가 상세 정보 가져오기
   Future<Expert> getExpertById(int id);
 
+  /// userId로 전문가 정보 가져오기 (ExpertProfile 기반)
+  Future<Expert?> getExpertByUserId(String userId);
+
   /// 전문가 검색
   Future<List<Expert>> searchExperts(String query);
 

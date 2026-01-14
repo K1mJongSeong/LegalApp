@@ -120,8 +120,9 @@ class AppRouter {
 
       case AppRoutes.confirm:
         final expertId = int.tryParse(queryParams['expertId'] ?? '');
+        final userId = queryParams['userId'];
         return _buildRoute(
-          ConfirmPage(expertId: expertId),
+          ConfirmPage(expertId: expertId, userId: userId),
           settings,
         );
 
