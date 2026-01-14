@@ -16,6 +16,9 @@ abstract class ExpertAccountRepository {
 
   /// 전문가 인증 승인 (isVerified=true, status=active)
   Future<void> approveExpertAccount(String accountId);
+
+  /// 인증된 전문가 계정 목록 조회 (isVerified: true, status: "active")
+  Future<List<ExpertAccount>> getVerifiedExpertAccounts();
 }
 
 

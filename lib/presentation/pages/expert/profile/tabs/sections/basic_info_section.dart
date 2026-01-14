@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../../../../core/constants/app_colors.dart';
 import '../../../../../../core/constants/app_sizes.dart';
+import '../../../../../../domain/entities/expert_profile.dart';
+import '../../../../../../domain/repositories/expert_profile_repository.dart';
+import '../../../../../../data/repositories/expert_profile_repository_impl.dart';
+import '../../../../../blocs/auth/auth_bloc.dart';
+import '../../../../../blocs/auth/auth_state.dart';
 
 /// 기본정보 섹션
 class BasicInfoSection extends StatefulWidget {
@@ -24,6 +30,52 @@ class _BasicInfoSectionState extends State<BasicInfoSection> {
   final TextEditingController _passYearController = TextEditingController(text: '2021');
   bool _isExamPublic = true;
   File? _profileImage;
+
+  // Repository
+  final ExpertProfileRepository _profileRepository = ExpertProfileRepositoryImpl();
+  
+  bool _isLoading = false;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  /// 기존 프로필 데이터 로드
+  Future<void> _loadProfile() async {
+    if (_isInitialized) return;
+
+    try {
+      final authState = context.read<AuthBloc>().state;
+      if (authState is! AuthAuthenticated) {
+        _isInitialized = true;
+        return;
+      }
+
+      final userId = authState.user.id;
+      final profile = await _profileRepository.getProfileByUserId(userId);
+
+      if (profile != null && mounted) {
+        setState(() {
+          _virtualNumberController.text = profile.virtualNumber ?? '';
+          _examTypeController.text = profile.examType ?? '';
+          _examSessionController.text = profile.examSession ?? '';
+          if (profile.passYear != null) {
+            _passYearController.text = profile.passYear.toString();
+          }
+          _isExamPublic = profile.isExamPublic;
+          _isInitialized = true;
+        });
+      } else {
+        _isInitialized = true;
+      }
+    } catch (e) {
+      debugPrint('프로필 로드 오류: $e');
+      _isInitialized = true;
+    }
+  }
 
   @override
   void dispose() {
@@ -197,6 +249,39 @@ class _BasicInfoSectionState extends State<BasicInfoSection> {
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingXL),
+          // 저장하기 버튼
+          SizedBox(
+            width: double.infinity,
+            height: AppSizes.buttonHeight,
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _handleSave,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                ),
+                disabledBackgroundColor: AppColors.textSecondary,
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text(
+                      '저장하기',
+                      style: TextStyle(
+                        fontSize: AppSizes.fontL,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
             ),
           ),
         ],
@@ -411,6 +496,109 @@ class _BasicInfoSectionState extends State<BasicInfoSection> {
         ),
       ],
     );
+  }
+
+  /// 저장하기 핸들러
+  Future<void> _handleSave() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // 현재 사용자 ID 가져오기
+      final authState = context.read<AuthBloc>().state;
+      if (authState is! AuthAuthenticated) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('로그인이 필요합니다'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        return;
+      }
+
+      final userId = authState.user.id;
+
+      // 기존 프로필 가져오기
+      ExpertProfile? existingProfile = await _profileRepository.getProfileByUserId(userId);
+
+      // 시험 합격 년도 파싱
+      int? passYear;
+      if (_passYearController.text.trim().isNotEmpty) {
+        passYear = int.tryParse(_passYearController.text.trim());
+        if (passYear == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('시험 합격 년도는 숫자로 입력해주세요'),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+          return;
+        }
+      }
+
+      // ExpertProfile 생성 또는 업데이트
+      final profile = existingProfile != null
+          ? existingProfile.copyWith(
+              virtualNumber: _virtualNumberController.text.trim().isEmpty
+                  ? null
+                  : _virtualNumberController.text.trim(),
+              examType: _examTypeController.text.trim().isEmpty
+                  ? null
+                  : _examTypeController.text.trim(),
+              examSession: _examSessionController.text.trim().isEmpty
+                  ? null
+                  : _examSessionController.text.trim(),
+              passYear: passYear,
+              isExamPublic: _isExamPublic,
+            )
+          : ExpertProfile(
+              id: '', // 새 프로필인 경우 Firestore에서 자동 생성
+              userId: userId,
+              virtualNumber: _virtualNumberController.text.trim().isEmpty
+                  ? null
+                  : _virtualNumberController.text.trim(),
+              examType: _examTypeController.text.trim().isEmpty
+                  ? null
+                  : _examTypeController.text.trim(),
+              examSession: _examSessionController.text.trim().isEmpty
+                  ? null
+                  : _examSessionController.text.trim(),
+              passYear: passYear,
+              isExamPublic: _isExamPublic,
+            );
+
+      // 프로필 저장
+      await _profileRepository.saveProfile(profile);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('저장되었습니다'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('저장 중 오류가 발생했습니다: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 }
 

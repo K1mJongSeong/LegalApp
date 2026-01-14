@@ -22,9 +22,9 @@ class ExpertBloc extends Bloc<ExpertEvent, ExpertState> {
   ) async {
     emit(ExpertLoading());
     try {
-      final experts = await _expertRepository.getExperts(
+      // 인증된 전문가만 조회 (isVerified: true, status: "active")
+      final experts = await _expertRepository.getVerifiedExperts(
         category: event.category,
-        urgency: event.urgency,
       );
       if (experts.isEmpty) {
         emit(ExpertEmpty());

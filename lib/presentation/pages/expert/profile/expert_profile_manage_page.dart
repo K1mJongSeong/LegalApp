@@ -87,14 +87,23 @@ class _ExpertProfileManagePageState extends State<ExpertProfileManagePage>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [
-          RequiredInfoTab(),
-          HighlightInfoTab(),
-          AdditionalInfoTab(),
-          SimpleInquiryTab(),
-        ],
+      body: PopScope(
+        onPopInvokedWithResult: (didPop, result) {
+          // 프로필 관리 페이지에서 나갈 때 홈 페이지에 알림
+          if (didPop) {
+            // 홈 페이지가 있으면 리프레시하도록 알림
+            // 이는 HomePage의 ExpertHomeSliver가 자동으로 리프레시됩니다
+          }
+        },
+        child: TabBarView(
+          controller: _tabController,
+          children: const [
+            RequiredInfoTab(),
+            HighlightInfoTab(),
+            AdditionalInfoTab(),
+            SimpleInquiryTab(),
+          ],
+        ),
       ),
     );
   }

@@ -21,6 +21,11 @@ abstract class ExpertRepository {
     required String category,
     String? urgency,
   });
+
+  /// 인증된 전문가 목록 가져오기 (expert_accounts와 expert_profiles 조인)
+  Future<List<Expert>> getVerifiedExperts({
+    String? category,
+  });
 }
 
 
