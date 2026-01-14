@@ -4,6 +4,7 @@ import 'education_model.dart';
 import 'career_model.dart';
 import 'qualification_model.dart';
 import 'award_model.dart';
+import 'publication_model.dart';
 
 /// 전문가 프로필 모델 (Firestore JSON 변환)
 class ExpertProfileModel extends ExpertProfile {
@@ -54,6 +55,9 @@ class ExpertProfileModel extends ExpertProfile {
     super.languages,
     super.otherLanguage,
     super.careers,
+    super.qualifications,
+    super.awards,
+    super.publications,
     super.createdAt,
     super.updatedAt,
   });
@@ -103,6 +107,18 @@ class ExpertProfileModel extends ExpertProfile {
       if (awardsList != null) {
         awards = awardsList
             .map((e) => AwardModel.fromJson(
+                e as Map<String, dynamic>, id: e['id'] as String?))
+            .toList();
+      }
+    }
+
+    // 논문/출판 파싱
+    List<Publication> publications = [];
+    if (json['publications'] != null) {
+      final publicationsList = json['publications'] as List<dynamic>?;
+      if (publicationsList != null) {
+        publications = publicationsList
+            .map((e) => PublicationModel.fromJson(
                 e as Map<String, dynamic>, id: e['id'] as String?))
             .toList();
       }
@@ -237,6 +253,8 @@ class ExpertProfileModel extends ExpertProfile {
       qualifications: qualifications,
       // 수상내역
       awards: awards,
+      // 논문/출판
+      publications: publications,
       createdAt: (json['createdAt'] as Timestamp?)?.toDate() ??
           (json['created_at'] as Timestamp?)?.toDate(),
       updatedAt: (json['updatedAt'] as Timestamp?)?.toDate() ??
@@ -315,6 +333,10 @@ class ExpertProfileModel extends ExpertProfile {
       'awards': awards
           .map((e) => AwardModel.fromEntity(e).toJson())
           .toList(),
+      // 논문/출판
+      'publications': publications
+          .map((e) => PublicationModel.fromEntity(e).toJson())
+          .toList(),
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
       if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
     };
@@ -371,6 +393,7 @@ class ExpertProfileModel extends ExpertProfile {
       careers: entity.careers,
       qualifications: entity.qualifications,
       awards: entity.awards,
+      publications: entity.publications,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );

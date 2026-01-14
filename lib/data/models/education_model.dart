@@ -64,3 +64,4 @@ class EducationModel extends Education {
 }
 
 
+

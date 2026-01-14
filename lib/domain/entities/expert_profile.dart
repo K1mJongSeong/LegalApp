@@ -2,6 +2,7 @@ import 'education.dart';
 import 'career.dart';
 import 'award.dart';
 import 'qualification.dart';
+import 'publication.dart';
 
 /// 전문가 프로필 정보 엔티티
 class ExpertProfile {
@@ -69,6 +70,7 @@ class ExpertProfile {
   final List<Career> careers; // 경력사항 목록
   final List<Qualification> qualifications; // 자격사항 목록
   final List<Award> awards; // 수상내역 목록
+  final List<Publication> publications; // 논문/출판 목록
   
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -122,6 +124,7 @@ class ExpertProfile {
     this.careers = const [],
     this.qualifications = const [],
     this.awards = const [],
+    this.publications = const [],
     this.createdAt,
     this.updatedAt,
   });
@@ -175,6 +178,7 @@ class ExpertProfile {
     List<Career>? careers,
     List<Qualification>? qualifications,
     List<Award>? awards,
+    List<Publication>? publications,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -227,6 +231,7 @@ class ExpertProfile {
       careers: careers ?? this.careers,
       qualifications: qualifications ?? this.qualifications,
       awards: awards ?? this.awards,
+      publications: publications ?? this.publications,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

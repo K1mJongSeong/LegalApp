@@ -1,18 +1,26 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/constants/app_colors.dart';
 import '../../../../../../core/constants/app_sizes.dart';
-import '../../../../../../domain/entities/qualification.dart';
+import '../../../../../../domain/entities/publication.dart';
 
-/// 자격사항 섹션
-class QualificationSection extends StatefulWidget {
-  const QualificationSection({super.key});
+/// 논문/출판 정보 섹션
+class PublicationSection extends StatefulWidget {
+  const PublicationSection({super.key});
 
   @override
-  State<QualificationSection> createState() => _QualificationSectionState();
+  State<PublicationSection> createState() => _PublicationSectionState();
 }
 
-class _QualificationSectionState extends State<QualificationSection> {
-  List<QualificationItem> _qualificationItems = [QualificationItem()];
+class _PublicationSectionState extends State<PublicationSection> {
+  List<PublicationItem> _publicationItems = [PublicationItem()];
+
+  // 분류 옵션
+  static const List<String> _categoryOptions = [
+    '논문',
+    '저서',
+    '번역서',
+    '기타',
+  ];
 
   // 년도 옵션 (1997~2026)
   List<int> get _yearOptions {
@@ -35,7 +43,7 @@ class _QualificationSectionState extends State<QualificationSection> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  '자격사항',
+                  '논문/출판 정보',
                   style: TextStyle(
                     fontSize: AppSizes.fontXL,
                     fontWeight: FontWeight.bold,
@@ -43,17 +51,17 @@ class _QualificationSectionState extends State<QualificationSection> {
                   ),
                 ),
                 const SizedBox(height: AppSizes.paddingXL),
-                // 자격사항 항목들
-                ...List.generate(_qualificationItems.length, (index) {
-                  return _buildQualificationItem(index);
+                // 논문/출판 항목들
+                ...List.generate(_publicationItems.length, (index) {
+                  return _buildPublicationItem(index);
                 }),
                 const SizedBox(height: AppSizes.paddingL),
-                // 항목추가/삭제 버튼
+                // 항목추가/제거 버튼
                 Row(
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: _addQualificationItem,
+                        onPressed: _addPublicationItem,
                         icon: const Icon(
                           Icons.add,
                           color: AppColors.primary,
@@ -78,18 +86,18 @@ class _QualificationSectionState extends State<QualificationSection> {
                         ),
                       ),
                     ),
-                    if (_qualificationItems.length > 1) ...[
+                    if (_publicationItems.length > 1) ...[
                       const SizedBox(width: AppSizes.paddingS),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: _removeQualificationItem,
+                          onPressed: _removePublicationItem,
                           icon: const Icon(
                             Icons.remove,
                             color: AppColors.error,
                             size: 20,
                           ),
                           label: const Text(
-                            '항목삭제',
+                            '항목제거',
                             style: TextStyle(
                               fontSize: AppSizes.fontM,
                               color: AppColors.error,
@@ -141,9 +149,9 @@ class _QualificationSectionState extends State<QualificationSection> {
     );
   }
 
-  /// 자격사항 항목 빌더
-  Widget _buildQualificationItem(int index) {
-    final item = _qualificationItems[index];
+  /// 논문/출판 항목 빌더
+  Widget _buildPublicationItem(int index) {
+    final item = _publicationItems[index];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,30 +160,106 @@ class _QualificationSectionState extends State<QualificationSection> {
           const Divider(height: AppSizes.paddingXL),
           const SizedBox(height: AppSizes.paddingL),
         ],
+        // 분류
+        _buildCategoryDropdown(
+          value: item.category,
+          hint: '[분류]',
+          onChanged: (value) {
+            setState(() {
+              _publicationItems[index] = item.copyWith(category: value);
+            });
+          },
+        ),
+        const SizedBox(height: AppSizes.paddingL),
         // 연도
         _buildYearDropdown(
           value: item.year?.toString(),
           hint: '[연도]',
           onChanged: (value) {
             setState(() {
-              _qualificationItems[index] = item.copyWith(
+              _publicationItems[index] = item.copyWith(
                 year: value != null ? int.parse(value) : null,
               );
             });
           },
         ),
         const SizedBox(height: AppSizes.paddingL),
-        // 자격사항 내용
+        // 제목
         _buildTextField(
-          label: '자격사항',
-          controller: item.descriptionController,
-          hint: '자격사항을 입력해주세요.',
-          maxLines: 5,
+          label: '제목',
+          controller: item.titleController,
+          hint: '제목',
+        ),
+        const SizedBox(height: AppSizes.paddingL),
+        // URL 주소
+        _buildTextField(
+          label: 'URL 주소',
+          controller: item.urlController,
+          hint: 'URL 주소',
         ),
         const SizedBox(height: AppSizes.paddingL),
         // 대표항목 라디오 버튼
         _buildRepresentativeRadio(index),
       ],
+    );
+  }
+
+  /// 분류 드롭다운 빌더
+  Widget _buildCategoryDropdown({
+    required String? value,
+    required String hint,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: DropdownButtonFormField<String>(
+        value: value,
+        decoration: InputDecoration(
+          hintText: hint,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.paddingM,
+            vertical: AppSizes.paddingM,
+          ),
+        ),
+        items: [
+          DropdownMenuItem<String>(
+            value: null,
+            child: Text(
+              hint,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          ..._categoryOptions.map((category) {
+            return DropdownMenuItem<String>(
+              value: category,
+              child: Text(category),
+            );
+          }),
+        ],
+        onChanged: onChanged,
+        icon: const Icon(
+          Icons.arrow_drop_down,
+          color: AppColors.textSecondary,
+        ),
+      ),
     );
   }
 
@@ -185,61 +269,56 @@ class _QualificationSectionState extends State<QualificationSection> {
     required String hint,
     required ValueChanged<String?> onChanged,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: DropdownButtonFormField<String>(
+        value: value,
+        decoration: InputDecoration(
+          hintText: hint,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppSizes.radiusM),
-            border: Border.all(color: AppColors.border),
+            borderSide: BorderSide.none,
           ),
-          child: DropdownButtonFormField<String>(
-            value: value,
-            decoration: InputDecoration(
-              hintText: hint,
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSizes.radiusM),
-                borderSide: BorderSide.none,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSizes.radiusM),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSizes.radiusM),
-                borderSide: const BorderSide(color: AppColors.primary, width: 2),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.paddingM,
-                vertical: AppSizes.paddingM,
-              ),
-            ),
-            items: [
-              DropdownMenuItem<String>(
-                value: null,
-                child: Text(
-                  hint,
-                  style: const TextStyle(color: AppColors.textSecondary),
-                ),
-              ),
-              ..._yearOptions.map((year) {
-                return DropdownMenuItem<String>(
-                  value: year.toString(),
-                  child: Text(year.toString()),
-                );
-              }),
-            ],
-            onChanged: onChanged,
-            icon: const Icon(
-              Icons.arrow_drop_down,
-              color: AppColors.textSecondary,
-            ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.paddingM,
+            vertical: AppSizes.paddingM,
           ),
         ),
-      ],
+        items: [
+          DropdownMenuItem<String>(
+            value: null,
+            child: Text(
+              hint,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          ..._yearOptions.map((year) {
+            return DropdownMenuItem<String>(
+              value: year.toString(),
+              child: Text(year.toString()),
+            );
+          }),
+        ],
+        onChanged: onChanged,
+        icon: const Icon(
+          Icons.arrow_drop_down,
+          color: AppColors.textSecondary,
+        ),
+      ),
     );
   }
 
@@ -293,7 +372,7 @@ class _QualificationSectionState extends State<QualificationSection> {
 
   /// 대표항목 라디오 버튼
   Widget _buildRepresentativeRadio(int index) {
-    final item = _qualificationItems[index];
+    final item = _publicationItems[index];
     final isSelected = item.isRepresentative;
 
     return Row(
@@ -302,13 +381,13 @@ class _QualificationSectionState extends State<QualificationSection> {
           onTap: () {
             setState(() {
               // 다른 항목들의 대표항목 해제
-              for (int i = 0; i < _qualificationItems.length; i++) {
-                if (i != index && _qualificationItems[i].isRepresentative) {
-                  _qualificationItems[i] = _qualificationItems[i].copyWith(isRepresentative: false);
+              for (int i = 0; i < _publicationItems.length; i++) {
+                if (i != index && _publicationItems[i].isRepresentative) {
+                  _publicationItems[i] = _publicationItems[i].copyWith(isRepresentative: false);
                 }
               }
               // 현재 항목의 대표항목 토글
-              _qualificationItems[index] = item.copyWith(isRepresentative: !isSelected);
+              _publicationItems[index] = item.copyWith(isRepresentative: !isSelected);
             });
           },
           child: Container(
@@ -348,32 +427,37 @@ class _QualificationSectionState extends State<QualificationSection> {
     );
   }
 
-  /// 자격사항 항목 추가
-  void _addQualificationItem() {
+  /// 논문/출판 항목 추가
+  void _addPublicationItem() {
     setState(() {
-      _qualificationItems.add(QualificationItem());
+      _publicationItems.add(PublicationItem());
     });
   }
 
-  /// 자격사항 항목 삭제
-  void _removeQualificationItem() {
-    if (_qualificationItems.length > 1) {
+  /// 논문/출판 항목 제거
+  void _removePublicationItem() {
+    if (_publicationItems.length > 1) {
       setState(() {
-        final removedItem = _qualificationItems.removeLast();
-        removedItem.descriptionController.dispose();
+        final removedItem = _publicationItems.removeLast();
+        removedItem.titleController.dispose();
+        removedItem.urlController.dispose();
       });
     }
   }
 
   /// 저장하기 핸들러
   void _handleSave() {
-    // Qualification 엔티티로 변환
-    final qualifications = _qualificationItems.map((item) {
-      return Qualification(
+    // Publication 엔티티로 변환
+    final publications = _publicationItems.map((item) {
+      return Publication(
+        category: item.category,
         year: item.year,
-        description: item.descriptionController.text.trim().isEmpty
+        title: item.titleController.text.trim().isEmpty
             ? null
-            : item.descriptionController.text.trim(),
+            : item.titleController.text.trim(),
+        url: item.urlController.text.trim().isEmpty
+            ? null
+            : item.urlController.text.trim(),
         isRepresentative: item.isRepresentative,
       );
     }).toList();
@@ -389,36 +473,45 @@ class _QualificationSectionState extends State<QualificationSection> {
 
   @override
   void dispose() {
-    for (var item in _qualificationItems) {
-      item.descriptionController.dispose();
+    for (var item in _publicationItems) {
+      item.titleController.dispose();
+      item.urlController.dispose();
     }
     super.dispose();
   }
 }
 
-/// 자격사항 항목 데이터 클래스
-class QualificationItem {
+/// 논문/출판 항목 데이터 클래스
+class PublicationItem {
+  final String? category;
   final int? year;
-  final TextEditingController descriptionController;
+  final TextEditingController titleController;
+  final TextEditingController urlController;
   final bool isRepresentative;
 
-  QualificationItem({
+  PublicationItem({
+    this.category,
     this.year,
-    TextEditingController? descriptionController,
+    TextEditingController? titleController,
+    TextEditingController? urlController,
     this.isRepresentative = false,
-  }) : descriptionController = descriptionController ?? TextEditingController();
+  })  : titleController = titleController ?? TextEditingController(),
+        urlController = urlController ?? TextEditingController();
 
-  QualificationItem copyWith({
+  PublicationItem copyWith({
+    String? category,
     int? year,
-    TextEditingController? descriptionController,
+    TextEditingController? titleController,
+    TextEditingController? urlController,
     bool? isRepresentative,
   }) {
-    return QualificationItem(
+    return PublicationItem(
+      category: category ?? this.category,
       year: year ?? this.year,
-      descriptionController: descriptionController ?? this.descriptionController,
+      titleController: titleController ?? this.titleController,
+      urlController: urlController ?? this.urlController,
       isRepresentative: isRepresentative ?? this.isRepresentative,
     );
   }
 }
-
 

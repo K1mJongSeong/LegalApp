@@ -47,3 +47,4 @@ class CareerModel extends Career {
   }
 }
 
+

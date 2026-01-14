@@ -42,3 +42,4 @@ class AwardModel extends Award {
   }
 }
 
+
