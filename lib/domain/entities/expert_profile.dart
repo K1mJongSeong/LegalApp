@@ -83,6 +83,14 @@ class ExpertProfile {
   // 지불정보
   final List<String> paymentMethods; // 지불방법 목록 ('freeConsultation', 'installment', 'postPayment', 'cardPayment')
   
+  // 간편 문의
+  final bool isPhoneInquiryEnabled; // 전화 문의 활성화 여부
+  final String? phoneInquiryNumber; // 전화 문의 번호
+  final bool isEmailInquiryEnabled; // 이메일 문의 활성화 여부
+  final String? emailInquiryAddress; // 이메일 문의 주소
+  final bool isKakaoTalkInquiryEnabled; // 카카오톡 문의 활성화 여부
+  final String? kakaoTalkInquiryLink; // 카카오톡 문의 링크
+  
   // 세금계산서 정보
   final String? taxInvoiceType; // 세금계산서 타입 ('taxInvoice' or 'cashReceipt')
   final String? businessRegistrationNumber; // 사업자 등록번호
@@ -149,6 +157,12 @@ class ExpertProfile {
     this.retainerFees = const [],
     this.serviceFees = const [],
     this.paymentMethods = const [],
+    this.isPhoneInquiryEnabled = false,
+    this.phoneInquiryNumber,
+    this.isEmailInquiryEnabled = false,
+    this.emailInquiryAddress,
+    this.isKakaoTalkInquiryEnabled = false,
+    this.kakaoTalkInquiryLink,
     this.taxInvoiceType,
     this.businessRegistrationNumber,
     this.companyName,
@@ -214,6 +228,12 @@ class ExpertProfile {
     List<RetainerFee>? retainerFees,
     List<ServiceFee>? serviceFees,
     List<String>? paymentMethods,
+    bool? isPhoneInquiryEnabled,
+    String? phoneInquiryNumber,
+    bool? isEmailInquiryEnabled,
+    String? emailInquiryAddress,
+    bool? isKakaoTalkInquiryEnabled,
+    String? kakaoTalkInquiryLink,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -272,6 +292,12 @@ class ExpertProfile {
       retainerFees: retainerFees ?? this.retainerFees,
       serviceFees: serviceFees ?? this.serviceFees,
       paymentMethods: paymentMethods ?? this.paymentMethods,
+      isPhoneInquiryEnabled: isPhoneInquiryEnabled ?? this.isPhoneInquiryEnabled,
+      phoneInquiryNumber: phoneInquiryNumber ?? this.phoneInquiryNumber,
+      isEmailInquiryEnabled: isEmailInquiryEnabled ?? this.isEmailInquiryEnabled,
+      emailInquiryAddress: emailInquiryAddress ?? this.emailInquiryAddress,
+      isKakaoTalkInquiryEnabled: isKakaoTalkInquiryEnabled ?? this.isKakaoTalkInquiryEnabled,
+      kakaoTalkInquiryLink: kakaoTalkInquiryLink ?? this.kakaoTalkInquiryLink,
       taxInvoiceType: taxInvoiceType ?? this.taxInvoiceType,
       businessRegistrationNumber: businessRegistrationNumber ?? this.businessRegistrationNumber,
       companyName: companyName ?? this.companyName,

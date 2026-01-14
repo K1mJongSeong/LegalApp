@@ -67,6 +67,12 @@ class ExpertProfileModel extends ExpertProfile {
     super.retainerFees,
     super.serviceFees,
     super.paymentMethods,
+    super.isPhoneInquiryEnabled,
+    super.phoneInquiryNumber,
+    super.isEmailInquiryEnabled,
+    super.emailInquiryAddress,
+    super.isKakaoTalkInquiryEnabled,
+    super.kakaoTalkInquiryLink,
     super.taxInvoiceType,
     super.businessRegistrationNumber,
     super.companyName,
@@ -339,6 +345,22 @@ class ExpertProfileModel extends ExpertProfile {
       serviceFees: serviceFees,
       // 지불방법
       paymentMethods: paymentMethods,
+      // 간편 문의
+      isPhoneInquiryEnabled: json['isPhoneInquiryEnabled'] as bool? ??
+          json['is_phone_inquiry_enabled'] as bool? ??
+          false,
+      phoneInquiryNumber: json['phoneInquiryNumber'] as String? ??
+          json['phone_inquiry_number'] as String?,
+      isEmailInquiryEnabled: json['isEmailInquiryEnabled'] as bool? ??
+          json['is_email_inquiry_enabled'] as bool? ??
+          false,
+      emailInquiryAddress: json['emailInquiryAddress'] as String? ??
+          json['email_inquiry_address'] as String?,
+      isKakaoTalkInquiryEnabled: json['isKakaoTalkInquiryEnabled'] as bool? ??
+          json['is_kakao_talk_inquiry_enabled'] as bool? ??
+          false,
+      kakaoTalkInquiryLink: json['kakaoTalkInquiryLink'] as String? ??
+          json['kakao_talk_inquiry_link'] as String?,
       // 세금계산서 정보
       taxInvoiceType: json['taxInvoiceType'] as String? ??
           json['tax_invoice_type'] as String?,
@@ -452,6 +474,13 @@ class ExpertProfileModel extends ExpertProfile {
           .toList(),
       // 지불방법
       'paymentMethods': paymentMethods,
+      // 간편 문의
+      'isPhoneInquiryEnabled': isPhoneInquiryEnabled,
+      if (phoneInquiryNumber != null) 'phoneInquiryNumber': phoneInquiryNumber,
+      'isEmailInquiryEnabled': isEmailInquiryEnabled,
+      if (emailInquiryAddress != null) 'emailInquiryAddress': emailInquiryAddress,
+      'isKakaoTalkInquiryEnabled': isKakaoTalkInquiryEnabled,
+      if (kakaoTalkInquiryLink != null) 'kakaoTalkInquiryLink': kakaoTalkInquiryLink,
       // 세금계산서 정보
       if (taxInvoiceType != null) 'taxInvoiceType': taxInvoiceType,
       if (businessRegistrationNumber != null) 'businessRegistrationNumber': businessRegistrationNumber,
@@ -521,6 +550,12 @@ class ExpertProfileModel extends ExpertProfile {
       retainerFees: entity.retainerFees,
       serviceFees: entity.serviceFees,
       paymentMethods: entity.paymentMethods,
+      isPhoneInquiryEnabled: entity.isPhoneInquiryEnabled,
+      phoneInquiryNumber: entity.phoneInquiryNumber,
+      isEmailInquiryEnabled: entity.isEmailInquiryEnabled,
+      emailInquiryAddress: entity.emailInquiryAddress,
+      isKakaoTalkInquiryEnabled: entity.isKakaoTalkInquiryEnabled,
+      kakaoTalkInquiryLink: entity.kakaoTalkInquiryLink,
       taxInvoiceType: entity.taxInvoiceType,
       businessRegistrationNumber: entity.businessRegistrationNumber,
       companyName: entity.companyName,
