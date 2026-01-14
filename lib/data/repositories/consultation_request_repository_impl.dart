@@ -28,6 +28,25 @@ class ConsultationRequestRepositoryImpl
       status: status,
     );
   }
+
+  @override
+  Future<ConsultationRequest> createConsultationRequest({
+    required String expertAccountId,
+    String? expertPublicId,
+    required String userId,
+    required String title,
+    required DateTime scheduledAt,
+    String status = 'waiting',
+  }) async {
+    return await _remoteDataSource.createConsultationRequest(
+      expertAccountId: expertAccountId,
+      expertPublicId: expertPublicId,
+      userId: userId,
+      title: title,
+      scheduledAt: scheduledAt,
+      status: status,
+    );
+  }
 }
 
 

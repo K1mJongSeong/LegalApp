@@ -3,11 +3,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/router/app_router.dart';
+import '../../../domain/repositories/expert_account_repository.dart';
+import '../../../data/repositories/expert_account_repository_impl.dart';
+import '../../../data/datasources/expert_account_remote_datasource.dart';
+import '../../../domain/repositories/consultation_request_repository.dart';
+import '../../../data/repositories/consultation_request_repository_impl.dart';
+import '../../../data/datasources/consultation_request_remote_datasource.dart';
 import '../../blocs/expert/expert_bloc.dart';
 import '../../blocs/expert/expert_event.dart';
 import '../../blocs/expert/expert_state.dart';
+import '../../blocs/auth/auth_bloc.dart';
+import '../../blocs/auth/auth_state.dart';
 import '../../widgets/common/expert_card.dart';
 import '../../widgets/common/expert_card_new.dart';
+import '../../widgets/common/consultation_booking_modal.dart';
 import '../../widgets/common/empty_state_widget.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
@@ -146,15 +155,19 @@ class _ExpertsPageState extends State<ExpertsPage> {
                                   );
                                 },
                                 onPhoneConsultation: () {
-                                  // TODO: 전화 상담 기능 구현
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('전화 상담 기능은 준비 중입니다')),
+                                  _showConsultationBookingModal(
+                                    context,
+                                    expert: expert,
+                                    consultationType: 'phone',
+                                    durationMinutes: 15,
                                   );
                                 },
                                 onVisitConsultation: () {
-                                  // TODO: 방문 상담 기능 구현
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('방문 상담 기능은 준비 중입니다')),
+                                  _showConsultationBookingModal(
+                                    context,
+                                    expert: expert,
+                                    consultationType: 'visit',
+                                    durationMinutes: 30,
                                   );
                                 },
                               );
@@ -270,5 +283,101 @@ class _ExpertsPageState extends State<ExpertsPage> {
         ],
       ),
     );
+  }
+
+  /// 상담 예약 모달 표시
+  void _showConsultationBookingModal(
+    BuildContext context, {
+    required expert,
+    required String consultationType,
+    required int durationMinutes,
+  }) {
+    // 로그인 확인
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('로그인이 필요합니다'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppSizes.radiusXL)),
+      ),
+      builder: (context) => ConsultationBookingModal(
+        expertName: expert.name,
+        consultationType: consultationType,
+        durationMinutes: durationMinutes,
+        onConfirm: (scheduledAt) async {
+          await _createConsultationRequest(
+            context,
+            expert: expert,
+            consultationType: consultationType,
+            durationMinutes: durationMinutes,
+            scheduledAt: scheduledAt,
+            userId: authState.user.id,
+          );
+        },
+      ),
+    );
+  }
+
+  /// 상담 요청 생성
+  Future<void> _createConsultationRequest(
+    BuildContext context, {
+    required expert,
+    required String consultationType,
+    required int durationMinutes,
+    required DateTime scheduledAt,
+    required String userId,
+  }) async {
+    try {
+      // Expert의 userId로 expertAccountId 조회
+      if (expert.userId == null) {
+        throw Exception('전문가 정보를 찾을 수 없습니다');
+      }
+
+      final expertAccountRepository = ExpertAccountRepositoryImpl(
+        ExpertAccountRemoteDataSource(),
+      );
+      final expertAccount = await expertAccountRepository.getExpertAccountByUserId(expert.userId!);
+
+      if (expertAccount == null) {
+        throw Exception('전문가 계정을 찾을 수 없습니다');
+      }
+
+      // 상담 요청 생성
+      final consultationRequestRepository = ConsultationRequestRepositoryImpl(
+        ConsultationRequestRemoteDataSource(),
+      );
+
+      final consultationTypeText = consultationType == 'phone' ? '전화' : '방문';
+      final title = '${expert.name}님과의 ${durationMinutes}분 ${consultationTypeText}상담';
+
+      await consultationRequestRepository.createConsultationRequest(
+        expertAccountId: expertAccount.id,
+        expertPublicId: expertAccount.expertPublicId,
+        userId: userId,
+        title: title,
+        scheduledAt: scheduledAt,
+        status: 'waiting',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('예약 실패: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+      rethrow;
+    }
   }
 }
