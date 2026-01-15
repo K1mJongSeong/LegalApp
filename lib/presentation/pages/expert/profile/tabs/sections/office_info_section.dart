@@ -883,6 +883,7 @@ class _OfficeInfoSectionState extends State<OfficeInfoSection> {
         border: Border.all(color: AppColors.border),
       ),
       child: DropdownButtonFormField<String>(
+        isExpanded: true,
         value: value,
         decoration: InputDecoration(
           hintText: hint,

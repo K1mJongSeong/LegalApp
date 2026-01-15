@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
@@ -8,9 +8,17 @@ import 'package:http/http.dart' as http;
 /// - 모바일(Android/iOS): .env 에서 OPENAI_API_KEY를 읽어 OpenAI API를 직접 호출
 /// - 웹(Flutter Web): Supabase Edge Function / 서버 프록시 엔드포인트로만 호출
 class GptService {
+  /// 모바일에서 사용할 OpenAI API Key (.env)
   static String get _apiKey => dotenv.env['OPENAI_API_KEY'] ?? '';
+
+  /// OpenAI Chat Completions 엔드포인트
   static const String _openAiBaseUrl =
       'https://api.openai.com/v1/chat/completions';
+
+  /// 웹에서 사용할 서버(또는 Supabase Edge Function) 프록시 엔드포인트
+  ///
+  /// 예: https://<project>.supabase.co/functions/v1/analyze-legal-case
+  /// 실제 URL은 프로젝트에 맞게 수정 필요
   static const String _webProxyUrl =
       'https://nbzchnwqlfthzfcfkgbz.supabase.co/functions/v1/ai-proxy';
 
@@ -21,8 +29,6 @@ class GptService {
     String progressItems = '',
     String goal = '',
   }) async {
-    print('IS WEB: $kIsWeb');
-    print('WEB PROXY URL: $_webProxyUrl');
     final prompt = '''
 당신은 한국 법률 전문가입니다. 다음 법률 사건을 분석해주세요.
 
@@ -74,8 +80,6 @@ $description
         if (kIsWeb) {
           return CaseSummaryResult.fromJson(data as Map<String, dynamic>);
         }
-        debugPrint('WEB RAW RESPONSE: ${response.body}');
-
 
         // 모바일(OpenAI 직접 호출) 응답 파싱
         final content = data['choices'][0]['message']['content'] as String;
@@ -189,43 +193,19 @@ class CaseSummaryResult {
     required this.expertDescription,
   });
 
-  // factory CaseSummaryResult.fromJson(Map<String, dynamic> json) {
-  //   return CaseSummaryResult(
-  //     summary: json['summary'] ?? '',
-  //     relatedLaws: (json['relatedLaws'] as List?)
-  //             ?.map((e) => RelatedLaw.fromJson(e))
-  //             .toList() ??
-  //         [],
-  //     similarCases: (json['similarCases'] as List?)
-  //             ?.map((e) => SimilarCase.fromJson(e))
-  //             .toList() ??
-  //         [],
-  //     expertCount: json['expertCount'] ?? 0,
-  //     expertDescription: json['expertDescription'] ?? '',
-  //   );
-  // }
   factory CaseSummaryResult.fromJson(Map<String, dynamic> json) {
-    final relatedLawsRaw = json['relatedLaws'];
-    final similarCasesRaw = json['similarCases'];
-
     return CaseSummaryResult(
-      summary: json['summary']?.toString() ?? '',
-      relatedLaws: relatedLawsRaw is List
-          ? relatedLawsRaw
-          .whereType<Map<String, dynamic>>()
-          .map((e) => RelatedLaw.fromJson(e))
-          .toList()
-          : [],
-      similarCases: similarCasesRaw is List
-          ? similarCasesRaw
-          .whereType<Map<String, dynamic>>()
-          .map((e) => SimilarCase.fromJson(e))
-          .toList()
-          : [],
-      expertCount: json['expertCount'] is int
-          ? json['expertCount']
-          : int.tryParse(json['expertCount']?.toString() ?? '') ?? 0,
-      expertDescription: json['expertDescription']?.toString() ?? '',
+      summary: json['summary'] ?? '',
+      relatedLaws: (json['relatedLaws'] as List?)
+              ?.map((e) => RelatedLaw.fromJson(e))
+              .toList() ??
+          [],
+      similarCases: (json['similarCases'] as List?)
+              ?.map((e) => SimilarCase.fromJson(e))
+              .toList() ??
+          [],
+      expertCount: json['expertCount'] ?? 0,
+      expertDescription: json['expertDescription'] ?? '',
     );
   }
 }
