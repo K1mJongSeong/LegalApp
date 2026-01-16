@@ -55,19 +55,19 @@ class SignupPromptDialog extends StatelessWidget {
             _buildBenefitItem(
               number: '1',
               title: '무료 초기 상담',
-              description: '첫 상담 무료 지원',
+              description: '사건 요약 기능 무료 지원',
             ),
             const SizedBox(height: AppSizes.paddingM),
             _buildBenefitItem(
               number: '2',
-              title: '사건 진행 상황 알림',
-              description: '실시간 업데이트 받기',
+              title: '초기 상담 지원',
+              description: '무료 상담 지원',
             ),
             const SizedBox(height: AppSizes.paddingM),
             _buildBenefitItem(
               number: '3',
               title: '전문가 직접 선택',
-              description: '비교하고 결정하기',
+              description: '내가 설정한 상담 조건의 전문가 목록',
             ),
             const SizedBox(height: AppSizes.paddingXL),
             // 회원가입 버튼
@@ -87,7 +87,7 @@ class SignupPromptDialog extends StatelessWidget {
                   ),
                 ),
                 child: const Text(
-                  '30초만에 회원가입하기',
+                  '30초만에 회원가입하고 혜택 받기',
                   style: TextStyle(
                     fontSize: AppSizes.fontM,
                     fontWeight: FontWeight.bold,
