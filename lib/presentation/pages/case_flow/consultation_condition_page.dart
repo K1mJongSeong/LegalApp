@@ -27,12 +27,12 @@ class ConsultationConditionPage extends StatefulWidget {
 class _ConsultationConditionPageState extends State<ConsultationConditionPage> {
   final List<String> _selectedMethods = [];
   String? _selectedRegion;
-  String? _selectedExperience;
-  String? _selectedFee;
-  bool _freeConsultation = false;
-  String? _selectedTime;
+  String? _selectedSortOrder;
+  bool _newlyRegisteredOnly = false;
+  String? _selectedGender;
+  bool _officialSpecializationOnly = false;
 
-  final List<String> _consultationMethods = ['전화', '채팅', '방문'];
+  final List<String> _consultationMethods = ['전화', '채팅', '방문', '이메일'];
   final List<String> _regions = [
     '서울',
     '경기',
@@ -52,25 +52,14 @@ class _ConsultationConditionPageState extends State<ConsultationConditionPage> {
     '경남',
     '제주',
   ];
-  final List<String> _experiences = [
-    '1년 이상',
-    '3년 이상',
-    '5년 이상',
-    '10년 이상',
-    '20년 이상',
+  final List<String> _sortOrders = [
+    '경력 높은 순',
+    '경력 낮은 순',
+    '경력무관',
   ];
-  final List<String> _fees = [
-    '무료',
-    '5만원 이하',
-    '10만원 이하',
-    '20만원 이하',
-    '30만원 이하',
-    '상관없음',
-  ];
-  final List<String> _times = [
-    '오전 (9시~12시)',
-    '오후 (12시~18시)',
-    '저녁 (18시~21시)',
+  final List<String> _genders = [
+    '남성',
+    '여성',
     '상관없음',
   ];
 
@@ -133,7 +122,7 @@ class _ConsultationConditionPageState extends State<ConsultationConditionPage> {
                     const SizedBox(height: AppSizes.paddingXL),
                     // 선호하는 상담 방식
                     _buildSection(
-                      title: '선호하는 상담 방식',
+                      title: '상담방식',
                       isOptional: true,
                       child: Column(
                         children: _consultationMethods.map((method) {
@@ -171,47 +160,81 @@ class _ConsultationConditionPageState extends State<ConsultationConditionPage> {
                       ),
                     ),
                     const SizedBox(height: AppSizes.paddingL),
-                    // 전문가 경력 범위
+                    // 경력 정렬 방식
                     _buildSection(
-                      title: '전문가 경력 범위',
+                      title: '경력 정렬 방식',
                       isOptional: true,
                       child: _buildDropdown(
-                        value: _selectedExperience,
-                        hint: '경력을 선택해주세요',
-                        items: _experiences,
+                        value: _selectedSortOrder,
+                        hint: '정렬 기준을 선택해주세요',
+                        items: _sortOrders,
                         onChanged: (value) {
                           setState(() {
-                            _selectedExperience = value;
+                            _selectedSortOrder = value;
                           });
                         },
                       ),
                     ),
                     const SizedBox(height: AppSizes.paddingL),
-                    // 상담비 범위
+                    // 신규 등록 전문가
+                    // _buildSection(
+                    //   title: '신규 등록 전문가',
+                    //   isOptional: false,
+                    //   child: Column(
+                    //     crossAxisAlignment: CrossAxisAlignment.start,
+                    //     children: [
+                    //       Text(
+                    //         '최근에 등록한 전문가만 표시됩니다',
+                    //         style: TextStyle(
+                    //           fontSize: AppSizes.fontS,
+                    //           color: AppColors.textSecondary,
+                    //         ),
+                    //       ),
+                    //       const SizedBox(height: AppSizes.paddingS),
+                    //       Row(
+                    //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    //         children: [
+                    //           const SizedBox.shrink(),
+                    //           Checkbox(
+                    //             value: _newlyRegisteredOnly,
+                    //             onChanged: (value) {
+                    //               setState(() {
+                    //                 _newlyRegisteredOnly = value ?? false;
+                    //               });
+                    //             },
+                    //             activeColor: AppColors.primary,
+                    //           ),
+                    //         ],
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
+                    // const SizedBox(height: AppSizes.paddingL),
+                    // 성별
                     _buildSection(
-                      title: '상담비 범위',
+                      title: '성별',
                       isOptional: true,
                       child: _buildDropdown(
-                        value: _selectedFee,
-                        hint: '금액을 선택해주세요',
-                        items: _fees,
+                        value: _selectedGender,
+                        hint: '성별을 선택해주세요',
+                        items: _genders,
                         onChanged: (value) {
                           setState(() {
-                            _selectedFee = value;
+                            _selectedGender = value;
                           });
                         },
                       ),
                     ),
                     const SizedBox(height: AppSizes.paddingL),
-                    // 무료 상담 희망
+                    // 공식 전문 등록
                     _buildSection(
-                      title: '무료 상담 희망',
+                      title: '공식 전문 등록',
                       isOptional: false,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '무료 상담 가능한 전문가만 표시됩니다',
+                            '전문 분야를 공식 등록한 전문가만 표시됩니다',
                             style: TextStyle(
                               fontSize: AppSizes.fontS,
                               color: AppColors.textSecondary,
@@ -219,38 +242,26 @@ class _ConsultationConditionPageState extends State<ConsultationConditionPage> {
                           ),
                           const SizedBox(height: AppSizes.paddingS),
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                              const SizedBox.shrink(),
                               Checkbox(
-                                value: _freeConsultation,
+                                value: _officialSpecializationOnly,
                                 onChanged: (value) {
                                   setState(() {
-                                    _freeConsultation = value ?? false;
+                                    _officialSpecializationOnly = value ?? false;
                                   });
                                 },
                                 activeColor: AppColors.primary,
                               ),
-                              const Text('무료 상담 희망'),
                             ],
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: AppSizes.paddingL),
-                    // 상담 가능 시간대
-                    _buildSection(
-                      title: '상담 가능 시간대',
-                      isOptional: true,
-                      child: _buildDropdown(
-                        value: _selectedTime,
-                        hint: '시간을 선택해주세요',
-                        items: _times,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedTime = value;
-                          });
-                        },
-                      ),
-                    ),
+                    const SizedBox(height: AppSizes.paddingXL),
+                    // 참고사항
+                    _buildReferenceBox(),
                   ],
                 ),
               ),
@@ -283,10 +294,10 @@ class _ConsultationConditionPageState extends State<ConsultationConditionPage> {
                         'goal': widget.goal,
                         'consultationMethod': _selectedMethods,
                         'preferredRegion': _selectedRegion,
-                        'expertExperience': _selectedExperience,
-                        'consultationFee': _selectedFee,
-                        'freeConsultation': _freeConsultation,
-                        'availableTime': _selectedTime,
+                        'sortOrder': _selectedSortOrder,
+                        'newlyRegisteredOnly': _newlyRegisteredOnly,
+                        'gender': _selectedGender,
+                        'officialSpecializationOnly': _officialSpecializationOnly,
                         'urgency': 'normal', // 기본값으로 설정
                       },
                     );
@@ -417,6 +428,66 @@ class _ConsultationConditionPageState extends State<ConsultationConditionPage> {
           );
         }).toList(),
         onChanged: onChanged,
+      ),
+    );
+  }
+
+  Widget _buildReferenceBox() {
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.paddingM),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: const Icon(
+              Icons.info_outline,
+              color: Colors.white,
+              size: 16,
+            ),
+          ),
+          const SizedBox(width: AppSizes.paddingM),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '참고사항',
+                  style: TextStyle(
+                    fontSize: AppSizes.fontM,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: AppSizes.paddingS),
+                Text(
+                  '설정하신 조건은 전문가 선택의 참고 자료입니다.',
+                  style: TextStyle(
+                    fontSize: AppSizes.fontS,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '최종 선택은 사용자님께서 하실 수 있으며, 조건과 다른 전문가를 선택할 수도 있습니다.',
+                  style: TextStyle(
+                    fontSize: AppSizes.fontS,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

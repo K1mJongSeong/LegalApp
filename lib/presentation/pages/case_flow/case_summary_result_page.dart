@@ -11,6 +11,7 @@ import '../../blocs/case/case_bloc.dart';
 import '../../blocs/case/case_event.dart';
 import '../../blocs/case/case_state.dart';
 import '../../widgets/common/signup_prompt_dialog.dart';
+import '../../widgets/common/consultation_post_dialog.dart';
 
 /// 사건 요약 결과 페이지
 class CaseSummaryResultPage extends StatefulWidget {
@@ -59,6 +60,10 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
   // 사건 저장 여부
   bool _isCaseSaved = false;
   String? _savedCaseId;
+  
+  // 사건 요약 수정용
+  final TextEditingController _summaryController = TextEditingController();
+  bool _isEditingSummary = false;
 
   @override
   void initState() {
@@ -73,6 +78,12 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
         _loadExpertCount();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _summaryController.dispose();
+    super.dispose();
   }
 
   /// 회원가입 유도 팝업 표시
@@ -174,6 +185,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
       setState(() {
         _result = result;
         _isLoading = false;
+        _summaryController.text = result.summary;
       });
       
       // 분석 완료 후 Firebase에 사건 저장
@@ -247,7 +259,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text('AI가 사건을 분석 중입니다...'),
+                  Text('AI가 사건을 요약 중입니다...'),
                 ],
               ),
             )
@@ -311,8 +323,8 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                 _buildCasesSection(),
                 const SizedBox(height: AppSizes.paddingL),
                 // 추천 전문가
-                _buildExpertsSection(),
-                const SizedBox(height: AppSizes.paddingXL),
+                // _buildExpertsSection(),
+                // const SizedBox(height: AppSizes.paddingXL),
               ],
             ),
           ),
@@ -334,11 +346,8 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                // 카테고리 필터를 적용해서 전문가 목록으로 이동
-                Navigator.pushNamed(
-                  context, 
-                  '${AppRoutes.experts}?category=${widget.category}',
-                );
+                // 상담 글 작성 팝업 표시
+                _showConsultationPostDialog();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
@@ -349,7 +358,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                 ),
               ),
               child: const Text(
-                '전문가 목록 보기',
+                '상담 글 등록 및 전문가 목록 보기',
                 style: TextStyle(
                   fontSize: AppSizes.fontM,
                   fontWeight: FontWeight.bold,
@@ -390,11 +399,23 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                 ],
               ),
               TextButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.edit, size: 16),
-                label: const Text('수정'),
+                onPressed: () {
+                  setState(() {
+                    _isEditingSummary = !_isEditingSummary;
+                  });
+                },
+                icon: Icon(_isEditingSummary ? Icons.check : Icons.edit, size: 16),
+                label: Text(_isEditingSummary ? '완료' : '수정'),
               ),
             ],
+          ),
+          const SizedBox(height: AppSizes.paddingS),
+          Text(
+            '변경하고 싶은 내용을 자유롭게 수정하세요.',
+            style: TextStyle(
+              fontSize: AppSizes.fontS,
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: AppSizes.paddingM),
           Container(
@@ -403,13 +424,29 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
               color: AppColors.primary.withOpacity(0.05),
               borderRadius: BorderRadius.circular(AppSizes.radiusM),
             ),
-            child: Text(
-              _result?.summary ?? '',
-              style: const TextStyle(
-                fontSize: AppSizes.fontM,
-                height: 1.6,
-              ),
-            ),
+            child: _isEditingSummary
+                ? TextField(
+                    controller: _summaryController,
+                    maxLines: null,
+                    style: const TextStyle(
+                      fontSize: AppSizes.fontM,
+                      height: 1.6,
+                    ),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  )
+                : Text(
+                    _summaryController.text.isEmpty
+                        ? (_result?.summary ?? '')
+                        : _summaryController.text,
+                    style: const TextStyle(
+                      fontSize: AppSizes.fontM,
+                      height: 1.6,
+                    ),
+                  ),
           ),
           const SizedBox(height: AppSizes.paddingM),
           Container(
@@ -499,11 +536,13 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                '${law.article} (${law.title})',
-                style: const TextStyle(
-                  fontSize: AppSizes.fontM,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  '${law.article} (${law.title})',
+                  style: const TextStyle(
+                    fontSize: AppSizes.fontM,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -709,6 +748,18 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// 상담 글 작성 팝업 표시
+  void _showConsultationPostDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => ConsultationPostDialog(
+        initialSummary: _summaryController.text,
+        category: widget.categoryName,
       ),
     );
   }
