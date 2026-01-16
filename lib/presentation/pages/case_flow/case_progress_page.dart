@@ -56,7 +56,7 @@ class _CaseProgressPageState extends State<CaseProgressPage> {
               child: Row(
                 children: [
                   Text(
-                    '2/7단계',
+                    '2/5단계',
                     style: TextStyle(
                       fontSize: AppSizes.fontS,
                       color: AppColors.textSecondary,
@@ -208,6 +208,7 @@ class _CaseProgressPageState extends State<CaseProgressPage> {
     );
   }
 }
+
 
 
 

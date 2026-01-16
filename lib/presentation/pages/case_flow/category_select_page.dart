@@ -4,8 +4,123 @@ import '../../../core/constants/app_sizes.dart';
 import '../../../core/router/app_router.dart';
 
 /// 법률 분야 선택 페이지
-class CategorySelectPage extends StatelessWidget {
+class CategorySelectPage extends StatefulWidget {
   const CategorySelectPage({super.key});
+
+  @override
+  State<CategorySelectPage> createState() => _CategorySelectPageState();
+}
+
+class _CategorySelectPageState extends State<CategorySelectPage> {
+  String? _selectedCategory;
+  String? _selectedCategoryName;
+
+  // 카테고리 목록 (마크다운 표 기준)
+  final List<Map<String, dynamic>> _categories = [
+    {
+      'id': 'labor',
+      'name': '직장 / 노동',
+      'subtitle': '해고, 임금체불, 근로계약',
+      'icon': Icons.work,
+      'subCategories': [
+        '기업법무',
+        '노동·인사',
+      ],
+    },
+    {
+      'id': 'real_estate',
+      'name': '부동산 / 임대차',
+      'subtitle': '전월세, 매매, 계약분쟁',
+      'icon': Icons.home,
+      'subCategories': [
+        '건축·부동산 일반',
+        '재개발·재건축',
+        '매매·소유권 등',
+        '임대차',
+      ],
+    },
+    {
+      'id': 'traffic',
+      'name': '교통사고',
+      'subtitle': '사고합의, 보험처리',
+      'icon': Icons.directions_car,
+      'subCategories': [
+        '교통사고·도주',
+        '음주·무면허',
+      ],
+    },
+    {
+      'id': 'criminal',
+      'name': '형사',
+      'subtitle': '고소, 고발, 형사사건',
+      'icon': Icons.gavel,
+      'subCategories': [
+        '성범죄',
+        '재산범죄',
+        '교통사고·범죄',
+        '형사절차',
+        '폭행·협박',
+        '명예훼손·모욕',
+        '기타 형사범죄',
+      ],
+    },
+    {
+      'id': 'civil',
+      'name': '민사',
+      'subtitle': '계약, 손해배상, 채권',
+      'icon': Icons.description,
+      'subCategories': [
+        '부동산·임대차',
+        '금전·계약 문제',
+        '민사절차',
+        '기타 민사문제',
+      ],
+    },
+    {
+      'id': 'family',
+      'name': '가사',
+      'subtitle': '이혼, 상속, 양육권',
+      'icon': Icons.favorite,
+      'subCategories': [
+        '이혼',
+        '상속',
+        '가사 일반',
+      ],
+    },
+    {
+      'id': 'company',
+      'name': '회사',
+      'subtitle': '기업법무, 노동·인사',
+      'icon': Icons.business,
+      'subCategories': [
+        '기업법무',
+        '노동·인사',
+      ],
+    },
+    {
+      'id': 'medical_tax_admin',
+      'name': '의료·세금·행정',
+      'subtitle': '세금·행정·헌법, 의료·식품·의약, 병역·군형법',
+      'icon': Icons.local_hospital,
+      'subCategories': [
+        '세금·행정·헌법',
+        '의료·식품·의약',
+        '병역·군형법',
+      ],
+    },
+    {
+      'id': 'it_ip_finance',
+      'name': 'IT·지식재산·금융',
+      'subtitle': '소비자·공정거래, IT·개인정보, 지식재산권·엔터, 금융·보험',
+      'icon': Icons.computer,
+      'subCategories': [
+        '소비자·공정거래',
+        'IT·개인정보',
+        '지식재산권·엔터',
+        '금융·보험',
+      ],
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -22,58 +137,29 @@ class CategorySelectPage extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(AppSizes.paddingM),
+        child: Column(
           children: [
-            _buildCategoryTile(
-              context,
-              Icons.gavel,
-              '형사',
-              '폭행/상해, 성범죄, 사기, 횡령/배임...',
-              'criminal',
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(AppSizes.paddingM),
+                children: [
+                  // 주요 카테고리 목록
+                  ..._categories.map((category) {
+                    return _buildCategoryTile(
+                      category['id'] as String,
+                      category['name'] as String,
+                      category['subtitle'] as String,
+                      category['icon'] as IconData,
+                    );
+                  }),
+                  const SizedBox(height: AppSizes.paddingS),
+                  // "잘 모르겠어요" 옵션
+                  _buildUnknownOption(),
+                ],
+              ),
             ),
-            _buildCategoryTile(
-              context,
-              Icons.description,
-              '민사',
-              '손해배상, 계약, 채권추심, 부당이득',
-              'civil',
-            ),
-            _buildCategoryTile(
-              context,
-              Icons.favorite,
-              '가족관계',
-              '이혼, 양육권, 재산분할, 상속',
-              'family',
-            ),
-            _buildCategoryTile(
-              context,
-              Icons.work,
-              '노동/근로',
-              '부당해고, 임금체불, 산재, 퇴직금',
-              'labor',
-            ),
-            _buildCategoryTile(
-              context,
-              Icons.home,
-              '부동산/임대차',
-              '전월세, 매매, 명도, 재개발',
-              'real',
-            ),
-            _buildCategoryTile(
-              context,
-              Icons.directions_car,
-              '교통사고',
-              '인적피해, 물적피해, 뺑소니, 음주...',
-              'traffic',
-            ),
-            _buildCategoryTile(
-              context,
-              Icons.business,
-              '기업/창업',
-              '계약서, 투자, 지적재산권, 노무',
-              'business',
-            ),
+            // 하단 "다음" 버튼
+            _buildNextButton(),
           ],
         ),
       ),
@@ -81,26 +167,36 @@ class CategorySelectPage extends StatelessWidget {
   }
 
   Widget _buildCategoryTile(
-    BuildContext context,
-    IconData icon,
+    String categoryId,
     String title,
     String subtitle,
-    String category,
+    IconData icon,
   ) {
+    final isSelected = _selectedCategory == categoryId;
+
     return Container(
       margin: const EdgeInsets.only(bottom: AppSizes.paddingS),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: isSelected
+            ? AppColors.primary.withOpacity(0.1)
+            : AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizes.radiusL),
-        border: Border.all(color: AppColors.border, width: 1),
+        border: Border.all(
+          color: isSelected ? AppColors.primary : AppColors.border,
+          width: isSelected ? 2 : 1,
+        ),
       ),
       child: ListTile(
         onTap: () {
-          Navigator.pushNamed(
-            context,
-            AppRoutes.caseProgress,
-            arguments: {'category': category, 'categoryName': title},
-          );
+          setState(() {
+            if (_selectedCategory == categoryId) {
+              _selectedCategory = null;
+              _selectedCategoryName = null;
+            } else {
+              _selectedCategory = categoryId;
+              _selectedCategoryName = title;
+            }
+          });
         },
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSizes.paddingM,
@@ -112,14 +208,19 @@ class CategorySelectPage extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            border: Border.all(
+              color: AppColors.primary,
+              width: 1,
+            ),
           ),
           child: Icon(icon, color: AppColors.primary),
         ),
         title: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: AppSizes.fontM,
             fontWeight: FontWeight.w600,
+            color: isSelected ? AppColors.primary : AppColors.textPrimary,
           ),
         ),
         subtitle: Text(
@@ -131,15 +232,155 @@ class CategorySelectPage extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: AppColors.textSecondary,
+        trailing: isSelected
+            ? Icon(
+                Icons.check_circle,
+                color: AppColors.primary,
+                size: 24,
+              )
+            : const Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: AppColors.textSecondary,
+              ),
+      ),
+    );
+  }
+
+  Widget _buildUnknownOption() {
+    final isSelected = _selectedCategory == 'unknown';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSizes.paddingS),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? AppColors.primary.withOpacity(0.1)
+            : AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.radiusL),
+        border: isSelected
+            ? Border.all(
+                color: AppColors.primary,
+                width: 2,
+              )
+            : Border.all(
+                color: AppColors.border.withOpacity(0.5),
+                width: 1,
+                style: BorderStyle.solid,
+              ),
+      ),
+      child: ListTile(
+            onTap: () {
+              setState(() {
+                if (_selectedCategory == 'unknown') {
+                  _selectedCategory = null;
+                  _selectedCategoryName = null;
+                } else {
+                  _selectedCategory = 'unknown';
+                  _selectedCategoryName = '잘 모르겠어요';
+                }
+              });
+            },
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.paddingM,
+              vertical: AppSizes.paddingS,
+            ),
+            leading: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppSizes.radiusM),
+              ),
+              child: Icon(
+                Icons.chat_bubble_outline,
+                color: AppColors.primary,
+              ),
+            ),
+            title: const Text(
+              '잘 모르겠어요',
+              style: TextStyle(
+                fontSize: AppSizes.fontM,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            trailing: isSelected
+                ? Icon(
+                    Icons.check_circle,
+                    color: AppColors.primary,
+                    size: 24,
+                  )
+                : null,
+          ),
+      );
+  }
+
+  Widget _buildNextButton() {
+    final isEnabled = _selectedCategory != null;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.paddingM),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        height: AppSizes.buttonHeight,
+        child: ElevatedButton(
+          onPressed: isEnabled
+              ? () {
+                  if (_selectedCategory == 'unknown') {
+                    // 잘 모르겠어요 선택 시 - 다음 단계로 바로 이동하지 않음
+                    // 또는 특별한 처리
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.caseProgress,
+                      arguments: {
+                        'category': 'unknown',
+                        'categoryName': '잘 모르겠어요',
+                      },
+                    );
+                  } else {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.caseProgress,
+                      arguments: {
+                        'category': _selectedCategory,
+                        'categoryName': _selectedCategoryName,
+                      },
+                    );
+                  }
+                }
+              : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isEnabled
+                ? AppColors.primary
+                : AppColors.textSecondary.withOpacity(0.3),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            ),
+            elevation: 0,
+          ),
+          child: const Text(
+            '다음',
+            style: TextStyle(
+              fontSize: AppSizes.fontL,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
       ),
     );
   }
 }
+
 
 
 

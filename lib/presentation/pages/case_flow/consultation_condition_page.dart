@@ -99,7 +99,7 @@ class _ConsultationConditionPageState extends State<ConsultationConditionPage> {
               child: Row(
                 children: [
                   Text(
-                    '5/7단계',
+                    '5/5단계',
                     style: TextStyle(
                       fontSize: AppSizes.fontS,
                       color: AppColors.textSecondary,
