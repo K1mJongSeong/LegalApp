@@ -77,7 +77,7 @@ class _ConsultationGoalPageState extends State<ConsultationGoalPage> {
               child: Row(
                 children: [
                   Text(
-                    '4/7단계',
+                    '4/5단계',
                     style: TextStyle(
                       fontSize: AppSizes.fontS,
                       color: AppColors.textSecondary,
@@ -242,6 +242,7 @@ class _ConsultationGoalPageState extends State<ConsultationGoalPage> {
     );
   }
 }
+
 
 
 

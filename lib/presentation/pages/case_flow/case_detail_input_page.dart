@@ -22,7 +22,14 @@ class CaseDetailInputPage extends StatefulWidget {
 
 class _CaseDetailInputPageState extends State<CaseDetailInputPage> {
   final _descriptionController = TextEditingController();
+  final int _minLength = 20;
   final int _maxLength = 2000;
+
+  /// 입력된 텍스트의 유효한 길이를 반환 (공백 제거 후)
+  int get _validTextLength => _descriptionController.text.trim().length;
+
+  /// 최소 글자 수 조건을 만족하는지 확인
+  bool get _isValidInput => _validTextLength >= _minLength;
 
   @override
   void dispose() {
@@ -103,7 +110,7 @@ class _CaseDetailInputPageState extends State<CaseDetailInputPage> {
                     ),
                     const SizedBox(height: AppSizes.paddingS),
                     Text(
-                      '(선택 사항)',
+                      '최소 ${_minLength}자 이상 입력해주세요',
                       style: TextStyle(
                         fontSize: AppSizes.fontS,
                         color: AppColors.textSecondary,
@@ -115,7 +122,11 @@ class _CaseDetailInputPageState extends State<CaseDetailInputPage> {
                       decoration: BoxDecoration(
                         color: AppColors.surface,
                         borderRadius: BorderRadius.circular(AppSizes.radiusL),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(
+                          color: !_isValidInput && _descriptionController.text.isNotEmpty
+                              ? AppColors.warning
+                              : AppColors.border,
+                        ),
                       ),
                       child: TextField(
                         controller: _descriptionController,
@@ -132,15 +143,40 @@ class _CaseDetailInputPageState extends State<CaseDetailInputPage> {
                         onChanged: (_) => setState(() {}),
                       ),
                     ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        '${_descriptionController.text.length} / ${_maxLength}자',
-                        style: TextStyle(
-                          fontSize: AppSizes.fontS,
-                          color: AppColors.textSecondary,
+                    const SizedBox(height: AppSizes.paddingS),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // 최소 글자 수 안내
+                        if (!_isValidInput && _descriptionController.text.isNotEmpty)
+                          Text(
+                            '최소 ${_minLength}자 이상 입력해주세요 (현재: ${_validTextLength}자)',
+                            style: TextStyle(
+                              fontSize: AppSizes.fontS,
+                              color: AppColors.warning,
+                            ),
+                          )
+                        else if (!_isValidInput)
+                          Text(
+                            '최소 ${_minLength}자 이상 입력해주세요',
+                            style: TextStyle(
+                              fontSize: AppSizes.fontS,
+                              color: AppColors.textSecondary,
+                            ),
+                          )
+                        else
+                          const SizedBox.shrink(),
+                        // 글자 수 표시
+                        Text(
+                          '${_validTextLength} / ${_maxLength}자',
+                          style: TextStyle(
+                            fontSize: AppSizes.fontS,
+                            color: !_isValidInput
+                                ? AppColors.warning
+                                : AppColors.textSecondary,
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                     const SizedBox(height: AppSizes.paddingXL),
                     // 작성 팁
@@ -194,25 +230,41 @@ class _CaseDetailInputPageState extends State<CaseDetailInputPage> {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      AppRoutes.consultationGoal,
-                      arguments: {
-                        'category': widget.category,
-                        'categoryName': widget.categoryName,
-                        'progressItems': widget.progressItems,
-                        'description': _descriptionController.text,
-                      },
-                    );
-                  },
+                  onPressed: _isValidInput
+                      ? () {
+                          // 추가 검증 (안전장치)
+                          if (!_isValidInput) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    '최소 ${_minLength}자 이상 입력해주세요. (현재: ${_validTextLength}자)'),
+                                backgroundColor: AppColors.warning,
+                              ),
+                            );
+                            return;
+                          }
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.consultationGoal,
+                            arguments: {
+                              'category': widget.category,
+                              'categoryName': widget.categoryName,
+                              'progressItems': widget.progressItems,
+                              'description': _descriptionController.text.trim(),
+                            },
+                          );
+                        }
+                      : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: _isValidInput
+                        ? AppColors.primary
+                        : AppColors.textSecondary.withOpacity(0.3),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppSizes.radiusL),
                     ),
+                    elevation: 0,
                   ),
                   child: const Text(
                     '다음',

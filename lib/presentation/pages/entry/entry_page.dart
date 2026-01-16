@@ -92,7 +92,7 @@ class EntryPage extends StatelessWidget {
                     height: AppSizes.buttonHeight,
                     child: OutlinedButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, AppRoutes.home);
+                        Navigator.pushReplacementNamed(context, AppRoutes.categorySelect);
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.primary,
