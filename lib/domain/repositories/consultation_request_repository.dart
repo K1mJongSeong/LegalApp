@@ -21,6 +21,7 @@ abstract class ConsultationRequestRepository {
     required String title,
     required DateTime scheduledAt,
     String status = 'waiting',
+    String? consultationPostId,
   });
 }
 

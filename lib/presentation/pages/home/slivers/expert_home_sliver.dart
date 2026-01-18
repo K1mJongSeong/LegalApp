@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../domain/entities/expert_profile.dart';
+import '../../../../domain/entities/consultation_post.dart';
 import '../../../../domain/repositories/expert_profile_repository.dart';
+import '../../../../domain/repositories/expert_account_repository.dart';
+import '../../../../domain/repositories/consultation_post_repository.dart';
 import '../../../../data/repositories/expert_profile_repository_impl.dart';
+import '../../../../data/repositories/expert_account_repository_impl.dart';
+import '../../../../data/repositories/consultation_post_repository_impl.dart';
+import '../../../../data/datasources/expert_account_remote_datasource.dart';
+import '../../../../data/datasources/consultation_post_remote_datasource.dart';
 import '../../../blocs/auth/auth_bloc.dart';
 import '../../../blocs/auth/auth_state.dart';
 import '../../../widgets/home/expert/expert_home_header.dart';
@@ -73,27 +82,54 @@ class ExpertHomeSliver extends StatelessWidget {
           const ConsultationSectionHeader(),
           const SizedBox(height: AppSizes.paddingS),
 
-          // 상담글 카드 1
-          const ConsultationCard(
-            category: '민사',
-            categoryColor: Colors.red,
-            time: '5분 전',
-            title: '공증 실무(위조 사문서) 관련 문의',
-            views: 3,
-            comments: 0,
-          ),
-          const SizedBox(height: AppSizes.paddingS),
+          // 예약된 상담 글 목록
+          BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, authState) {
+              if (authState is! AuthAuthenticated) {
+                return _buildEmptyConsultation();
+              }
 
-          // 상담글 카드 2
-          const ConsultationCard(
-            category: '가족',
-            categoryColor: Colors.purple,
-            time: '15분 전',
-            title: '상속 포기 절차와 비용 문의드립니다',
-            views: 12,
-            comments: 2,
+              return FutureBuilder<List<ConsultationPost>>(
+                future: _loadConsultationPosts(authState.user.id),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(AppSizes.paddingL),
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+
+                  if (snapshot.hasError) {
+                    return _buildEmptyConsultation();
+                  }
+
+                  final posts = snapshot.data ?? [];
+                  if (posts.isEmpty) {
+                    return _buildEmptyConsultation();
+                  }
+
+                  return Column(
+                    children: [
+                      ...posts.map((post) => Padding(
+                            padding: const EdgeInsets.only(bottom: AppSizes.paddingS),
+                            child: ConsultationCard(
+                              category: post.category ?? '기타',
+                              categoryColor: _getCategoryColor(post.category),
+                              time: _formatTimeAgo(post.createdAt),
+                              title: post.title,
+                              views: post.views,
+                              comments: post.comments,
+                            ),
+                          )),
+                      const SizedBox(height: AppSizes.paddingM),
+                    ],
+                  );
+                },
+              );
+            },
           ),
-          const SizedBox(height: AppSizes.paddingM),
 
           // 추천 카드
           const RecommendationCard(),
@@ -113,6 +149,94 @@ class ExpertHomeSliver extends StatelessWidget {
         ]),
       ),
     );
+  }
+
+  /// 전문가 계정 ID로 예약된 상담 글 목록 로드
+  Future<List<ConsultationPost>> _loadConsultationPosts(String userId) async {
+    try {
+      // userId로 expertAccountId 조회
+      final expertAccountRepository = ExpertAccountRepositoryImpl(
+        ExpertAccountRemoteDataSource(),
+      );
+      final expertAccount = await expertAccountRepository.getExpertAccountByUserId(userId);
+
+      if (expertAccount == null) {
+        return [];
+      }
+
+      // 예약된 상담 글 목록 조회
+      final consultationPostRepository = ConsultationPostRepositoryImpl(
+        ConsultationPostRemoteDataSource(),
+      );
+      return await consultationPostRepository.getConsultationPostsByExpertAccountId(
+        expertAccount.id,
+      );
+    } catch (e) {
+      debugPrint('❌ ExpertHomeSliver._loadConsultationPosts error: $e');
+      return [];
+    }
+  }
+
+  /// 빈 상담 글 위젯
+  Widget _buildEmptyConsultation() {
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.paddingL),
+      margin: const EdgeInsets.only(bottom: AppSizes.paddingM),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppSizes.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          '예약된 상담이 없습니다.',
+          style: TextStyle(
+            fontSize: AppSizes.fontM,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 카테고리 색상 반환
+  Color _getCategoryColor(String? category) {
+    switch (category) {
+      case '민사':
+        return Colors.red;
+      case '가족':
+        return Colors.purple;
+      case '형사':
+        return Colors.blue;
+      case '노동':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  /// 시간 포맷 (예: "5분 전")
+  String _formatTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inMinutes < 1) {
+      return '방금 전';
+    } else if (difference.inHours < 1) {
+      return '${difference.inMinutes}분 전';
+    } else if (difference.inDays < 1) {
+      return '${difference.inHours}시간 전';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}일 전';
+    } else {
+      return DateFormat('yyyy.MM.dd').format(dateTime);
+    }
   }
 }
 
