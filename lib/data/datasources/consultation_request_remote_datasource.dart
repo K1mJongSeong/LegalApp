@@ -61,6 +61,7 @@ class ConsultationRequestRemoteDataSource {
     required String title,
     required DateTime scheduledAt,
     String status = 'waiting',
+    String? consultationPostId,
   }) async {
     try {
       debugPrint('📝 ConsultationRequestDataSource: create');
@@ -73,6 +74,7 @@ class ConsultationRequestRemoteDataSource {
         'status': status,
         'scheduledAt': Timestamp.fromDate(scheduledAt),
         'createdAt': Timestamp.fromDate(now),
+        'consultationPostId': consultationPostId,
       };
 
       final docRef = await _collection.add(data);

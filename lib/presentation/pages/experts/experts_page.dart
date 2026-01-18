@@ -8,8 +8,11 @@ import '../../../domain/repositories/expert_account_repository.dart';
 import '../../../data/repositories/expert_account_repository_impl.dart';
 import '../../../data/datasources/expert_account_remote_datasource.dart';
 import '../../../domain/repositories/consultation_request_repository.dart';
+import '../../../domain/repositories/consultation_post_repository.dart';
 import '../../../data/repositories/consultation_request_repository_impl.dart';
+import '../../../data/repositories/consultation_post_repository_impl.dart';
 import '../../../data/datasources/consultation_request_remote_datasource.dart';
+import '../../../data/datasources/consultation_post_remote_datasource.dart';
 import '../../blocs/expert/expert_bloc.dart';
 import '../../blocs/expert/expert_event.dart';
 import '../../blocs/expert/expert_state.dart';
@@ -36,6 +39,14 @@ class ExpertsPage extends StatefulWidget {
 class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
   final _searchController = TextEditingController();
   List<Expert>? _cachedExperts; // 목록 캐시
+  
+  // 필터 상태
+  Set<String> _selectedConsultationMethods = {}; // 전화, 채팅, 방문, 이메일
+  String? _selectedRegion; // 선호 지역
+  String? _experienceSort; // 경력 정렬
+  String? _selectedGender; // 성별
+  Set<String> _selectedQualifications = {}; // 특수 자격
+  Set<String> _selectedExperiences = {}; // 경험
 
   @override
   void initState() {
@@ -417,50 +428,399 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
   void _showFilterSheet() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppSizes.radiusXL)),
       ),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(AppSizes.paddingL),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '필터',
-                style: TextStyle(
-                  fontSize: AppSizes.fontXL,
-                  fontWeight: FontWeight.bold,
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.9,
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSizes.paddingL),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 헤더
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          '필터',
+                          style: TextStyle(
+                            fontSize: AppSizes.fontXL,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            setModalState(() {
+                              _selectedConsultationMethods.clear();
+                              _selectedRegion = null;
+                              _experienceSort = null;
+                              _selectedGender = null;
+                              _selectedQualifications.clear();
+                              _selectedExperiences.clear();
+                            });
+                          },
+                          child: const Text('초기화'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSizes.paddingL),
+                    
+                    // 카테고리
+                    _buildFilterSection(
+                      title: '카테고리',
+                      child: Wrap(
+                        spacing: AppSizes.paddingS,
+                        runSpacing: AppSizes.paddingS,
+                        children: [
+                          _buildFilterChip('전체', null),
+                          _buildFilterChip('노동/근로', 'labor'),
+                          _buildFilterChip('세금/조세', 'tax'),
+                          _buildFilterChip('형사', 'criminal'),
+                          _buildFilterChip('가사/이혼', 'family'),
+                          _buildFilterChip('부동산', 'real'),
+                        ],
+                      ),
+                    ),
+                    
+                    // 선호하는 상담 방식
+                    _buildFilterSection(
+                      title: '선호하는 상담 방식',
+                      child: Column(
+                        children: [
+                          _buildCheckboxTile('전화', 'phone', _selectedConsultationMethods, (value) {
+                            setModalState(() {
+                              if (value == true) {
+                                _selectedConsultationMethods.add('phone');
+                              } else {
+                                _selectedConsultationMethods.remove('phone');
+                              }
+                            });
+                          }),
+                          _buildCheckboxTile('채팅', 'chat', _selectedConsultationMethods, (value) {
+                            setModalState(() {
+                              if (value == true) {
+                                _selectedConsultationMethods.add('chat');
+                              } else {
+                                _selectedConsultationMethods.remove('chat');
+                              }
+                            });
+                          }),
+                          _buildCheckboxTile('방문', 'visit', _selectedConsultationMethods, (value) {
+                            setModalState(() {
+                              if (value == true) {
+                                _selectedConsultationMethods.add('visit');
+                              } else {
+                                _selectedConsultationMethods.remove('visit');
+                              }
+                            });
+                          }),
+                          _buildCheckboxTile('이메일', 'email', _selectedConsultationMethods, (value) {
+                            setModalState(() {
+                              if (value == true) {
+                                _selectedConsultationMethods.add('email');
+                              } else {
+                                _selectedConsultationMethods.remove('email');
+                              }
+                            });
+                          }),
+                        ],
+                      ),
+                    ),
+                    
+                    // 선호 지역
+                    _buildFilterSection(
+                      title: '선호 지역',
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedRegion,
+                        decoration: InputDecoration(
+                          hintText: '지역을 선택하세요',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppSizes.paddingM,
+                            vertical: AppSizes.paddingS,
+                          ),
+                        ),
+                        items: _getRegionList().map((region) {
+                          return DropdownMenuItem(
+                            value: region,
+                            child: Text(region),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setModalState(() {
+                            _selectedRegion = value;
+                          });
+                        },
+                      ),
+                    ),
+                    
+                    // 경력 정렬
+                    _buildFilterSection(
+                      title: '경력 정렬',
+                      child: DropdownButtonFormField<String>(
+                        value: _experienceSort,
+                        decoration: InputDecoration(
+                          hintText: '정렬 방식을 선택하세요',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppSizes.paddingM,
+                            vertical: AppSizes.paddingS,
+                          ),
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 'high', child: Text('경력 높은 순')),
+                          DropdownMenuItem(value: 'low', child: Text('경력 낮은 순')),
+                          DropdownMenuItem(value: 'none', child: Text('경력 무관')),
+                        ],
+                        onChanged: (value) {
+                          setModalState(() {
+                            _experienceSort = value;
+                          });
+                        },
+                      ),
+                    ),
+                    
+                    // 성별
+                    _buildFilterSection(
+                      title: '성별',
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedGender,
+                        decoration: InputDecoration(
+                          hintText: '성별을 선택하세요',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppSizes.paddingM,
+                            vertical: AppSizes.paddingS,
+                          ),
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 'male', child: Text('남성')),
+                          DropdownMenuItem(value: 'female', child: Text('여성')),
+                          DropdownMenuItem(value: 'any', child: Text('상관없음')),
+                        ],
+                        onChanged: (value) {
+                          setModalState(() {
+                            _selectedGender = value;
+                          });
+                        },
+                      ),
+                    ),
+                    
+                    // 특수 자격
+                    _buildFilterSection(
+                      title: '특수 자격',
+                      child: Column(
+                        children: [
+                          _buildCheckboxTile('세무사', 'tax_accountant', _selectedQualifications, (value) {
+                            setModalState(() {
+                              if (value == true) {
+                                _selectedQualifications.add('tax_accountant');
+                              } else {
+                                _selectedQualifications.remove('tax_accountant');
+                              }
+                            });
+                          }),
+                          _buildCheckboxTile('노무사', 'labor_attorney', _selectedQualifications, (value) {
+                            setModalState(() {
+                              if (value == true) {
+                                _selectedQualifications.add('labor_attorney');
+                              } else {
+                                _selectedQualifications.remove('labor_attorney');
+                              }
+                            });
+                          }),
+                          _buildCheckboxTile('변리사', 'patent_attorney', _selectedQualifications, (value) {
+                            setModalState(() {
+                              if (value == true) {
+                                _selectedQualifications.add('patent_attorney');
+                              } else {
+                                _selectedQualifications.remove('patent_attorney');
+                              }
+                            });
+                          }),
+                          _buildCheckboxTile('관세사', 'customs_broker', _selectedQualifications, (value) {
+                            setModalState(() {
+                              if (value == true) {
+                                _selectedQualifications.add('customs_broker');
+                              } else {
+                                _selectedQualifications.remove('customs_broker');
+                              }
+                            });
+                          }),
+                          _buildCheckboxTile('회계사', 'accountant', _selectedQualifications, (value) {
+                            setModalState(() {
+                              if (value == true) {
+                                _selectedQualifications.add('accountant');
+                              } else {
+                                _selectedQualifications.remove('accountant');
+                              }
+                            });
+                          }),
+                        ],
+                      ),
+                    ),
+                    
+                    // 경험
+                    _buildFilterSection(
+                      title: '경험',
+                      child: Column(
+                        children: [
+                          _buildCheckboxTile('판사 경험', 'judge', _selectedExperiences, (value) {
+                            setModalState(() {
+                              if (value == true) {
+                                _selectedExperiences.add('judge');
+                              } else {
+                                _selectedExperiences.remove('judge');
+                              }
+                            });
+                          }),
+                          _buildCheckboxTile('검사 경험', 'prosecutor', _selectedExperiences, (value) {
+                            setModalState(() {
+                              if (value == true) {
+                                _selectedExperiences.add('prosecutor');
+                              } else {
+                                _selectedExperiences.remove('prosecutor');
+                              }
+                            });
+                          }),
+                          _buildCheckboxTile('경찰 경험', 'police', _selectedExperiences, (value) {
+                            setModalState(() {
+                              if (value == true) {
+                                _selectedExperiences.add('police');
+                              } else {
+                                _selectedExperiences.remove('police');
+                              }
+                            });
+                          }),
+                          _buildCheckboxTile('법원 공무원 경험', 'court_official', _selectedExperiences, (value) {
+                            setModalState(() {
+                              if (value == true) {
+                                _selectedExperiences.add('court_official');
+                              } else {
+                                _selectedExperiences.remove('court_official');
+                              }
+                            });
+                          }),
+                          _buildCheckboxTile('검찰 공무원 경험', 'prosecution_official', _selectedExperiences, (value) {
+                            setModalState(() {
+                              if (value == true) {
+                                _selectedExperiences.add('prosecution_official');
+                              } else {
+                                _selectedExperiences.remove('prosecution_official');
+                              }
+                            });
+                          }),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(height: AppSizes.paddingL),
+                    
+                    // 적용 버튼
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _applyFilters();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingM),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                          ),
+                        ),
+                        child: const Text('적용'),
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.paddingM),
+                  ],
                 ),
               ),
-              const SizedBox(height: AppSizes.paddingL),
-              const Text('카테고리', style: TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(height: AppSizes.paddingS),
-              Wrap(
-                spacing: AppSizes.paddingS,
-                children: [
-                  _buildFilterChip('전체', null),
-                  _buildFilterChip('노동/근로', 'labor'),
-                  _buildFilterChip('세금/조세', 'tax'),
-                  _buildFilterChip('형사', 'criminal'),
-                  _buildFilterChip('가사/이혼', 'family'),
-                  _buildFilterChip('부동산', 'real'),
-                ],
-              ),
-              const SizedBox(height: AppSizes.paddingL),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('적용'),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
+  }
+
+  Widget _buildFilterSection({
+    required String title,
+    required Widget child,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSizes.paddingL),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: AppSizes.fontM,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingS),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCheckboxTile(
+    String title,
+    String value,
+    Set<String> selectedSet,
+    ValueChanged<bool?> onChanged,
+  ) {
+    return CheckboxListTile(
+      title: Text(title),
+      value: selectedSet.contains(value),
+      onChanged: onChanged,
+      contentPadding: EdgeInsets.zero,
+      controlAffinity: ListTileControlAffinity.leading,
+    );
+  }
+
+  List<String> _getRegionList() {
+    return [
+      '서울',
+      '부산',
+      '대구',
+      '인천',
+      '광주',
+      '대전',
+      '울산',
+      '세종',
+      '경기',
+      '강원',
+      '충북',
+      '충남',
+      '전북',
+      '전남',
+      '경북',
+      '경남',
+      '제주',
+    ];
+  }
+
+  void _applyFilters() {
+    // TODO: 실제 필터 로직 구현 (현재는 카테고리만 지원)
+    _loadExperts();
   }
 
   Widget _buildFilterChip(String label, String? category) {
@@ -578,13 +938,21 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
         throw Exception('전문가 계정을 찾을 수 없습니다');
       }
 
+      // 최근 작성한 상담 글 조회 (예약 시 연결)
+      final consultationPostRepository = ConsultationPostRepositoryImpl(
+        ConsultationPostRemoteDataSource(),
+      );
+      final latestPost = await consultationPostRepository.getLatestConsultationPostByUserId(userId);
+
       // 상담 요청 생성
       final consultationRequestRepository = ConsultationRequestRepositoryImpl(
         ConsultationRequestRemoteDataSource(),
       );
 
       final consultationTypeText = consultationType == 'phone' ? '전화' : '방문';
-      final title = '${expert.name}님과의 ${durationMinutes}분 ${consultationTypeText}상담';
+      final title = latestPost != null
+          ? latestPost.title
+          : '${expert.name}님과의 ${durationMinutes}분 ${consultationTypeText}상담';
 
       await consultationRequestRepository.createConsultationRequest(
         expertAccountId: expertAccount.id,
@@ -593,6 +961,7 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
         title: title,
         scheduledAt: scheduledAt,
         status: 'waiting',
+        consultationPostId: latestPost?.id,
       );
     } catch (e) {
       if (context.mounted) {

@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/router/app_router.dart';
+import '../../../data/datasources/consultation_post_remote_datasource.dart';
+import '../../../data/repositories/consultation_post_repository_impl.dart';
+import '../../blocs/auth/auth_bloc.dart';
+import '../../blocs/auth/auth_state.dart';
 
 /// 상담 글 작성 팝업
 class ConsultationPostDialog extends StatefulWidget {
@@ -27,6 +32,7 @@ class _ConsultationPostDialogState extends State<ConsultationPostDialog> {
   final int _contentMinLength = 50;
   DateTime? _incidentDate;
   bool _isAgreed = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -162,14 +168,9 @@ class _ConsultationPostDialogState extends State<ConsultationPostDialog> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _isValid
-                          ? () {
-                              // 전문가 목록으로 이동
-                              Navigator.pop(context);
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.experts,
-                              );
+                      onPressed: _isValid && !_isSaving
+                          ? () async {
+                              await _saveConsultationPost();
                             }
                           : null,
                       style: ElevatedButton.styleFrom(
@@ -523,6 +524,67 @@ class _ConsultationPostDialogState extends State<ConsultationPostDialog> {
         ),
       ),
     );
+  }
+
+  /// 상담 글 저장
+  Future<void> _saveConsultationPost() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('로그인이 필요합니다'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final repository = ConsultationPostRepositoryImpl(
+        ConsultationPostRemoteDataSource(),
+      );
+
+      await repository.createConsultationPost(
+        userId: authState.user.id,
+        title: _titleController.text.trim(),
+        content: _contentController.text.trim(),
+        incidentDate: _incidentDate!,
+        category: widget.category,
+      );
+
+      if (mounted) {
+        Navigator.pop(context);
+        Navigator.pushNamed(
+          context,
+          AppRoutes.experts,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('상담 글이 등록되었습니다'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('상담 글 등록 실패: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
   }
 }
 

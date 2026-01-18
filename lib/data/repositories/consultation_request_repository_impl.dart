@@ -37,6 +37,7 @@ class ConsultationRequestRepositoryImpl
     required String title,
     required DateTime scheduledAt,
     String status = 'waiting',
+    String? consultationPostId,
   }) async {
     return await _remoteDataSource.createConsultationRequest(
       expertAccountId: expertAccountId,
@@ -45,6 +46,7 @@ class ConsultationRequestRepositoryImpl
       title: title,
       scheduledAt: scheduledAt,
       status: status,
+      consultationPostId: consultationPostId,
     );
   }
 }

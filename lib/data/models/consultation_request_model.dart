@@ -12,6 +12,7 @@ class ConsultationRequestModel extends ConsultationRequest {
     required super.status,
     super.scheduledAt,
     required super.createdAt,
+    super.consultationPostId,
   });
 
   /// Firestore → Model
@@ -31,6 +32,8 @@ class ConsultationRequestModel extends ConsultationRequest {
       createdAt: (json['createdAt'] as Timestamp?)?.toDate() ??
           (json['created_at'] as Timestamp?)?.toDate() ??
           DateTime.now(),
+      consultationPostId: json['consultationPostId'] as String? ??
+          json['consultation_post_id'] as String?,
     );
   }
 
@@ -45,6 +48,7 @@ class ConsultationRequestModel extends ConsultationRequest {
       'scheduledAt':
           scheduledAt != null ? Timestamp.fromDate(scheduledAt!) : null,
       'createdAt': Timestamp.fromDate(createdAt),
+      'consultationPostId': consultationPostId,
     };
   }
 }

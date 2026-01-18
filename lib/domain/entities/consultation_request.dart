@@ -10,6 +10,7 @@ class ConsultationRequest extends Equatable {
   final String status; // waiting, accepted, completed
   final DateTime? scheduledAt;
   final DateTime createdAt;
+  final String? consultationPostId; // consultation_posts 참조 (상담 글 ID)
 
   const ConsultationRequest({
     required this.id,
@@ -20,6 +21,7 @@ class ConsultationRequest extends Equatable {
     required this.status,
     this.scheduledAt,
     required this.createdAt,
+    this.consultationPostId,
   });
 
   @override
@@ -32,6 +34,7 @@ class ConsultationRequest extends Equatable {
         status,
         scheduledAt,
         createdAt,
+        consultationPostId,
       ];
 }
 
