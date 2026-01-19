@@ -278,4 +278,3 @@ class _AdditionalInfoTabState extends State<AdditionalInfoTab>
     }
   }
 }
-

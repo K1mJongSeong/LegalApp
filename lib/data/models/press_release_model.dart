@@ -50,6 +50,3 @@ class PressReleaseModel extends PressRelease {
   }
 }
 
-
-
-

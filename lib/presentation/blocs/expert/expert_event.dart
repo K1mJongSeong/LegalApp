@@ -51,5 +51,3 @@ class ExpertSearchRequested extends ExpertEvent {
 
 /// 에러 초기화
 class ExpertErrorCleared extends ExpertEvent {}
-
-

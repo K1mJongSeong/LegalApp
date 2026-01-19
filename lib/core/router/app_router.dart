@@ -18,6 +18,7 @@ import '../../presentation/pages/case_flow/consultation_goal_page.dart';
 import '../../presentation/pages/case_flow/consultation_condition_page.dart';
 import '../../presentation/pages/case_flow/urgency_select_page.dart';
 import '../../presentation/pages/case_flow/case_summary_result_page.dart';
+import '../../presentation/pages/case_flow/case_submission_page.dart';
 import '../../presentation/pages/expert/expert_dashboard_page.dart';
 import '../../presentation/pages/expert/expert_certification_page.dart';
 import '../../presentation/pages/expert/profile/expert_profile_manage_page.dart';
@@ -52,6 +53,7 @@ class AppRoutes {
   static const String consultationCondition = '/consultation-condition';
   static const String urgencySelect = '/urgency-select';
   static const String caseSummaryResult = '/case-summary-result';
+  static const String caseSubmission = '/case-submission';
   // 전문가 관련
   static const String expertDashboard = '/expert-dashboard';
   static const String expertCertification = '/expert-certification';
@@ -219,6 +221,17 @@ class AppRouter {
             consultationFee: args?['consultationFee'] as String?,
             freeConsultation: args?['freeConsultation'] as bool? ?? false,
             availableTime: args?['availableTime'] as String?,
+          ),
+          settings,
+        );
+
+      case AppRoutes.caseSubmission:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return _buildRoute(
+          CaseSubmissionPage(
+            consultationPostId: args?['consultationPostId'] ?? '',
+            expertUserId: args?['expertUserId'] ?? '',
+            expertId: args?['expertId'] as String?,
           ),
           settings,
         );

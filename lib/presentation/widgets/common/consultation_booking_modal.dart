@@ -11,7 +11,7 @@ class ConsultationBookingModal extends StatefulWidget {
   final String expertName;
   final String consultationType; // 'phone' or 'visit'
   final int durationMinutes; // 15 or 30
-  final Function(DateTime scheduledAt) onConfirm;
+  final Future<bool?> Function(DateTime scheduledAt) onConfirm;
 
   const ConsultationBookingModal({
     super.key,
@@ -315,18 +315,24 @@ class _ConsultationBookingModalState extends State<ConsultationBookingModal> {
     });
 
     try {
-      await widget.onConfirm(scheduledAt);
+      final shouldClose = await widget.onConfirm(scheduledAt);
       if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('예약이 완료되었습니다'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        // onConfirm이 true를 반환하면 모달 닫기 (페이지 이동이 없는 경우)
+        // false를 반환하면 모달을 열어둠 (페이지 이동이 있는 경우)
+        if (shouldClose == true) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('예약이 완료되었습니다'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+        // shouldClose가 false이면 모달은 열어두고, experts_page에서 페이지 이동 후 모달을 닫음
       }
     } catch (e) {
       if (mounted) {
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('예약 실패: $e'),
@@ -343,6 +349,7 @@ class _ConsultationBookingModalState extends State<ConsultationBookingModal> {
     }
   }
 }
+
 
 
 

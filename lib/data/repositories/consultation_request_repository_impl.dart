@@ -50,16 +50,3 @@ class ConsultationRequestRepositoryImpl
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

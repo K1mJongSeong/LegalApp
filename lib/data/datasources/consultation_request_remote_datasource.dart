@@ -90,16 +90,3 @@ class ConsultationRequestRemoteDataSource {
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

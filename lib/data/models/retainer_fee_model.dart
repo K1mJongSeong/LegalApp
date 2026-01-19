@@ -58,6 +58,3 @@ class RetainerFeeModel extends RetainerFee {
   }
 }
 
-
-
-

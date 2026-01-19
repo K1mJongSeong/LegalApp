@@ -43,5 +43,10 @@ class ConsultationPostRepositoryImpl implements ConsultationPostRepository {
   Future<ConsultationPost?> getLatestConsultationPostByUserId(String userId) async {
     return await _remoteDataSource.getLatestConsultationPostByUserId(userId);
   }
+
+  @override
+  Future<List<ConsultationPost>> getConsultationPostsByUserId(String userId) async {
+    return await _remoteDataSource.getConsultationPostsByUserId(userId);
+  }
 }
 

@@ -46,6 +46,3 @@ class ServiceFeeModel extends ServiceFee {
   }
 }
 
-
-
-

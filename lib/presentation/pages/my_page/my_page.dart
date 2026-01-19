@@ -233,7 +233,7 @@ class _MyPageState extends State<MyPage> {
             ),
           ),
         ),
-        bottomNavigationBar: const BottomNavBar(currentIndex: 2),
+        bottomNavigationBar: const BottomNavBar(currentIndex: 3),
       ),
     );
   }

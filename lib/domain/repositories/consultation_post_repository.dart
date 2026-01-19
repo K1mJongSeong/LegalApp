@@ -21,5 +21,7 @@ abstract class ConsultationPostRepository {
 
   /// 사용자 ID로 최근 상담 글 조회 (예약 시 사용)
   Future<ConsultationPost?> getLatestConsultationPostByUserId(String userId);
-}
 
+  /// 사용자 ID로 상담 글 목록 조회
+  Future<List<ConsultationPost>> getConsultationPostsByUserId(String userId);
+}

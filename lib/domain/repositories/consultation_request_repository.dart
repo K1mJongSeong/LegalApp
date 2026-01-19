@@ -24,16 +24,3 @@ abstract class ConsultationRequestRepository {
     String? consultationPostId,
   });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
