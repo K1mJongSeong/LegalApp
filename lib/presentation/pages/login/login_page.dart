@@ -8,6 +8,7 @@ import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
 import '../../widgets/common/primary_button.dart';
+import '../signup/signup_page.dart';
 
 /// 로그인 화면
 class LoginPage extends StatefulWidget {
@@ -197,7 +198,13 @@ class _LoginPageState extends State<LoginPage>
                             );
                           } else {
                             // 일반 회원가입
-                            Navigator.pushNamed(context, AppRoutes.signupPrompt);
+                            // Navigator.pushNamed(context, AppRoutes.signupPrompt);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SignupPage(isExpert: _isExpertTab),
+                              ),
+                            );
                           }
                         },
                       ),
