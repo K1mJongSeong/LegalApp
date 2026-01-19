@@ -39,6 +39,8 @@ class ExpertsPage extends StatefulWidget {
 class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
   final _searchController = TextEditingController();
   List<Expert>? _cachedExperts; // 목록 캐시
+  String? _latestConsultationPostId; // 최근 작성한 상담 글 ID
+  String? _selectedExpertId; // 선택된 전문가 ID
   
   // 필터 상태
   Set<String> _selectedConsultationMethods = {}; // 전화, 채팅, 방문, 이메일
@@ -53,6 +55,29 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadExperts();
+    _loadLatestConsultationPost();
+  }
+
+  /// 최근 작성한 상담 글 조회
+  Future<void> _loadLatestConsultationPost() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      try {
+        final consultationPostRepository = ConsultationPostRepositoryImpl(
+          ConsultationPostRemoteDataSource(),
+        );
+        final latestPost = await consultationPostRepository.getLatestConsultationPostByUserId(
+          authState.user.id,
+        );
+        if (mounted && latestPost != null) {
+          setState(() {
+            _latestConsultationPostId = latestPost.id;
+          });
+        }
+      } catch (e) {
+        debugPrint('최근 상담 글 조회 실패: $e');
+      }
+    }
   }
 
   @override
@@ -154,40 +179,38 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
                             itemCount: _cachedExperts!.length,
                             itemBuilder: (context, index) {
                               final expert = _cachedExperts![index];
-                              return ExpertCardNew(
-                                expert: expert,
-                                onTap: () {
-                                  // userId를 사용하여 상세 페이지로 이동
-                                  if (expert.userId != null) {
-                                    Navigator.pushNamed(
-                                      context,
-                                      '${AppRoutes.confirm}?userId=${expert.userId}',
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('전문가 정보를 불러올 수 없습니다'),
-                                        backgroundColor: AppColors.error,
-                                      ),
-                                    );
-                                  }
-                                },
-                                onPhoneConsultation: () {
-                                  _showConsultationBookingModal(
-                                    context,
+                              final isSelected = _selectedExpertId == expert.id.toString();
+                              return Column(
+                                children: [
+                                  ExpertCardNew(
                                     expert: expert,
-                                    consultationType: 'phone',
-                                    durationMinutes: 15,
-                                  );
-                                },
-                                onVisitConsultation: () {
-                                  _showConsultationBookingModal(
-                                    context,
-                                    expert: expert,
-                                    consultationType: 'visit',
-                                    durationMinutes: 30,
-                                  );
-                                },
+                                    isSelected: isSelected,
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedExpertId = isSelected ? null : expert.id.toString();
+                                      });
+                                    },
+                                    onPhoneConsultation: () {
+                                      _showConsultationBookingModal(
+                                        context,
+                                        expert: expert,
+                                        consultationType: 'phone',
+                                        durationMinutes: 15,
+                                      );
+                                    },
+                                    onVisitConsultation: () {
+                                      _showConsultationBookingModal(
+                                        context,
+                                        expert: expert,
+                                        consultationType: 'visit',
+                                        durationMinutes: 30,
+                                      );
+                                    },
+                                  ),
+                                  // 선택된 카드 아래에 버튼 표시
+                                  if (isSelected && _latestConsultationPostId != null)
+                                    _buildActionButtons(expert),
+                                ],
                               );
                             },
                           ),
@@ -206,39 +229,38 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
                               itemCount: _cachedExperts!.length,
                               itemBuilder: (context, index) {
                                 final expert = _cachedExperts![index];
-                                return ExpertCardNew(
-                                  expert: expert,
-                                  onTap: () {
-                                    if (expert.userId != null) {
-                                      Navigator.pushNamed(
-                                        context,
-                                        '${AppRoutes.confirm}?userId=${expert.userId}',
-                                      );
-                                    } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('전문가 정보를 불러올 수 없습니다'),
-                                          backgroundColor: AppColors.error,
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  onPhoneConsultation: () {
-                                    _showConsultationBookingModal(
-                                      context,
+                                final isSelected = _selectedExpertId == expert.id.toString();
+                                return Column(
+                                  children: [
+                                    ExpertCardNew(
                                       expert: expert,
-                                      consultationType: 'phone',
-                                      durationMinutes: 15,
-                                    );
-                                  },
-                                  onVisitConsultation: () {
-                                    _showConsultationBookingModal(
-                                      context,
-                                      expert: expert,
-                                      consultationType: 'visit',
-                                      durationMinutes: 30,
-                                    );
-                                  },
+                                      isSelected: isSelected,
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedExpertId = isSelected ? null : expert.id.toString();
+                                        });
+                                      },
+                                      onPhoneConsultation: () {
+                                        _showConsultationBookingModal(
+                                          context,
+                                          expert: expert,
+                                          consultationType: 'phone',
+                                          durationMinutes: 15,
+                                        );
+                                      },
+                                      onVisitConsultation: () {
+                                        _showConsultationBookingModal(
+                                          context,
+                                          expert: expert,
+                                          consultationType: 'visit',
+                                          durationMinutes: 30,
+                                        );
+                                      },
+                                    ),
+                                    // 선택된 카드 아래에 버튼 표시
+                                    if (isSelected && _latestConsultationPostId != null)
+                                      _buildActionButtons(expert),
+                                  ],
                                 );
                               },
                             ),
@@ -259,39 +281,38 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
                               itemCount: _cachedExperts!.length,
                               itemBuilder: (context, index) {
                                 final expert = _cachedExperts![index];
-                                return ExpertCardNew(
-                                  expert: expert,
-                                  onTap: () {
-                                    if (expert.userId != null) {
-                                      Navigator.pushNamed(
-                                        context,
-                                        '${AppRoutes.confirm}?userId=${expert.userId}',
-                                      );
-                                    } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('전문가 정보를 불러올 수 없습니다'),
-                                          backgroundColor: AppColors.error,
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  onPhoneConsultation: () {
-                                    _showConsultationBookingModal(
-                                      context,
+                                final isSelected = _selectedExpertId == expert.id.toString();
+                                return Column(
+                                  children: [
+                                    ExpertCardNew(
                                       expert: expert,
-                                      consultationType: 'phone',
-                                      durationMinutes: 15,
-                                    );
-                                  },
-                                  onVisitConsultation: () {
-                                    _showConsultationBookingModal(
-                                      context,
-                                      expert: expert,
-                                      consultationType: 'visit',
-                                      durationMinutes: 30,
-                                    );
-                                  },
+                                      isSelected: isSelected,
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedExpertId = isSelected ? null : expert.id.toString();
+                                        });
+                                      },
+                                      onPhoneConsultation: () {
+                                        _showConsultationBookingModal(
+                                          context,
+                                          expert: expert,
+                                          consultationType: 'phone',
+                                          durationMinutes: 15,
+                                        );
+                                      },
+                                      onVisitConsultation: () {
+                                        _showConsultationBookingModal(
+                                          context,
+                                          expert: expert,
+                                          consultationType: 'visit',
+                                          durationMinutes: 30,
+                                        );
+                                      },
+                                    ),
+                                    // 선택된 카드 아래에 버튼 표시
+                                    if (isSelected && _latestConsultationPostId != null)
+                                      _buildActionButtons(expert),
+                                  ],
                                 );
                               },
                             ),
@@ -323,40 +344,38 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
                             itemCount: state.experts.length,
                             itemBuilder: (context, index) {
                               final expert = state.experts[index];
-                              return ExpertCardNew(
-                                expert: expert,
-                                onTap: () {
-                                  // userId를 사용하여 상세 페이지로 이동
-                                  if (expert.userId != null) {
-                                    Navigator.pushNamed(
-                                      context,
-                                      '${AppRoutes.confirm}?userId=${expert.userId}',
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('전문가 정보를 불러올 수 없습니다'),
-                                        backgroundColor: AppColors.error,
-                                      ),
-                                    );
-                                  }
-                                },
-                                onPhoneConsultation: () {
-                                  _showConsultationBookingModal(
-                                    context,
+                              final isSelected = _selectedExpertId == expert.id.toString();
+                              return Column(
+                                children: [
+                                  ExpertCardNew(
                                     expert: expert,
-                                    consultationType: 'phone',
-                                    durationMinutes: 15,
-                                  );
-                                },
-                                onVisitConsultation: () {
-                                  _showConsultationBookingModal(
-                                    context,
-                                    expert: expert,
-                                    consultationType: 'visit',
-                                    durationMinutes: 30,
-                                  );
-                                },
+                                    isSelected: isSelected,
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedExpertId = isSelected ? null : expert.id.toString();
+                                      });
+                                    },
+                                    onPhoneConsultation: () {
+                                      _showConsultationBookingModal(
+                                        context,
+                                        expert: expert,
+                                        consultationType: 'phone',
+                                        durationMinutes: 15,
+                                      );
+                                    },
+                                    onVisitConsultation: () {
+                                      _showConsultationBookingModal(
+                                        context,
+                                        expert: expert,
+                                        consultationType: 'visit',
+                                        durationMinutes: 30,
+                                      );
+                                    },
+                                  ),
+                                  // 선택된 카드 아래에 버튼 표시
+                                  if (isSelected && _latestConsultationPostId != null)
+                                    _buildActionButtons(expert),
+                                ],
                               );
                             },
                           ),
@@ -919,6 +938,113 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
           }
         },
       ),
+    );
+  }
+
+  /// 액션 버튼 위젯 빌드
+  Widget _buildActionButtons(expert) {
+    return Container(
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppSizes.paddingM,
+        vertical: AppSizes.paddingS,
+      ),
+      padding: const EdgeInsets.all(AppSizes.paddingM),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppSizes.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // 사건 요약 전송 및 상담 신청 버튼
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => _navigateToCaseSubmission(expert),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingM),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                ),
+              ),
+              child: const Text(
+                '사건 요약 전송 및 상담 신청',
+                style: TextStyle(
+                  fontSize: AppSizes.fontM,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingS),
+          // 전문가 프로필 상세보기 버튼
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () {
+                if (expert.userId != null) {
+                  Navigator.pushNamed(
+                    context,
+                    '${AppRoutes.confirm}?userId=${expert.userId}',
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('전문가 정보를 불러올 수 없습니다'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              },
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.border),
+                padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingM),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                ),
+              ),
+              child: const Text(
+                '전문가 프로필 상세보기',
+                style: TextStyle(
+                  fontSize: AppSizes.fontM,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 사건 전송 페이지로 이동
+  void _navigateToCaseSubmission(expert) {
+    if (_latestConsultationPostId == null || expert.userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('상담 글 정보를 찾을 수 없습니다'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    Navigator.pushNamed(
+      context,
+      AppRoutes.caseSubmission,
+      arguments: {
+        'consultationPostId': _latestConsultationPostId!,
+        'expertUserId': expert.userId!,
+        'expertId': expert.id.toString(),
+      },
     );
   }
 

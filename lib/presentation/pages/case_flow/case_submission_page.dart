@@ -591,16 +591,10 @@ class _CaseSubmissionPageState extends State<CaseSubmissionPage> {
       await dataSource.incrementSubmissionCount();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('사건이 성공적으로 전송되었습니다'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-        // 홈으로 이동
+        // 완료 안내 페이지로 이동
         Navigator.pushNamedAndRemoveUntil(
           context,
-          AppRoutes.home,
+          AppRoutes.caseSubmissionComplete,
           (route) => false,
         );
       }

@@ -19,6 +19,7 @@ import '../../presentation/pages/case_flow/consultation_condition_page.dart';
 import '../../presentation/pages/case_flow/urgency_select_page.dart';
 import '../../presentation/pages/case_flow/case_summary_result_page.dart';
 import '../../presentation/pages/case_flow/case_submission_page.dart';
+import '../../presentation/pages/case_flow/case_submission_complete_page.dart';
 import '../../presentation/pages/expert/expert_dashboard_page.dart';
 import '../../presentation/pages/expert/expert_certification_page.dart';
 import '../../presentation/pages/expert/profile/expert_profile_manage_page.dart';
@@ -54,6 +55,7 @@ class AppRoutes {
   static const String urgencySelect = '/urgency-select';
   static const String caseSummaryResult = '/case-summary-result';
   static const String caseSubmission = '/case-submission';
+  static const String caseSubmissionComplete = '/case-submission-complete';
   // 전문가 관련
   static const String expertDashboard = '/expert-dashboard';
   static const String expertCertification = '/expert-certification';
@@ -235,6 +237,9 @@ class AppRouter {
           ),
           settings,
         );
+
+      case AppRoutes.caseSubmissionComplete:
+        return _buildRoute(const CaseSubmissionCompletePage(), settings);
 
       case AppRoutes.expertDashboard:
         return _buildRoute(const ExpertDashboardPage(), settings);
