@@ -433,7 +433,3 @@ class OtherActivityItem {
     );
   }
 }
-
-
-
-

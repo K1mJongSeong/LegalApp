@@ -492,4 +492,3 @@ class _ConsultationConditionPageState extends State<ConsultationConditionPage> {
     );
   }
 }
-

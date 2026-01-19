@@ -601,4 +601,3 @@ class _BasicInfoSectionState extends State<BasicInfoSection> {
     }
   }
 }
-

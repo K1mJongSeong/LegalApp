@@ -758,7 +758,9 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => ConsultationPostDialog(
-        initialSummary: _summaryController.text,
+        // 상담 글 내용 초기값은 GPT 요약이 아니라
+        // 사용자가 직접 입력한 사건 상세(description)를 사용
+        initialSummary: widget.description,
         category: widget.categoryName,
       ),
     );

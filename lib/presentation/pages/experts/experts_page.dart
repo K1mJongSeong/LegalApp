@@ -901,14 +901,22 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
         consultationType: consultationType,
         durationMinutes: durationMinutes,
         onConfirm: (scheduledAt) async {
-          await _createConsultationRequest(
-            context,
-            expert: expert,
-            consultationType: consultationType,
-            durationMinutes: durationMinutes,
-            scheduledAt: scheduledAt,
-            userId: authState.user.id,
-          );
+          try {
+            await _createConsultationRequest(
+              context,
+              expert: expert,
+              consultationType: consultationType,
+              durationMinutes: durationMinutes,
+              scheduledAt: scheduledAt,
+              userId: authState.user.id,
+            );
+            // 페이지 이동이 있으면 false 반환 (모달을 열어둠)
+            // 페이지 이동이 없으면 true 반환 (모달 닫기)
+            return false; // 페이지 이동이 있으므로 false 반환
+          } catch (e) {
+            // 에러 발생 시 true 반환하여 모달 닫기
+            return true;
+          }
         },
       ),
     );

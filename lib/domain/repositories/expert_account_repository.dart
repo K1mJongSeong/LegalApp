@@ -20,16 +20,3 @@ abstract class ExpertAccountRepository {
   /// 인증된 전문가 계정 목록 조회 (isVerified: true, status: "active")
   Future<List<ExpertAccount>> getVerifiedExpertAccounts();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

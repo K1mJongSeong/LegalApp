@@ -42,7 +42,3 @@ class QualificationModel extends Qualification {
   }
 }
 
-
-
-
-

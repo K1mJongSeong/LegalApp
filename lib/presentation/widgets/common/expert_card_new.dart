@@ -259,4 +259,3 @@ class ExpertCardNew extends StatelessWidget {
     );
   }
 }
-

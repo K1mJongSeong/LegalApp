@@ -102,11 +102,11 @@ class _OfficeInfoSectionState extends State<OfficeInfoSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(AppSizes.paddingL),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppSizes.radiusL),
-            ),
+      padding: const EdgeInsets.all(AppSizes.paddingL),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppSizes.radiusL),
+      ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

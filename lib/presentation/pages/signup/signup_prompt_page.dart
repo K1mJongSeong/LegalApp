@@ -146,12 +146,6 @@ class _SignupPromptPageState extends State<SignupPromptPage>
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
           const Expanded(
             child: Text(
               '로그인',
@@ -162,12 +156,9 @@ class _SignupPromptPageState extends State<SignupPromptPage>
               ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => Navigator.pop(context),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
+          // 로그인/회원가입 절차를 강제하기 위해
+          // 우측 닫기 버튼을 제거합니다.
+          const SizedBox(width: 24),
         ],
       ),
     );
