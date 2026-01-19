@@ -45,7 +45,9 @@ class _SignupPageState extends State<SignupPage> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
-          Navigator.pushReplacementNamed(context, AppRoutes.home);
+          // 회원가입 성공 시 현재 페이지만 닫고,
+          // 이전에 진행 중이던 플로우(예: 사건 요약 페이지)로 돌아가도록 처리
+          Navigator.pop(context);
         } else if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
