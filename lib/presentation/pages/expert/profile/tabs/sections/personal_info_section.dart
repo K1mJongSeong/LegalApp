@@ -59,11 +59,14 @@ class _PersonalInfoSectionState extends State<PersonalInfoSection> {
       }
 
       final userId = authState.user.id;
+      final signupName = authState.user.name;
       final profile = await _profileRepository.getProfileByUserId(userId);
 
       if (profile != null && mounted) {
         setState(() {
-          _nameController.text = profile.name ?? '';
+          _nameController.text = (profile.name != null && profile.name!.isNotEmpty)
+              ? profile.name!
+              : signupName;
           if (profile.birthDate != null) {
             _birthDateController.text = DateFormat('yyyy.MM.dd').format(profile.birthDate!);
           }
@@ -80,7 +83,11 @@ class _PersonalInfoSectionState extends State<PersonalInfoSection> {
           _isInitialized = true;
         });
       } else {
-        _isInitialized = true;
+        // 프로필이 아직 없으면 회원가입 시 입력한 이름을 기본값으로 사용
+        setState(() {
+          _nameController.text = signupName;
+          _isInitialized = true;
+        });
       }
     } catch (e) {
       debugPrint('프로필 로드 오류: $e');

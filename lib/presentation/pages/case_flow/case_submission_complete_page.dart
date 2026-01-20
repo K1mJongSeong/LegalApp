@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/router/app_router.dart';
@@ -103,6 +104,29 @@ class CaseSubmissionCompletePage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: AppSizes.paddingXL),
+                  // 설문 참여 버튼
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () => _launchSurvey(context),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.primary),
+                        padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingM),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                        ),
+                      ),
+                      child: const Text(
+                        '설문 참여하고 무료상담 쿠폰 받기',
+                        style: TextStyle(
+                          fontSize: AppSizes.fontM,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSizes.paddingM),
                   // 마이페이지로 이동 버튼
                   SizedBox(
                     width: double.infinity,
@@ -149,6 +173,18 @@ class CaseSubmissionCompletePage extends StatelessWidget {
         height: 1.5,
       ),
     );
+  }
+
+  /// 설문조사 페이지 열기
+  Future<void> _launchSurvey(BuildContext context) async {
+    final Uri url = Uri.parse(
+      'https://docs.google.com/forms/d/e/1FAIpQLScvYEXxBHnNJpuBoBKxQh6avjrx5ZwkcJC6BpWt46Y9VwQtTA/viewform?usp=publish-editor',
+    );
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('설문 페이지를 열 수 없습니다')),
+      );
+    }
   }
 }
 

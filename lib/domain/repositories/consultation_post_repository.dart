@@ -24,4 +24,7 @@ abstract class ConsultationPostRepository {
 
   /// 사용자 ID로 상담 글 목록 조회
   Future<List<ConsultationPost>> getConsultationPostsByUserId(String userId);
+
+  /// 상담 글 삭제
+  Future<void> deleteConsultationPost(String postId);
 }

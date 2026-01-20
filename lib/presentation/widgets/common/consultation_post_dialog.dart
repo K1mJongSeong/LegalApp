@@ -29,7 +29,7 @@ class _ConsultationPostDialogState extends State<ConsultationPostDialog> {
   final TextEditingController _contentController = TextEditingController();
   final int _titleMinLength = 10;
   final int _titleMaxLength = 50;
-  final int _contentMinLength = 50;
+  final int _contentMinLength = 20;
   DateTime? _incidentDate;
   bool _isAgreed = false;
   bool _isSaving = false;
@@ -596,17 +596,8 @@ class _ConsultationPostDialogState extends State<ConsultationPostDialog> {
       );
 
       if (mounted) {
-        Navigator.pop(context);
-        Navigator.pushNamed(
-          context,
-          AppRoutes.experts,
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('상담 글이 등록되었습니다'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        // 성공 여부를 부모에게 전달 (전문가 목록 이동은 부모에서 처리)
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {

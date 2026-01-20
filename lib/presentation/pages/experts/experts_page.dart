@@ -106,13 +106,19 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state;
+    final userName = authState is AuthAuthenticated && authState.user.name.isNotEmpty
+        ? authState.user.name
+        : '회원';
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('전문가 목록'),
+        title: Text('$userName님을 위한 전문가 목록'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.home),
+          // onPressed: () => Navigator.pop(context),
+          onPressed: () => _showExitDialog(context),
         ),
         actions: [
           IconButton(
@@ -440,6 +446,41 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+
+  void _showExitDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('홈으로 이동'),
+        // content: Text(_isCaseSaved
+        //     ? '홈으로 이동하시겠습니까?\n사건은 \'내 사건\'에서 확인할 수 있습니다.'
+        //     : '홈으로 이동하시겠습니까?'),
+        content: Text("홈으로 이동하시겠습니까?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                AppRoutes.home,
+                    (route) => false,
+              );
+            },
+            child: const Text('홈으로'),
+          ),
+        ],
       ),
     );
   }
