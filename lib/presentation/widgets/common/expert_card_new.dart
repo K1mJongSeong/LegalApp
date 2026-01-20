@@ -11,6 +11,7 @@ class ExpertCardNew extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onPhoneConsultation;
   final VoidCallback? onVisitConsultation;
+  final bool isSelected; // 선택된 카드인지 여부
 
   const ExpertCardNew({
     super.key,
@@ -19,6 +20,7 @@ class ExpertCardNew extends StatelessWidget {
     this.onTap,
     this.onPhoneConsultation,
     this.onVisitConsultation,
+    this.isSelected = false,
   });
 
   @override
@@ -58,6 +60,9 @@ class ExpertCardNew extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppSizes.radiusL),
+        border: isSelected
+            ? Border.all(color: AppColors.primary, width: 2)
+            : null,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),

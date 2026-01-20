@@ -311,6 +311,14 @@ class _MyCasePageState extends State<MyCasePage>
         return Icons.family_restroom_outlined;
       case 'real':
         return Icons.home_work_outlined;
+      case 'traffic':
+        return Icons.traffic;
+      case 'real_estate':
+        return Icons.apartment_outlined;
+      case 'civil':
+        return Icons.balance_outlined;
+      case 'company':
+        return Icons.business_outlined;
       default:
         return Icons.folder_outlined;
     }
@@ -328,6 +336,14 @@ class _MyCasePageState extends State<MyCasePage>
         return '가사/이혼';
       case 'real':
         return '부동산';
+      case 'traffic':
+        return '교통사고';
+      case 'real_estate':
+        return '부동산/임대차';
+      case 'civil':
+        return '민사';
+      case 'company':
+        return '회사';
       default:
         return category;
     }

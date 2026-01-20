@@ -15,7 +15,7 @@ class _CategorySelectPageState extends State<CategorySelectPage> {
   String? _selectedCategory;
   String? _selectedCategoryName;
 
-  // 카테고리 목록 (마크다운 표 기준)
+  // 카테고리 목록
   final List<Map<String, dynamic>> _categories = [
     {
       'id': 'labor',
