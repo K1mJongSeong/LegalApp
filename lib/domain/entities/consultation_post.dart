@@ -40,3 +40,4 @@ class ConsultationPost extends Equatable {
         comments,
       ];
 }
+

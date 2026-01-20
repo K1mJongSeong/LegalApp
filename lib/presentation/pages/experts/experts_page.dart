@@ -877,7 +877,8 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
           const SizedBox(width: AppSizes.paddingM),
           Expanded(
             child: Text(
-              '아래 전문가들은 해당 분야를 등록한 전문가들입니다. 상담 여부 및 선택은 사용자님의 판단에 따릅니다.',
+              // '아래 전문가들은 해당 분야를 등록한 전문가들입니다. 상담 여부 및 선택은 사용자님의 판단에 따릅니다.',
+            '현재는 베타서비스이며 등록된 전문가는 가상의 인물로 상담이 불가 합니다. 정식 서비스 오픈 시 알림을 보내드리겠습니다.',
               style: TextStyle(
                 fontSize: AppSizes.fontS,
                 color: AppColors.textPrimary,

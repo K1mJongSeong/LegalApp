@@ -106,6 +106,8 @@ class _ConsultationPostDialogState extends State<ConsultationPostDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 제목
+                    _buildWritingGuide(),
+                    const SizedBox(height: AppSizes.paddingL,),
                     _buildTitleField(),
                     const SizedBox(height: AppSizes.paddingL),
                     // 최초 사건 발생 일자
@@ -444,6 +446,43 @@ class _ConsultationPostDialogState extends State<ConsultationPostDialog> {
     );
   }
 
+  Widget _buildWritingGuide() {
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.paddingM),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.lightbulb_outline, color: AppColors.warning, size: 20),
+              SizedBox(width: 8),
+              Text(
+                '안내',
+                style: TextStyle(
+                  fontSize: AppSizes.fontM,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.paddingS),
+          Text(
+            '상담 글 등록 시, 사건에 대한 전문가 답변을 받아보실 수 있습니다.',
+            style: TextStyle(
+              fontSize: AppSizes.fontS,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
   Widget _buildWritingTip() {
     return Container(
       padding: const EdgeInsets.all(AppSizes.paddingM),
@@ -499,7 +538,7 @@ class _ConsultationPostDialogState extends State<ConsultationPostDialog> {
           ),
           const SizedBox(height: AppSizes.paddingS),
           _buildInfoItem('1. 상담글 제목은 답변을 받기에 적합한 내용으로 일부 변경될 수 있습니다.'),
-          _buildInfoItem('2. 상담글은 변호사 담변 등록 글 삭제가 불가합니다.'),
+          _buildInfoItem('2. 작성글에 전문가 답변 등록 시, 글 삭제는 불가합니다.'),
           _buildInfoItem('3. 등록된 글은 네이버 지식인, 포털 사이트, 로디코드 사이트에 노출 될 수 있습니다.'),
           _buildInfoItem('4. 아래 사항에 해당할 경우, 서비스 이용이 제한될 수 있습니다.'),
           const SizedBox(height: AppSizes.paddingS),

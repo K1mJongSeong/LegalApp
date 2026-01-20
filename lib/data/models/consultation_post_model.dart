@@ -54,3 +54,4 @@ class ConsultationPostModel extends ConsultationPost {
   }
 }
 
+
