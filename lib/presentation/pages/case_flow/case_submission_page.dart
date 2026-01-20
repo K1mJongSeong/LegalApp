@@ -142,7 +142,7 @@ class _CaseSubmissionPageState extends State<CaseSubmissionPage> {
               _buildSecondScreen(),
               const SizedBox(height: AppSizes.paddingL),
               // 상담 사례 보기 버튼
-              _buildViewCasesButton(),
+              // _buildViewCasesButton(),
             ],
           ),
         ),

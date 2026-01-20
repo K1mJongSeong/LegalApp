@@ -44,6 +44,10 @@ class _ExpertDashboardPageState extends State<ExpertDashboardPage> {
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

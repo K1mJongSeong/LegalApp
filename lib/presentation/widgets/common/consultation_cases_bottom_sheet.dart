@@ -21,11 +21,76 @@ class ConsultationCasesBottomSheet extends StatefulWidget {
 class _ConsultationCasesBottomSheetState extends State<ConsultationCasesBottomSheet> {
   List<ConsultationPost> _posts = [];
   bool _isLoading = true;
+  bool _isDeleting = false;
 
   @override
   void initState() {
     super.initState();
     _loadConsultationPosts();
+  }
+
+  Future<void> _deleteConsultationPost(ConsultationPost post) async {
+    if (_isDeleting) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('상담 글 삭제'),
+        content: const Text('해당 상담 글을 삭제하시겠습니까?\n삭제 후에는 복구할 수 없습니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() {
+      _isDeleting = true;
+    });
+
+    try {
+      final repository = ConsultationPostRepositoryImpl(
+        ConsultationPostRemoteDataSource(),
+      );
+      await repository.deleteConsultationPost(post.id);
+
+      if (mounted) {
+        setState(() {
+          _posts.removeWhere((p) => p.id == post.id);
+          _isDeleting = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('상담 글이 삭제되었습니다'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isDeleting = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('삭제 실패: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _loadConsultationPosts() async {
@@ -151,12 +216,12 @@ class _ConsultationCasesBottomSheetState extends State<ConsultationCasesBottomSh
     String timeString;
     if (timeAgo.inDays == 0) {
       if (timeAgo.inHours == 0) {
-        timeString = '${timeAgo.inMinutes}분 전 답변 작성';
+        timeString = '${timeAgo.inMinutes}분 전 작성';
       } else {
-        timeString = '${timeAgo.inHours}시간 전 답변 작성';
+        timeString = '${timeAgo.inHours}시간 전 작성';
       }
     } else {
-      timeString = '${timeAgo.inDays}일 전 답변 작성';
+      timeString = '${timeAgo.inDays}일 전 작성';
     }
 
     // 답변 내용 (임시로 상담 글 내용 사용, 실제로는 답변 필드가 필요)
@@ -259,7 +324,7 @@ class _ConsultationCasesBottomSheetState extends State<ConsultationCasesBottomSh
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: AppSizes.paddingM),
-          // 하단 정보
+          // 하단 정보 + 삭제 버튼
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -295,13 +360,33 @@ class _ConsultationCasesBottomSheetState extends State<ConsultationCasesBottomSh
                   ),
                 ],
               ),
-              // 시간
-              Text(
-                timeString,
-                style: TextStyle(
-                  fontSize: AppSizes.fontS,
-                  color: AppColors.textSecondary,
-                ),
+              Row(
+                children: [
+                  // 시간
+                  Text(
+                    timeString,
+                    style: TextStyle(
+                      fontSize: AppSizes.fontS,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: AppSizes.paddingM),
+                  TextButton.icon(
+                    onPressed: _isDeleting ? null : () => _deleteConsultationPost(post),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      size: 16,
+                      color: AppColors.error,
+                    ),
+                    label: const Text(
+                      '삭제',
+                      style: TextStyle(
+                        fontSize: AppSizes.fontS,
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

@@ -158,5 +158,17 @@ class ConsultationPostRemoteDataSource {
       return [];
     }
   }
+
+  /// 상담 글 삭제
+  Future<void> deleteConsultationPost(String postId) async {
+    try {
+      debugPrint('🗑 ConsultationPostDataSource: delete($postId)');
+      await _collection.doc(postId).delete();
+      debugPrint('   → 삭제 완료');
+    } catch (e) {
+      debugPrint('❌ ConsultationPostDataSource.delete error: $e');
+      rethrow;
+    }
+  }
 }
 

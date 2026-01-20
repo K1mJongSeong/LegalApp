@@ -776,8 +776,8 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
   }
 
   /// 상담 글 작성 팝업 표시
-  void _showConsultationPostDialog() {
-    showDialog(
+  Future<void> _showConsultationPostDialog() async {
+    final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) => ConsultationPostDialog(
@@ -787,6 +787,18 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
         category: widget.categoryName,
       ),
     );
+
+    // 작성 성공 시 전문가 목록으로 이동
+    if (result == true && mounted) {
+      Navigator.pushNamed(
+        context,
+        AppRoutes.experts,
+        arguments: {
+          'category': widget.category,
+          'urgency': widget.urgency,
+        },
+      );
+    }
   }
 }
 

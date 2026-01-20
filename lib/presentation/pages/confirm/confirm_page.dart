@@ -299,6 +299,16 @@ class _ConfirmPageState extends State<ConfirmPage> {
 
   /// 프로필 섹션
   Widget _buildProfileSection(ExpertProfile profile) {
+    // 회원(사용자) 이름 - 전문가 이름이 없을 때 fallback으로 사용
+    final authState = context.read<AuthBloc>().state;
+    final fallbackUserName = authState is AuthAuthenticated && authState.user.name.isNotEmpty
+        ? authState.user.name
+        : '회원';
+
+    final displayName = (profile.name != null && profile.name!.isNotEmpty)
+        ? profile.name!
+        : fallbackUserName;
+
     // 직업 타입 결정
     String profession = '변호사';
     if (profile.examType != null) {
@@ -332,11 +342,11 @@ class _ConfirmPageState extends State<ConfirmPage> {
                       profile.profileImageUrl!,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        return _buildDefaultAvatar(profile.name ?? '?');
+                        return _buildDefaultAvatar(displayName);
                       },
                     ),
                   )
-                : _buildDefaultAvatar(profile.name ?? '?'),
+                : _buildDefaultAvatar(displayName),
           ),
           const SizedBox(width: AppSizes.paddingM),
           // 이름, 직업, 소속, 소개
@@ -348,7 +358,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
                 Row(
                   children: [
                     Text(
-                      profile.name ?? '이름 없음',
+                      displayName,
                       style: const TextStyle(
                         fontSize: AppSizes.fontL,
                         fontWeight: FontWeight.bold,
