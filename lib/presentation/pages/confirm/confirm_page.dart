@@ -8,15 +8,20 @@ import '../../../domain/entities/consultation_request.dart';
 import '../../../domain/repositories/expert_profile_repository.dart';
 import '../../../domain/repositories/expert_account_repository.dart';
 import '../../../domain/repositories/consultation_request_repository.dart';
+import '../../../domain/repositories/consultation_post_repository.dart';
 import '../../../data/repositories/expert_profile_repository_impl.dart';
 import '../../../data/repositories/expert_account_repository_impl.dart';
 import '../../../data/repositories/consultation_request_repository_impl.dart';
+import '../../../data/repositories/consultation_post_repository_impl.dart';
 import '../../../data/datasources/expert_profile_remote_datasource.dart';
 import '../../../data/datasources/expert_account_remote_datasource.dart';
 import '../../../data/datasources/consultation_request_remote_datasource.dart';
+import '../../../data/datasources/consultation_post_remote_datasource.dart';
 import '../../blocs/expert/expert_bloc.dart';
 import '../../blocs/expert/expert_event.dart';
 import '../../blocs/expert/expert_state.dart';
+import '../../blocs/auth/auth_bloc.dart';
+import '../../blocs/auth/auth_state.dart';
 import '../../widgets/common/primary_button.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
@@ -37,15 +42,39 @@ class _ConfirmPageState extends State<ConfirmPage> {
   ExpertProfile? _profile;
   bool _isLoadingProfile = true;
   String? _availabilityText;
+  String? _latestConsultationPostId; // 최근 작성한 상담 글 ID
 
   @override
   void initState() {
     super.initState();
     _loadProfile();
+    _loadLatestConsultationPost();
     if (widget.userId != null) {
       context.read<ExpertBloc>().add(ExpertDetailByUserIdRequested(widget.userId!));
     } else if (widget.expertId != null) {
       context.read<ExpertBloc>().add(ExpertDetailRequested(widget.expertId!));
+    }
+  }
+
+  /// 최근 작성한 상담 글 조회
+  Future<void> _loadLatestConsultationPost() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      try {
+        final consultationPostRepository = ConsultationPostRepositoryImpl(
+          ConsultationPostRemoteDataSource(),
+        );
+        final latestPost = await consultationPostRepository.getLatestConsultationPostByUserId(
+          authState.user.id,
+        );
+        if (mounted && latestPost != null) {
+          setState(() {
+            _latestConsultationPostId = latestPost.id;
+          });
+        }
+      } catch (e) {
+        debugPrint('최근 상담 글 조회 실패: $e');
+      }
     }
   }
 
@@ -242,7 +271,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => _showConfirmDialog(profile.name ?? '전문가', 0),
+                  onPressed: () => _navigateToCaseSubmission(profile),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -266,6 +295,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
       ),
     );
   }
+
 
   /// 프로필 섹션
   Widget _buildProfileSection(ExpertProfile profile) {
@@ -680,29 +710,26 @@ class _ConfirmPageState extends State<ConfirmPage> {
     );
   }
 
-  void _showConfirmDialog(String expertName, int expertId) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('상담 신청'),
-        content: Text('$expertName님에게 상담을 신청하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('취소'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('상담이 신청되었습니다')),
-              );
-              Navigator.pushReplacementNamed(context, AppRoutes.home);
-            },
-            child: const Text('확인'),
-          ),
-        ],
-      ),
+  /// 사건 전송 페이지로 이동
+  void _navigateToCaseSubmission(ExpertProfile profile) {
+    if (_latestConsultationPostId == null || profile.userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('상담 글 정보를 찾을 수 없습니다'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    Navigator.pushNamed(
+      context,
+      AppRoutes.caseSubmission,
+      arguments: {
+        'consultationPostId': _latestConsultationPostId!,
+        'expertUserId': profile.userId!,
+        'expertId': widget.expertId?.toString(),
+      },
     );
   }
 }

@@ -46,3 +46,4 @@ class OtherActivityModel extends OtherActivity {
   }
 }
 
+

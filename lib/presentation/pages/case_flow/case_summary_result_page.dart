@@ -501,6 +501,29 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
           ),
           const SizedBox(height: AppSizes.paddingM),
           ...(_result?.relatedLaws ?? []).map((law) => _buildLawCard(law)),
+          const SizedBox(height: AppSizes.paddingS),
+          Container(
+            padding: const EdgeInsets.all(AppSizes.paddingS),
+            decoration: BoxDecoration(
+              color: AppColors.info.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppSizes.radiusS),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: AppColors.info, size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '제공된 법령 및 판례는 참고 정보이며, 귀하의 사건에 직접 적용된다고 단정할 수 없습니다.',
+                    style: TextStyle(
+                      fontSize: AppSizes.fontXS,
+                      color: AppColors.info,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

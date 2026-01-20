@@ -24,12 +24,12 @@ class SignupPromptDialog extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
+                // IconButton(
+                //   icon: const Icon(Icons.close),
+                //   onPressed: () => Navigator.pop(context),
+                //   padding: EdgeInsets.zero,
+                //   constraints: const BoxConstraints(),
+                // ),
               ],
             ),
             const SizedBox(height: AppSizes.paddingS),
@@ -54,7 +54,7 @@ class SignupPromptDialog extends StatelessWidget {
             // 혜택 목록
             _buildBenefitItem(
               number: '1',
-              title: '무료 초기 상담',
+              title: '무료 사건 요약',
               description: '사건 요약 기능 무료 지원',
             ),
             const SizedBox(height: AppSizes.paddingM),
@@ -155,6 +155,7 @@ class SignupPromptDialog extends StatelessWidget {
     );
   }
 }
+
 
 
 
