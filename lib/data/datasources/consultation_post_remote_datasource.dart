@@ -159,6 +159,27 @@ class ConsultationPostRemoteDataSource {
     }
   }
 
+  /// 모든 상담 글 조회
+  Future<List<ConsultationPostModel>> getAllConsultationPosts() async {
+    try {
+      debugPrint('🔍 ConsultationPostDataSource: getAllConsultationPosts');
+      final querySnapshot = await _collection
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      debugPrint('   → ${querySnapshot.docs.length}건 발견');
+      return querySnapshot.docs.map((doc) {
+        return ConsultationPostModel.fromJson({
+          'id': doc.id,
+          ...doc.data(),
+        });
+      }).toList();
+    } catch (e) {
+      debugPrint('❌ ConsultationPostDataSource.getAllConsultationPosts error: $e');
+      return [];
+    }
+  }
+
   /// 상담 글 삭제
   Future<void> deleteConsultationPost(String postId) async {
     try {
