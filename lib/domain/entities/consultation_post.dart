@@ -41,3 +41,4 @@ class ConsultationPost extends Equatable {
       ];
 }
 
+

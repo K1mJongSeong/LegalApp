@@ -94,19 +94,12 @@ class _ConsultationCasesBottomSheetState extends State<ConsultationCasesBottomSh
   }
 
   Future<void> _loadConsultationPosts() async {
-    final authState = context.read<AuthBloc>().state;
-    if (authState is! AuthAuthenticated) {
-      setState(() {
-        _isLoading = false;
-      });
-      return;
-    }
-
     try {
       final repository = ConsultationPostRepositoryImpl(
         ConsultationPostRemoteDataSource(),
       );
-      final posts = await repository.getConsultationPostsByUserId(authState.user.id);
+      // 모든 유저의 상담 글 가져오기
+      final posts = await repository.getAllConsultationPosts();
       
       setState(() {
         _posts = posts;
@@ -207,6 +200,10 @@ class _ConsultationCasesBottomSheetState extends State<ConsultationCasesBottomSh
   }
 
   Widget _buildConsultationCaseCard(ConsultationPost post) {
+    // 현재 로그인한 사용자 확인
+    final authState = context.read<AuthBloc>().state;
+    final isMyPost = authState is AuthAuthenticated && authState.user.id == post.userId;
+
     // 카테고리 태그
     final categoryTag = _getCategoryTag(post.category);
     final subCategoryTag = _getSubCategoryTag(post.category);
@@ -370,22 +367,25 @@ class _ConsultationCasesBottomSheetState extends State<ConsultationCasesBottomSh
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  const SizedBox(width: AppSizes.paddingM),
-                  TextButton.icon(
-                    onPressed: _isDeleting ? null : () => _deleteConsultationPost(post),
-                    icon: const Icon(
-                      Icons.delete_outline,
-                      size: 16,
-                      color: AppColors.error,
-                    ),
-                    label: const Text(
-                      '삭제',
-                      style: TextStyle(
-                        fontSize: AppSizes.fontS,
+                  // 본인 글일 때만 삭제 버튼 표시
+                  if (isMyPost) ...[
+                    const SizedBox(width: AppSizes.paddingM),
+                    TextButton.icon(
+                      onPressed: _isDeleting ? null : () => _deleteConsultationPost(post),
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        size: 16,
                         color: AppColors.error,
                       ),
+                      label: const Text(
+                        '삭제',
+                        style: TextStyle(
+                          fontSize: AppSizes.fontS,
+                          color: AppColors.error,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ],

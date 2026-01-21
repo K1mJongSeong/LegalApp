@@ -50,6 +50,11 @@ class ConsultationPostRepositoryImpl implements ConsultationPostRepository {
   }
 
   @override
+  Future<List<ConsultationPost>> getAllConsultationPosts() async {
+    return await _remoteDataSource.getAllConsultationPosts();
+  }
+
+  @override
   Future<void> deleteConsultationPost(String postId) async {
     await _remoteDataSource.deleteConsultationPost(postId);
   }

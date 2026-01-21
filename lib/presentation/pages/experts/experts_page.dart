@@ -114,7 +114,8 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('$userName님을 위한 전문가 목록'),
+        // title: Text('$userName님을 위한 전문가 목록'),
+        title: const Text('전문가 목록'),
         leading: IconButton(
           icon: const Icon(Icons.home),
           // onPressed: () => Navigator.pop(context),
