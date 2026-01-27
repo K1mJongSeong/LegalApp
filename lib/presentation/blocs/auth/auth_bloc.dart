@@ -16,6 +16,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthPasswordResetRequested>(_onPasswordResetRequested);
     on<AuthErrorCleared>(_onErrorCleared);
+    on<AuthGoogleLoginRequested>(_onGoogleLoginRequested);
+    on<AuthKakaoLoginRequested>(_onKakaoLoginRequested);
   }
 
   Future<void> _onCheckRequested(
@@ -100,6 +102,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) {
     emit(AuthUnauthenticated());
+  }
+
+  Future<void> _onGoogleLoginRequested(
+    AuthGoogleLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final user = await _authRepository.loginWithGoogle(isExpert: event.isExpert);
+      emit(AuthAuthenticated(user));
+    } catch (e) {
+      emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onKakaoLoginRequested(
+    AuthKakaoLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final user = await _authRepository.loginWithKakao(isExpert: event.isExpert);
+      emit(AuthAuthenticated(user));
+    } catch (e) {
+      emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
+    }
   }
 }
 

@@ -61,4 +61,24 @@ class AuthPasswordResetRequested extends AuthEvent {
 /// 에러 초기화
 class AuthErrorCleared extends AuthEvent {}
 
+/// 구글 로그인 요청
+class AuthGoogleLoginRequested extends AuthEvent {
+  final bool isExpert;
+
+  const AuthGoogleLoginRequested({this.isExpert = false});
+
+  @override
+  List<Object?> get props => [isExpert];
+}
+
+/// 카카오 로그인 요청
+class AuthKakaoLoginRequested extends AuthEvent {
+  final bool isExpert;
+
+  const AuthKakaoLoginRequested({this.isExpert = false});
+
+  @override
+  List<Object?> get props => [isExpert];
+}
+
 

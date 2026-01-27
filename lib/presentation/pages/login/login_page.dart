@@ -229,16 +229,11 @@ class _LoginPageState extends State<LoginPage>
                         ],
                       ),
                       const SizedBox(height: AppSizes.paddingM),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildSocialButton(Icons.chat_bubble, Colors.yellow.shade700),
-                          const SizedBox(width: AppSizes.paddingM),
-                          _buildSocialButton(Icons.g_mobiledata, Colors.red),
-                          const SizedBox(width: AppSizes.paddingM),
-                          _buildSocialButton(Icons.apple, Colors.black),
-                        ],
-                      ),
+                      // 카카오 로그인 버튼
+                      _buildKakaoLoginButton(),
+                      const SizedBox(height: AppSizes.paddingS),
+                      // 구글 로그인 버튼
+                      _buildGoogleLoginButton(),
                     ],
                   ),
                 ),
@@ -250,23 +245,80 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
-  Widget _buildSocialButton(IconData icon, Color color) {
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusL),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: color),
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('소셜 로그인은 준비 중입니다')),
-          );
-        },
-      ),
+  Widget _buildKakaoLoginButton() {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        return InkWell(
+          onTap: state is AuthLoading
+              ? null
+              : () {
+                  context.read<AuthBloc>().add(
+                        AuthKakaoLoginRequested(isExpert: _isExpertTab),
+                      );
+                },
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            child: Image.asset(
+              'assets/kakao_login_medium_wide.png',
+              height: 48,
+              fit: BoxFit.contain,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildGoogleLoginButton() {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        return SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: OutlinedButton(
+            onPressed: state is AuthLoading
+                ? null
+                : () {
+                    context.read<AuthBloc>().add(
+                          AuthGoogleLoginRequested(isExpert: _isExpertTab),
+                        );
+                  },
+            style: OutlinedButton.styleFrom(
+              backgroundColor: Colors.white,
+              side: const BorderSide(color: AppColors.border),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSizes.radiusM),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.network(
+                  'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                  height: 24,
+                  width: 24,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(
+                      Icons.g_mobiledata,
+                      size: 24,
+                      color: Colors.red,
+                    );
+                  },
+                ),
+                const SizedBox(width: AppSizes.paddingM),
+                const Text(
+                  'Google 로그인',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: AppSizes.fontM,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
