@@ -61,4 +61,38 @@ class AuthPasswordResetRequested extends AuthEvent {
 /// 에러 초기화
 class AuthErrorCleared extends AuthEvent {}
 
+/// 구글 로그인 요청
+class AuthGoogleLoginRequested extends AuthEvent {
+  final bool isExpert;
+
+  const AuthGoogleLoginRequested({this.isExpert = false});
+
+  @override
+  List<Object?> get props => [isExpert];
+}
+
+/// 카카오 로그인 요청
+class AuthKakaoLoginRequested extends AuthEvent {
+  final bool isExpert;
+
+  const AuthKakaoLoginRequested({this.isExpert = false});
+
+  @override
+  List<Object?> get props => [isExpert];
+}
+
+/// 회원탈퇴 요청
+class AuthDeleteAccountRequested extends AuthEvent {
+  final String? password; // 이메일 로그인 사용자용
+  final String? loginProvider; // 'google', 'kakao', 'email'
+
+  const AuthDeleteAccountRequested({
+    this.password,
+    this.loginProvider,
+  });
+
+  @override
+  List<Object?> get props => [password, loginProvider];
+}
+
 

@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:flutter/services.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../models/user_model.dart';
@@ -155,6 +159,353 @@ class AuthRepositoryImpl implements AuthRepository {
         return null;
       }
     });
+  }
+
+  /// 구글 로그인
+  Future<User> loginWithGoogle({bool isExpert = false}) async {
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'],
+      );
+      
+      GoogleSignInAccount? googleUser;
+      try {
+        googleUser = await googleSignIn.signIn();
+      } on PlatformException catch (e) {
+        // PlatformException 처리 (DEVELOPER_ERROR 등)
+        if (e.code == 'sign_in_failed') {
+          final message = e.message ?? '';
+          if (message.contains('10') || message.contains('DEVELOPER_ERROR')) {
+            throw Exception(
+              '구글 로그인 설정 오류입니다.\n'
+              'Firebase Console에서 다음을 확인해주세요:\n'
+              '1. Authentication > Sign-in method > Google 활성화\n'
+              '2. 프로젝트 설정 > 일반 > SHA 인증서 지문 등록\n'
+              '(디버그 키스토어 SHA-1을 등록해야 합니다)'
+            );
+          }
+        }
+        rethrow;
+      }
+
+      if (googleUser == null) {
+        throw Exception('구글 로그인이 취소되었습니다');
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      if (googleAuth.idToken == null) {
+        throw Exception('구글 인증 토큰을 가져올 수 없습니다');
+      }
+
+      final credential = firebase_auth.GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential =
+          await _firebaseAuth.signInWithCredential(credential);
+      final user = userCredential.user;
+
+      if (user == null) {
+        throw Exception('구글 로그인에 실패했습니다');
+      }
+
+      // Firestore에서 사용자 정보 확인 또는 생성
+      final doc = await _usersCollection.doc(user.uid).get();
+
+      if (!doc.exists) {
+        // 신규 사용자 - Firestore에 정보 저장
+        final userData = {
+          'email': user.email ?? '',
+          'name': user.displayName ?? user.email?.split('@').first ?? '사용자',
+          'phone': user.phoneNumber,
+          'profile_image': user.photoURL,
+          'is_expert': isExpert,
+          'created_at': DateTime.now().toIso8601String(),
+          'login_provider': 'google',
+        };
+        await _usersCollection.doc(user.uid).set(userData);
+
+        return UserModel.fromJson({
+          'id': user.uid,
+          ...userData,
+        });
+      }
+
+      return UserModel.fromJson({
+        'id': user.uid,
+        ...doc.data()!,
+      });
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } on PlatformException catch (e) {
+      if (e.code == 'sign_in_failed') {
+        final message = e.message ?? '';
+        if (message.contains('10') || message.contains('DEVELOPER_ERROR')) {
+          throw Exception(
+            '구글 로그인 설정 오류입니다.\n'
+            'Firebase Console에서 다음을 확인해주세요:\n'
+            '1. Authentication > Sign-in method > Google 활성화\n'
+            '2. 프로젝트 설정 > 일반 > SHA 인증서 지문 등록\n'
+            '(디버그 키스토어 SHA-1을 등록해야 합니다)'
+          );
+        }
+      }
+      throw Exception('구글 로그인 중 오류가 발생했습니다: ${e.message ?? e.toString()}');
+    } catch (e) {
+      if (e.toString().contains('취소') || e.toString().contains('cancelled')) {
+        throw Exception('구글 로그인이 취소되었습니다');
+      }
+      throw Exception('구글 로그인 중 오류가 발생했습니다: $e');
+    }
+  }
+
+  /// 카카오 로그인
+  Future<User> loginWithKakao({bool isExpert = false}) async {
+    try {
+      // 웹 환경이거나 카카오톡 설치 여부 확인 실패 시 카카오 계정 로그인 사용
+      bool useKakaoTalk = false;
+      if (!kIsWeb) {
+        try {
+          useKakaoTalk = await kakao.isKakaoTalkInstalled();
+        } catch (e) {
+          // MissingPluginException 등 네이티브 플러그인 에러 발생 시
+          // 카카오 계정 로그인으로 폴백
+          debugPrint('⚠️ 카카오톡 설치 여부 확인 실패, 카카오 계정 로그인 사용: $e');
+          useKakaoTalk = false;
+        }
+      }
+
+      if (useKakaoTalk) {
+        await kakao.UserApi.instance.loginWithKakaoTalk();
+      } else {
+        await kakao.UserApi.instance.loginWithKakaoAccount();
+      }
+
+      // 카카오 사용자 정보 가져오기
+      final kakaoUser = await kakao.UserApi.instance.me();
+
+      // Firebase Custom Token으로 로그인하거나 이메일 기반 로그인 사용
+      // 여기서는 카카오 이메일로 Firebase에 로그인하는 방식 사용
+      final email = kakaoUser.kakaoAccount?.email;
+      if (email == null || email.isEmpty) {
+        throw Exception('카카오 계정에 이메일이 등록되어 있지 않습니다.\n카카오 계정 설정에서 이메일을 등록해주세요.');
+      }
+
+      // 카카오 ID를 기반으로 고유한 비밀번호 생성 (항상 동일한 값)
+      final kakaoPassword = 'kakao_secure_${kakaoUser.id}';
+
+      firebase_auth.UserCredential userCredential;
+
+      try {
+        // 먼저 기존 계정으로 로그인 시도
+        userCredential = await _firebaseAuth.signInWithEmailAndPassword(
+          email: email,
+          password: kakaoPassword,
+        );
+      } on firebase_auth.FirebaseAuthException catch (e) {
+        if (e.code == 'user-not-found') {
+          // 신규 사용자 - 계정 생성
+          userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
+            email: email,
+            password: kakaoPassword,
+          );
+        } else if (e.code == 'wrong-password') {
+          // 기존 이메일/비밀번호 사용자 - 카카오 연동 불가
+          throw Exception('이미 이메일로 가입된 계정입니다.\n이메일과 비밀번호로 로그인해주세요.');
+        } else {
+          rethrow;
+        }
+      }
+
+      final user = userCredential.user;
+      if (user == null) {
+        throw Exception('카카오 로그인에 실패했습니다');
+      }
+
+      // Firestore에 사용자 정보 저장/업데이트
+      final doc = await _usersCollection.doc(user.uid).get();
+
+      if (!doc.exists) {
+        final userData = {
+          'email': email,
+          'name': kakaoUser.kakaoAccount?.profile?.nickname ?? email.split('@').first,
+          'phone': kakaoUser.kakaoAccount?.phoneNumber,
+          'profile_image': kakaoUser.kakaoAccount?.profile?.profileImageUrl,
+          'is_expert': isExpert,
+          'created_at': DateTime.now().toIso8601String(),
+          'login_provider': 'kakao',
+          'kakao_id': kakaoUser.id.toString(),
+        };
+        await _usersCollection.doc(user.uid).set(userData);
+
+        return UserModel.fromJson({
+          'id': user.uid,
+          ...userData,
+        });
+      }
+
+      return UserModel.fromJson({
+        'id': user.uid,
+        ...doc.data()!,
+      });
+    } catch (e) {
+      if (e.toString().contains('취소') || e.toString().contains('cancelled')) {
+        throw Exception('카카오 로그인이 취소되었습니다');
+      }
+      rethrow;
+    }
+  }
+
+  /// 회원탈퇴
+  Future<void> deleteAccount({
+    String? password,
+    String? loginProvider,
+  }) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) {
+      throw Exception('로그인된 사용자가 없습니다');
+    }
+
+    try {
+      // 1. 재인증 (Firebase는 민감한 작업 전 최근 로그인 필요)
+      await _reauthenticate(user, password: password, loginProvider: loginProvider);
+
+      // 2. Firestore에서 사용자 관련 데이터 삭제
+      await _deleteUserData(user.uid);
+
+      // 3. Firebase Auth에서 사용자 삭제
+      await user.delete();
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        throw Exception('보안을 위해 다시 로그인한 후 탈퇴를 진행해주세요');
+      }
+      throw _handleAuthException(e);
+    }
+  }
+
+  /// 재인증 처리
+  Future<void> _reauthenticate(
+    firebase_auth.User user, {
+    String? password,
+    String? loginProvider,
+  }) async {
+    final email = user.email;
+
+    if (loginProvider == 'google') {
+      // 구글 재인증
+      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        throw Exception('구글 인증이 취소되었습니다');
+      }
+      final googleAuth = await googleUser.authentication;
+      final credential = firebase_auth.GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      await user.reauthenticateWithCredential(credential);
+    } else if (loginProvider == 'kakao') {
+      // 카카오 재인증 (이메일/비밀번호 방식으로 저장되어 있음)
+      // 카카오 로그인 후 Firebase에 저장된 비밀번호로 재인증
+      try {
+        // 카카오 로그인
+        bool useKakaoTalk = false;
+        if (!kIsWeb) {
+          try {
+            useKakaoTalk = await kakao.isKakaoTalkInstalled();
+          } catch (e) {
+            useKakaoTalk = false;
+          }
+        }
+
+        if (useKakaoTalk) {
+          await kakao.UserApi.instance.loginWithKakaoTalk();
+        } else {
+          await kakao.UserApi.instance.loginWithKakaoAccount();
+        }
+
+        final kakaoUser = await kakao.UserApi.instance.me();
+        final kakaoPassword = 'kakao_secure_${kakaoUser.id}';
+
+        if (email != null) {
+          final credential = firebase_auth.EmailAuthProvider.credential(
+            email: email,
+            password: kakaoPassword,
+          );
+          await user.reauthenticateWithCredential(credential);
+        }
+      } catch (e) {
+        throw Exception('카카오 인증에 실패했습니다');
+      }
+    } else if (password != null && email != null) {
+      // 이메일/비밀번호 재인증
+      final credential = firebase_auth.EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+      await user.reauthenticateWithCredential(credential);
+    } else {
+      throw Exception('재인증에 필요한 정보가 없습니다');
+    }
+  }
+
+  /// Firestore에서 사용자 관련 데이터 삭제
+  Future<void> _deleteUserData(String userId) async {
+    final batch = _firestore.batch();
+
+    // 1. users 컬렉션에서 사용자 문서 삭제
+    batch.delete(_usersCollection.doc(userId));
+
+    // 2. cases 컬렉션에서 사용자의 사건들 삭제
+    final casesSnapshot = await _firestore
+        .collection('cases')
+        .where('user_id', isEqualTo: userId)
+        .get();
+    for (final doc in casesSnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // 3. reviews 컬렉션에서 사용자가 작성한 리뷰들 삭제
+    final reviewsSnapshot = await _firestore
+        .collection('reviews')
+        .where('user_id', isEqualTo: userId)
+        .get();
+    for (final doc in reviewsSnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // 4. expert_accounts 컬렉션에서 전문가 계정 삭제 (있는 경우)
+    final expertAccountSnapshot = await _firestore
+        .collection('expert_accounts')
+        .where('user_id', isEqualTo: userId)
+        .get();
+    for (final doc in expertAccountSnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // 5. consultation_posts 컬렉션에서 사용자가 작성한 상담 글 삭제
+    final consultationPostsSnapshot = await _firestore
+        .collection('consultation_posts')
+        .where('user_id', isEqualTo: userId)
+        .get();
+    for (final doc in consultationPostsSnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // 6. case_submissions 컬렉션에서 사용자의 제출 내역 삭제
+    final caseSubmissionsSnapshot = await _firestore
+        .collection('case_submissions')
+        .where('user_id', isEqualTo: userId)
+        .get();
+    for (final doc in caseSubmissionsSnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // 배치 실행
+    await batch.commit();
   }
 
   /// Firebase Auth 예외 처리

@@ -5,9 +5,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../domain/entities/expert_profile.dart';
 import '../../../../domain/entities/consultation_post.dart';
-import '../../../../domain/repositories/expert_profile_repository.dart';
-import '../../../../domain/repositories/expert_account_repository.dart';
-import '../../../../domain/repositories/consultation_post_repository.dart';
 import '../../../../data/repositories/expert_profile_repository_impl.dart';
 import '../../../../data/repositories/expert_account_repository_impl.dart';
 import '../../../../data/repositories/consultation_post_repository_impl.dart';
@@ -15,9 +12,7 @@ import '../../../../data/datasources/expert_account_remote_datasource.dart';
 import '../../../../data/datasources/consultation_post_remote_datasource.dart';
 import '../../../blocs/auth/auth_bloc.dart';
 import '../../../blocs/auth/auth_state.dart';
-import '../../../widgets/home/expert/expert_home_header.dart';
 import '../../../widgets/home/expert/expert_profile_card.dart';
-import '../../../widgets/home/expert/profile_tip_card.dart';
 import '../../../widgets/home/expert/consultation_section_header.dart';
 import '../../../widgets/home/expert/consultation_card.dart';
 import '../../../widgets/home/expert/recommendation_card.dart';
@@ -26,10 +21,9 @@ import '../../../widgets/home/expert/expert_verification_card.dart';
 import '../../../widgets/home/expert/expert_quick_menu.dart';
 
 /// 전문가 홈 Sliver 위젯
-/// 
-/// SliverList + SliverChildListDelegate로 구성
-/// Column, Expanded, Spacer 사용하지 않음
-class ExpertHomeSliver extends StatelessWidget {
+///
+/// SliverMainAxisGroup으로 각 섹션을 개별 Sliver로 구성
+class ExpertHomeSliver extends StatefulWidget {
   final String name;
   final bool isVerified;
 
@@ -40,144 +34,266 @@ class ExpertHomeSliver extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return SliverPadding(
-      padding: const EdgeInsets.all(AppSizes.paddingM),
-      sliver: SliverList(
-        delegate: SliverChildListDelegate([
-          // 헤더
-          // const ExpertHomeHeader(),
-          const SizedBox(height: AppSizes.paddingM),
+  State<ExpertHomeSliver> createState() => _ExpertHomeSliverState();
+}
 
-          // 프로필 카드
-          BlocBuilder<AuthBloc, AuthState>(
-            builder: (context, authState) {
-              if (authState is! AuthAuthenticated) {
-                return ExpertProfileCard(
-                  name: name,
-                  isVerified: isVerified,
-                );
-              }
+class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
+  ExpertProfile? _profile;
+  List<ConsultationPost> _posts = [];
+  bool _isLoadingProfile = true;
+  bool _isLoadingPosts = true;
 
-              return FutureBuilder<ExpertProfile?>(
-                future: ExpertProfileRepositoryImpl()
-                    .getProfileByUserId(authState.user.id),
-                builder: (context, snapshot) {
-                  return ExpertProfileCard(
-                    name: name,
-                    isVerified: isVerified,
-                    profile: snapshot.data,
-                  );
-                },
-              );
-            },
-          ),
-          const SizedBox(height: AppSizes.paddingM),
-
-          // 프로필 완성 팁 카드
-          const ProfileTipCard(),
-          const SizedBox(height: AppSizes.paddingL),
-
-          // 관심있는 상담글 섹션 헤더
-          const ConsultationSectionHeader(),
-          const SizedBox(height: AppSizes.paddingS),
-
-          // 예약된 상담 글 목록
-          BlocBuilder<AuthBloc, AuthState>(
-            builder: (context, authState) {
-              if (authState is! AuthAuthenticated) {
-                return _buildEmptyConsultation();
-              }
-
-              return FutureBuilder<List<ConsultationPost>>(
-                future: _loadConsultationPosts(authState.user.id),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(AppSizes.paddingL),
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  }
-
-                  if (snapshot.hasError) {
-                    return _buildEmptyConsultation();
-                  }
-
-                  final posts = snapshot.data ?? [];
-                  if (posts.isEmpty) {
-                    return _buildEmptyConsultation();
-                  }
-
-                  return Column(
-                    children: [
-                      ...posts.map((post) => Padding(
-                            padding: const EdgeInsets.only(bottom: AppSizes.paddingS),
-                            child: ConsultationCard(
-                              category: post.category ?? '기타',
-                              categoryColor: _getCategoryColor(post.category),
-                              time: _formatTimeAgo(post.createdAt),
-                              title: post.title,
-                              views: post.views,
-                              comments: post.comments,
-                            ),
-                          )),
-                      const SizedBox(height: AppSizes.paddingM),
-                    ],
-                  );
-                },
-              );
-            },
-          ),
-
-          // 추천 카드
-          const RecommendationCard(),
-          const SizedBox(height: AppSizes.paddingM),
-
-          // 공지사항 카드
-          const NoticeCard(),
-          const SizedBox(height: AppSizes.paddingM),
-
-          // 전문가 인증 카드 (미인증 시)
-          if (!isVerified) const ExpertVerificationCard(),
-          if (!isVerified) const SizedBox(height: AppSizes.paddingL),
-
-          // 하단 퀵 메뉴
-          const ExpertQuickMenu(),
-          const SizedBox(height: AppSizes.paddingL),
-        ]),
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
   }
 
-  /// 전문가 계정 ID로 예약된 상담 글 목록 로드
-  Future<List<ConsultationPost>> _loadConsultationPosts(String userId) async {
+  Future<void> _loadData() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      setState(() {
+        _isLoadingProfile = false;
+        _isLoadingPosts = false;
+      });
+      return;
+    }
+
+    await Future.wait([
+      _loadProfile(authState.user.id),
+      _loadConsultationPosts(authState.user.id),
+    ]);
+  }
+
+  Future<void> _loadProfile(String userId) async {
     try {
-      // userId로 expertAccountId 조회
+      final profile = await ExpertProfileRepositoryImpl()
+          .getProfileByUserId(userId);
+      if (mounted) {
+        setState(() {
+          _profile = profile;
+          _isLoadingProfile = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('❌ ExpertHomeSliver._loadProfile error: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingProfile = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadConsultationPosts(String userId) async {
+    try {
       final expertAccountRepository = ExpertAccountRepositoryImpl(
         ExpertAccountRemoteDataSource(),
       );
       final expertAccount = await expertAccountRepository.getExpertAccountByUserId(userId);
 
       if (expertAccount == null) {
-        return [];
+        if (mounted) {
+          setState(() {
+            _isLoadingPosts = false;
+          });
+        }
+        return;
       }
 
-      // 예약된 상담 글 목록 조회
       final consultationPostRepository = ConsultationPostRepositoryImpl(
         ConsultationPostRemoteDataSource(),
       );
-      return await consultationPostRepository.getConsultationPostsByExpertAccountId(
+      final posts = await consultationPostRepository.getConsultationPostsByExpertAccountId(
         expertAccount.id,
       );
+
+      if (mounted) {
+        setState(() {
+          _posts = posts;
+          _isLoadingPosts = false;
+        });
+      }
     } catch (e) {
       debugPrint('❌ ExpertHomeSliver._loadConsultationPosts error: $e');
-      return [];
+      if (mounted) {
+        setState(() {
+          _isLoadingPosts = false;
+        });
+      }
     }
   }
 
-  /// 빈 상담 글 위젯
+  Widget _buildProfileCard() {
+    // 로딩 중이든 아니든 항상 동일한 위젯 구조 유지 (높이 일관성)
+    return ExpertProfileCard(
+      name: widget.name,
+      isVerified: widget.isVerified,
+      profile: _isLoadingProfile ? null : _profile,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverMainAxisGroup(
+      slivers: [
+        // 상단 여백
+        const SliverToBoxAdapter(
+          child: SizedBox(height: AppSizes.paddingM),
+        ),
+
+        // 프로필 카드
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+          sliver: SliverToBoxAdapter(
+            child: _buildProfileCard(),
+          ),
+        ),
+
+        // 프로필 카드 후 여백
+        const SliverToBoxAdapter(
+          child: SizedBox(height: AppSizes.paddingL),
+        ),
+
+        // 상담글 섹션 헤더
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+          sliver: const SliverToBoxAdapter(
+            child: ConsultationSectionHeader(),
+          ),
+        ),
+
+        // 섹션 헤더 후 여백
+        const SliverToBoxAdapter(
+          child: SizedBox(height: AppSizes.paddingS),
+        ),
+
+        // 상담 글 섹션
+        if (_isLoadingPosts)
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+            sliver: SliverToBoxAdapter(
+              child: _buildLoadingConsultation(),
+            ),
+          )
+        else if (_posts.isEmpty)
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+            sliver: SliverToBoxAdapter(
+              child: _buildEmptyConsultation(),
+            ),
+          )
+        else
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final post = _posts[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: AppSizes.paddingS),
+                    child: ConsultationCard(
+                      category: post.category ?? '기타',
+                      categoryColor: _getCategoryColor(post.category),
+                      time: _formatTimeAgo(post.createdAt),
+                      title: post.title,
+                      views: post.views,
+                      comments: post.comments,
+                    ),
+                  );
+                },
+                childCount: _posts.length,
+              ),
+            ),
+          ),
+
+        // 상담 글 후 여백
+        if (_posts.isNotEmpty)
+          const SliverToBoxAdapter(
+            child: SizedBox(height: AppSizes.paddingM),
+          ),
+
+        // 추천 카드
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+          sliver: const SliverToBoxAdapter(
+            child: RecommendationCard(),
+          ),
+        ),
+
+        // 추천 카드 후 여백
+        const SliverToBoxAdapter(
+          child: SizedBox(height: AppSizes.paddingM),
+        ),
+
+        // 공지사항 카드
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+          sliver: const SliverToBoxAdapter(
+            child: NoticeCard(),
+          ),
+        ),
+
+        // 공지사항 카드 후 여백
+        const SliverToBoxAdapter(
+          child: SizedBox(height: AppSizes.paddingM),
+        ),
+
+        // 전문가 인증 카드 (미인증 시)
+        if (!widget.isVerified)
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+            sliver: const SliverToBoxAdapter(
+              child: ExpertVerificationCard(),
+            ),
+          ),
+
+        if (!widget.isVerified)
+          const SliverToBoxAdapter(
+            child: SizedBox(height: AppSizes.paddingL),
+          ),
+
+        // 하단 퀵 메뉴
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+          sliver: const SliverToBoxAdapter(
+            child: ExpertQuickMenu(),
+          ),
+        ),
+
+        // 하단 여백
+        const SliverToBoxAdapter(
+          child: SizedBox(height: AppSizes.paddingL),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingConsultation() {
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.paddingL),
+      margin: const EdgeInsets.only(bottom: AppSizes.paddingM),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppSizes.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: const Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmptyConsultation() {
     return Container(
       padding: const EdgeInsets.all(AppSizes.paddingL),
@@ -205,7 +321,6 @@ class ExpertHomeSliver extends StatelessWidget {
     );
   }
 
-  /// 카테고리 색상 반환
   Color _getCategoryColor(String? category) {
     switch (category) {
       case '민사':
@@ -221,7 +336,6 @@ class ExpertHomeSliver extends StatelessWidget {
     }
   }
 
-  /// 시간 포맷 (예: "5분 전")
   String _formatTimeAgo(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
