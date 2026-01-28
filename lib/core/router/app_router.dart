@@ -29,6 +29,8 @@ import '../../presentation/pages/expert/ad/expert_ad_page.dart';
 import '../../presentation/pages/expert/post/expert_post_page.dart';
 import '../../presentation/pages/expert/video/expert_video_page.dart';
 import '../../presentation/pages/expert/notice/expert_notice_page.dart';
+import '../../presentation/pages/legal/terms_of_service_page.dart';
+import '../../presentation/pages/legal/privacy_policy_page.dart';
 
 /// 앱 라우트 이름 상수
 class AppRoutes {
@@ -67,6 +69,9 @@ class AppRoutes {
   static const String expertPost = '/expert-post';
   static const String expertVideo = '/expert-video';
   static const String expertNotice = '/expert-notice';
+  // 법적 문서
+  static const String termsOfService = '/terms-of-service';
+  static const String privacyPolicy = '/privacy-policy';
 }
 
 /// 앱 라우터 설정
@@ -268,6 +273,12 @@ class AppRouter {
 
       case AppRoutes.expertNotice:
         return _buildRoute(const ExpertNoticePage(), settings);
+
+      case AppRoutes.termsOfService:
+        return _buildRoute(const TermsOfServicePage(), settings);
+
+      case AppRoutes.privacyPolicy:
+        return _buildRoute(const PrivacyPolicyPage(), settings);
 
       default:
         return _buildRoute(const SplashPage(), settings);

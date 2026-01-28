@@ -260,7 +260,8 @@ class _LoginPageState extends State<LoginPage>
             borderRadius: BorderRadius.circular(AppSizes.radiusM),
             child: Image.asset(
               'assets/kakao_login_medium_wide.png',
-              height: 48,
+              width: 300,
+              height: 45,
               fit: BoxFit.contain,
             ),
           ),
@@ -272,49 +273,21 @@ class _LoginPageState extends State<LoginPage>
   Widget _buildGoogleLoginButton() {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        return SizedBox(
-          width: double.infinity,
-          height: 48,
-          child: OutlinedButton(
-            onPressed: state is AuthLoading
-                ? null
-                : () {
-                    context.read<AuthBloc>().add(
-                          AuthGoogleLoginRequested(isExpert: _isExpertTab),
-                        );
-                  },
-            style: OutlinedButton.styleFrom(
-              backgroundColor: Colors.white,
-              side: const BorderSide(color: AppColors.border),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSizes.radiusM),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.network(
-                  'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
-                  height: 24,
-                  width: 24,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
-                      Icons.g_mobiledata,
-                      size: 24,
-                      color: Colors.red,
-                    );
-                  },
-                ),
-                const SizedBox(width: AppSizes.paddingM),
-                const Text(
-                  'Google 로그인',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: AppSizes.fontM,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+        return InkWell(
+          onTap: state is AuthLoading
+              ? null
+              : () {
+                  context.read<AuthBloc>().add(
+                        AuthGoogleLoginRequested(isExpert: _isExpertTab),
+                      );
+                },
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            child: Image.asset(
+              'assets/android_light_sq_SI@2x.png',
+              width: 300,
+              height: 45,
+              fit: BoxFit.contain,
             ),
           ),
         );

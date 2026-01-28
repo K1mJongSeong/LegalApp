@@ -10,6 +10,7 @@ class UserModel extends User {
     super.profileImage,
     super.isExpert,
     required super.createdAt,
+    super.loginProvider,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -21,6 +22,7 @@ class UserModel extends User {
       profileImage: json['profile_image'] as String?,
       isExpert: json['is_expert'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
+      loginProvider: json['login_provider'] as String?,
     );
   }
 
@@ -33,6 +35,7 @@ class UserModel extends User {
       'profile_image': profileImage,
       'is_expert': isExpert,
       'created_at': createdAt.toIso8601String(),
+      'login_provider': loginProvider,
     };
   }
 
@@ -45,6 +48,7 @@ class UserModel extends User {
       profileImage: user.profileImage,
       isExpert: user.isExpert,
       createdAt: user.createdAt,
+      loginProvider: user.loginProvider,
     );
   }
 }

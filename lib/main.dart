@@ -52,28 +52,37 @@ void main() async {
     debugPrint('ℹ️ Web 환경: .env는 로드하지 않고 서버/프록시를 통해 GPT를 호출합니다.');
   }
 
-  // 카카오 SDK 초기화 (웹 환경이 아닐 때만)
-  if (!kIsWeb) {
-    try {
+  // 카카오 SDK 초기화
+  try {
+    if (kIsWeb) {
+      // 웹: --dart-define으로 주입된 값 사용
+      // 빌드 명령어: flutter build web --dart-define=KAKAO_JS_KEY=your_key
+      const kakaoJsKey = String.fromEnvironment('KAKAO_JS_KEY');
+      if (kakaoJsKey.isNotEmpty) {
+        KakaoSdk.init(javaScriptAppKey: kakaoJsKey);
+        debugPrint('✅ Kakao SDK initialized (Web)');
+      } else {
+        debugPrint('⚠️ Kakao SDK not initialized: KAKAO_JS_KEY not provided via --dart-define');
+      }
+    } else {
+      // 모바일: .env 파일 사용
       final kakaoNativeAppKey = dotenv.env['KAKAO_NATIVE_APP_KEY'];
       final kakaoJsAppKey = dotenv.env['KAKAO_JAVASCRIPT_APP_KEY'];
 
-      if (kakaoNativeAppKey != null && 
-          kakaoNativeAppKey.isNotEmpty && 
+      if (kakaoNativeAppKey != null &&
+          kakaoNativeAppKey.isNotEmpty &&
           kakaoNativeAppKey != 'YOUR_KAKAO_NATIVE_APP_KEY') {
         KakaoSdk.init(
           nativeAppKey: kakaoNativeAppKey,
           javaScriptAppKey: kakaoJsAppKey,
         );
-        debugPrint('✅ Kakao SDK initialized');
+        debugPrint('✅ Kakao SDK initialized (Mobile)');
       } else {
         debugPrint('⚠️ Kakao SDK not initialized: KAKAO_NATIVE_APP_KEY not found in .env');
       }
-    } catch (e) {
-      debugPrint('⚠️ Kakao SDK initialization error: $e');
     }
-  } else {
-    debugPrint('ℹ️ Web 환경: Kakao SDK는 웹에서 지원되지 않습니다.');
+  } catch (e) {
+    debugPrint('⚠️ Kakao SDK initialization error: $e');
   }
 
   // Firebase 초기화

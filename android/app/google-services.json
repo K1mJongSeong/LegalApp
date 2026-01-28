@@ -12,7 +12,20 @@
           "package_name": "com.dailyprogress.lawdecode"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "514654100338-4re97hrpsg74jf9ako1eu6ruvjal1kbo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dailyprogress.lawdecode",
+            "certificate_hash": "1cd361384ea03bd6e7157ff531a5de6b8c435f52"
+          }
+        },
+        {
+          "client_id": "514654100338-cbf3d9u5qbhgmhbrbfn6a64so4e2b0ki.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBl7hrl77etR8oyRpe6J5h0EAea4DYBuZU"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "514654100338-cbf3d9u5qbhgmhbrbfn6a64so4e2b0ki.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

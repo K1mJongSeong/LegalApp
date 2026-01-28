@@ -41,4 +41,7 @@ class AuthError extends AuthState {
 /// 비밀번호 재설정 이메일 발송 완료
 class AuthPasswordResetSent extends AuthState {}
 
+/// 회원탈퇴 완료
+class AuthAccountDeleted extends AuthState {}
+
 

@@ -7,6 +7,7 @@ class User {
   final String? profileImage;
   final bool isExpert;
   final DateTime createdAt;
+  final String? loginProvider; // 'email', 'google', 'kakao'
 
   const User({
     required this.id,
@@ -16,6 +17,7 @@ class User {
     this.profileImage,
     this.isExpert = false,
     required this.createdAt,
+    this.loginProvider,
   });
 
   User copyWith({
@@ -26,6 +28,7 @@ class User {
     String? profileImage,
     bool? isExpert,
     DateTime? createdAt,
+    String? loginProvider,
   }) {
     return User(
       id: id ?? this.id,
@@ -35,6 +38,7 @@ class User {
       profileImage: profileImage ?? this.profileImage,
       isExpert: isExpert ?? this.isExpert,
       createdAt: createdAt ?? this.createdAt,
+      loginProvider: loginProvider ?? this.loginProvider,
     );
   }
 }
