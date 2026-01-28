@@ -248,21 +248,43 @@ class _LoginPageState extends State<LoginPage>
   Widget _buildKakaoLoginButton() {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        return InkWell(
-          onTap: state is AuthLoading
-              ? null
-              : () {
-                  context.read<AuthBloc>().add(
-                        AuthKakaoLoginRequested(isExpert: _isExpertTab),
-                      );
-                },
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppSizes.radiusM),
-            child: Image.asset(
-              'assets/kakao_login_medium_wide.png',
-              width: 300,
-              height: 45,
-              fit: BoxFit.contain,
+        return SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton(
+            onPressed: state is AuthLoading
+                ? null
+                : () {
+                    context.read<AuthBloc>().add(
+                          AuthKakaoLoginRequested(isExpert: _isExpertTab),
+                        );
+                  },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFEE500), // 카카오 옐로우
+              foregroundColor: const Color(0xFF000000), // 검정색 텍스트
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSizes.radiusM),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/kakaotalk_sharing_btn_small.png',
+                  width: 20,
+                  height: 20,
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Login with Kakao',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -273,21 +295,44 @@ class _LoginPageState extends State<LoginPage>
   Widget _buildGoogleLoginButton() {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        return InkWell(
-          onTap: state is AuthLoading
-              ? null
-              : () {
-                  context.read<AuthBloc>().add(
-                        AuthGoogleLoginRequested(isExpert: _isExpertTab),
-                      );
-                },
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppSizes.radiusM),
-            child: Image.asset(
-              'assets/android_light_sq_SI@2x.png',
-              width: 300,
-              height: 45,
-              fit: BoxFit.contain,
+        return SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: OutlinedButton(
+            onPressed: state is AuthLoading
+                ? null
+                : () {
+                    context.read<AuthBloc>().add(
+                          AuthGoogleLoginRequested(isExpert: _isExpertTab),
+                        );
+                  },
+            style: OutlinedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF1F1F1F), // 어두운 회색
+              side: const BorderSide(color: Color(0xFF747775), width: 1),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSizes.radiusM),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/web_light_rd_na@2x.png',
+                  width: 20,
+                  height: 20,
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Sign in with Google',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         );
