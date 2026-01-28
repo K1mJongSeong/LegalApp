@@ -556,42 +556,77 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
                       title: '선호하는 상담 방식',
                       child: Column(
                         children: [
-                          _buildCheckboxTile('전화', 'phone', _selectedConsultationMethods, (value) {
-                            setModalState(() {
-                              if (value == true) {
-                                _selectedConsultationMethods.add('phone');
-                              } else {
-                                _selectedConsultationMethods.remove('phone');
-                              }
-                            });
-                          }),
-                          _buildCheckboxTile('채팅', 'chat', _selectedConsultationMethods, (value) {
-                            setModalState(() {
-                              if (value == true) {
-                                _selectedConsultationMethods.add('chat');
-                              } else {
-                                _selectedConsultationMethods.remove('chat');
-                              }
-                            });
-                          }),
-                          _buildCheckboxTile('방문', 'visit', _selectedConsultationMethods, (value) {
-                            setModalState(() {
-                              if (value == true) {
-                                _selectedConsultationMethods.add('visit');
-                              } else {
-                                _selectedConsultationMethods.remove('visit');
-                              }
-                            });
-                          }),
-                          _buildCheckboxTile('이메일', 'email', _selectedConsultationMethods, (value) {
-                            setModalState(() {
-                              if (value == true) {
-                                _selectedConsultationMethods.add('email');
-                              } else {
-                                _selectedConsultationMethods.remove('email');
-                              }
-                            });
-                          }),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildToggleButton(
+                                  '전화',
+                                  _selectedConsultationMethods.contains('phone'),
+                                  () {
+                                    setModalState(() {
+                                      if (_selectedConsultationMethods.contains('phone')) {
+                                        _selectedConsultationMethods.remove('phone');
+                                      } else {
+                                        _selectedConsultationMethods.add('phone');
+                                      }
+                                    });
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: AppSizes.paddingS),
+                              Expanded(
+                                child: _buildToggleButton(
+                                  '채팅',
+                                  _selectedConsultationMethods.contains('chat'),
+                                  () {
+                                    setModalState(() {
+                                      if (_selectedConsultationMethods.contains('chat')) {
+                                        _selectedConsultationMethods.remove('chat');
+                                      } else {
+                                        _selectedConsultationMethods.add('chat');
+                                      }
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSizes.paddingS),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildToggleButton(
+                                  '방문',
+                                  _selectedConsultationMethods.contains('visit'),
+                                  () {
+                                    setModalState(() {
+                                      if (_selectedConsultationMethods.contains('visit')) {
+                                        _selectedConsultationMethods.remove('visit');
+                                      } else {
+                                        _selectedConsultationMethods.add('visit');
+                                      }
+                                    });
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: AppSizes.paddingS),
+                              Expanded(
+                                child: _buildToggleButton(
+                                  '이메일',
+                                  _selectedConsultationMethods.contains('email'),
+                                  () {
+                                    setModalState(() {
+                                      if (_selectedConsultationMethods.contains('email')) {
+                                        _selectedConsultationMethods.remove('email');
+                                      } else {
+                                        _selectedConsultationMethods.add('email');
+                                      }
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -686,51 +721,90 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
                       title: '특수 자격',
                       child: Column(
                         children: [
-                          _buildCheckboxTile('세무사', 'tax_accountant', _selectedQualifications, (value) {
-                            setModalState(() {
-                              if (value == true) {
-                                _selectedQualifications.add('tax_accountant');
-                              } else {
-                                _selectedQualifications.remove('tax_accountant');
-                              }
-                            });
-                          }),
-                          _buildCheckboxTile('노무사', 'labor_attorney', _selectedQualifications, (value) {
-                            setModalState(() {
-                              if (value == true) {
-                                _selectedQualifications.add('labor_attorney');
-                              } else {
-                                _selectedQualifications.remove('labor_attorney');
-                              }
-                            });
-                          }),
-                          _buildCheckboxTile('변리사', 'patent_attorney', _selectedQualifications, (value) {
-                            setModalState(() {
-                              if (value == true) {
-                                _selectedQualifications.add('patent_attorney');
-                              } else {
-                                _selectedQualifications.remove('patent_attorney');
-                              }
-                            });
-                          }),
-                          _buildCheckboxTile('관세사', 'customs_broker', _selectedQualifications, (value) {
-                            setModalState(() {
-                              if (value == true) {
-                                _selectedQualifications.add('customs_broker');
-                              } else {
-                                _selectedQualifications.remove('customs_broker');
-                              }
-                            });
-                          }),
-                          _buildCheckboxTile('회계사', 'accountant', _selectedQualifications, (value) {
-                            setModalState(() {
-                              if (value == true) {
-                                _selectedQualifications.add('accountant');
-                              } else {
-                                _selectedQualifications.remove('accountant');
-                              }
-                            });
-                          }),
+                          SizedBox(
+                            width: double.infinity,
+                            child: _buildToggleButton(
+                              '세무사',
+                              _selectedQualifications.contains('tax_accountant'),
+                              () {
+                                setModalState(() {
+                                  if (_selectedQualifications.contains('tax_accountant')) {
+                                    _selectedQualifications.remove('tax_accountant');
+                                  } else {
+                                    _selectedQualifications.add('tax_accountant');
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.paddingS),
+                          SizedBox(
+                            width: double.infinity,
+                            child: _buildToggleButton(
+                              '노무사',
+                              _selectedQualifications.contains('labor_attorney'),
+                              () {
+                                setModalState(() {
+                                  if (_selectedQualifications.contains('labor_attorney')) {
+                                    _selectedQualifications.remove('labor_attorney');
+                                  } else {
+                                    _selectedQualifications.add('labor_attorney');
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.paddingS),
+                          SizedBox(
+                            width: double.infinity,
+                            child: _buildToggleButton(
+                              '변리사',
+                              _selectedQualifications.contains('patent_attorney'),
+                              () {
+                                setModalState(() {
+                                  if (_selectedQualifications.contains('patent_attorney')) {
+                                    _selectedQualifications.remove('patent_attorney');
+                                  } else {
+                                    _selectedQualifications.add('patent_attorney');
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.paddingS),
+                          SizedBox(
+                            width: double.infinity,
+                            child: _buildToggleButton(
+                              '관세사',
+                              _selectedQualifications.contains('customs_broker'),
+                              () {
+                                setModalState(() {
+                                  if (_selectedQualifications.contains('customs_broker')) {
+                                    _selectedQualifications.remove('customs_broker');
+                                  } else {
+                                    _selectedQualifications.add('customs_broker');
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.paddingS),
+                          SizedBox(
+                            width: double.infinity,
+                            child: _buildToggleButton(
+                              '회계사',
+                              _selectedQualifications.contains('accountant'),
+                              () {
+                                setModalState(() {
+                                  if (_selectedQualifications.contains('accountant')) {
+                                    _selectedQualifications.remove('accountant');
+                                  } else {
+                                    _selectedQualifications.add('accountant');
+                                  }
+                                });
+                              },
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -740,51 +814,90 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
                       title: '경험',
                       child: Column(
                         children: [
-                          _buildCheckboxTile('판사 경험', 'judge', _selectedExperiences, (value) {
-                            setModalState(() {
-                              if (value == true) {
-                                _selectedExperiences.add('judge');
-                              } else {
-                                _selectedExperiences.remove('judge');
-                              }
-                            });
-                          }),
-                          _buildCheckboxTile('검사 경험', 'prosecutor', _selectedExperiences, (value) {
-                            setModalState(() {
-                              if (value == true) {
-                                _selectedExperiences.add('prosecutor');
-                              } else {
-                                _selectedExperiences.remove('prosecutor');
-                              }
-                            });
-                          }),
-                          _buildCheckboxTile('경찰 경험', 'police', _selectedExperiences, (value) {
-                            setModalState(() {
-                              if (value == true) {
-                                _selectedExperiences.add('police');
-                              } else {
-                                _selectedExperiences.remove('police');
-                              }
-                            });
-                          }),
-                          _buildCheckboxTile('법원 공무원 경험', 'court_official', _selectedExperiences, (value) {
-                            setModalState(() {
-                              if (value == true) {
-                                _selectedExperiences.add('court_official');
-                              } else {
-                                _selectedExperiences.remove('court_official');
-                              }
-                            });
-                          }),
-                          _buildCheckboxTile('검찰 공무원 경험', 'prosecution_official', _selectedExperiences, (value) {
-                            setModalState(() {
-                              if (value == true) {
-                                _selectedExperiences.add('prosecution_official');
-                              } else {
-                                _selectedExperiences.remove('prosecution_official');
-                              }
-                            });
-                          }),
+                          SizedBox(
+                            width: double.infinity,
+                            child: _buildToggleButton(
+                              '판사 경험',
+                              _selectedExperiences.contains('judge'),
+                              () {
+                                setModalState(() {
+                                  if (_selectedExperiences.contains('judge')) {
+                                    _selectedExperiences.remove('judge');
+                                  } else {
+                                    _selectedExperiences.add('judge');
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.paddingS),
+                          SizedBox(
+                            width: double.infinity,
+                            child: _buildToggleButton(
+                              '검사 경험',
+                              _selectedExperiences.contains('prosecutor'),
+                              () {
+                                setModalState(() {
+                                  if (_selectedExperiences.contains('prosecutor')) {
+                                    _selectedExperiences.remove('prosecutor');
+                                  } else {
+                                    _selectedExperiences.add('prosecutor');
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.paddingS),
+                          SizedBox(
+                            width: double.infinity,
+                            child: _buildToggleButton(
+                              '경찰 경험',
+                              _selectedExperiences.contains('police'),
+                              () {
+                                setModalState(() {
+                                  if (_selectedExperiences.contains('police')) {
+                                    _selectedExperiences.remove('police');
+                                  } else {
+                                    _selectedExperiences.add('police');
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.paddingS),
+                          SizedBox(
+                            width: double.infinity,
+                            child: _buildToggleButton(
+                              '법원 공무원 경험',
+                              _selectedExperiences.contains('court_official'),
+                              () {
+                                setModalState(() {
+                                  if (_selectedExperiences.contains('court_official')) {
+                                    _selectedExperiences.remove('court_official');
+                                  } else {
+                                    _selectedExperiences.add('court_official');
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.paddingS),
+                          SizedBox(
+                            width: double.infinity,
+                            child: _buildToggleButton(
+                              '검찰 공무원 경험',
+                              _selectedExperiences.contains('prosecution_official'),
+                              () {
+                                setModalState(() {
+                                  if (_selectedExperiences.contains('prosecution_official')) {
+                                    _selectedExperiences.remove('prosecution_official');
+                                  } else {
+                                    _selectedExperiences.add('prosecution_official');
+                                  }
+                                });
+                              },
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -857,6 +970,50 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
     );
   }
 
+  Widget _buildToggleButton(String label, bool isSelected, VoidCallback onTap) {
+    return SizedBox(
+      height: 48,
+      child: isSelected
+          ? ElevatedButton(
+              onPressed: onTap,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                ),
+              ),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: AppSizes.fontM,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            )
+          : OutlinedButton(
+              onPressed: onTap,
+              style: OutlinedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppColors.textPrimary,
+                side: const BorderSide(color: AppColors.border),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                ),
+              ),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: AppSizes.fontM,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+    );
+  }
+
   List<String> _getRegionList() {
     return [
       '서울',
@@ -885,9 +1042,15 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
   }
 
   Widget _buildFilterChip(String label, String? category) {
+    final isSelected = widget.category == category;
     return FilterChip(
-      label: Text(label),
-      selected: widget.category == category,
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : AppColors.textPrimary,
+        ),
+      ),
+      selected: isSelected,
       onSelected: (selected) {
         Navigator.pop(context);
         context.read<ExpertBloc>().add(

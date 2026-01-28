@@ -120,109 +120,87 @@ class _ConsultationConditionPageState extends State<ConsultationConditionPage> {
                       ),
                     ),
                     const SizedBox(height: AppSizes.paddingXL),
-                    // 선호하는 상담 방식
-                    _buildSection(
-                      title: '상담방식',
-                      isOptional: true,
+                    // 상담 조건 통합 카드
+                    Container(
+                      padding: const EdgeInsets.all(AppSizes.paddingM),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppSizes.radiusL),
+                        border: Border.all(color: AppColors.border),
+                      ),
                       child: Column(
-                        children: _consultationMethods.map((method) {
-                          final isSelected = _selectedMethods.contains(method);
-                          return _buildCheckboxItem(
-                            method,
-                            isSelected,
-                            () {
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 상담방식
+                          _buildSectionTitle('상담방식', isOptional: true),
+                          const SizedBox(height: AppSizes.paddingM),
+                          Column(
+                            children: _consultationMethods.map((method) {
+                              final isSelected = _selectedMethods.contains(method);
+                              return _buildCheckboxItem(
+                                method,
+                                isSelected,
+                                () {
+                                  setState(() {
+                                    if (isSelected) {
+                                      _selectedMethods.remove(method);
+                                    } else {
+                                      _selectedMethods.add(method);
+                                    }
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
+
+                          const Divider(height: AppSizes.paddingL * 2),
+
+                          // 선호 지역
+                          _buildSectionTitle('선호 지역', isOptional: true),
+                          const SizedBox(height: AppSizes.paddingM),
+                          _buildDropdown(
+                            value: _selectedRegion,
+                            hint: '지역을 선택해주세요',
+                            items: _regions,
+                            onChanged: (value) {
                               setState(() {
-                                if (isSelected) {
-                                  _selectedMethods.remove(method);
-                                } else {
-                                  _selectedMethods.add(method);
-                                }
+                                _selectedRegion = value;
                               });
                             },
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.paddingL),
-                    // 선호 지역
-                    _buildSection(
-                      title: '선호 지역',
-                      isOptional: true,
-                      child: _buildDropdown(
-                        value: _selectedRegion,
-                        hint: '지역을 선택해주세요',
-                        items: _regions,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedRegion = value;
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.paddingL),
-                    // 경력 정렬 방식
-                    _buildSection(
-                      title: '경력 정렬 방식',
-                      isOptional: true,
-                      child: _buildDropdown(
-                        value: _selectedSortOrder,
-                        hint: '정렬 기준을 선택해주세요',
-                        items: _sortOrders,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedSortOrder = value;
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.paddingL),
-                    // 신규 등록 전문가
-                    // _buildSection(
-                    //   title: '신규 등록 전문가',
-                    //   isOptional: false,
-                    //   child: Column(
-                    //     crossAxisAlignment: CrossAxisAlignment.start,
-                    //     children: [
-                    //       Text(
-                    //         '최근에 등록한 전문가만 표시됩니다',
-                    //         style: TextStyle(
-                    //           fontSize: AppSizes.fontS,
-                    //           color: AppColors.textSecondary,
-                    //         ),
-                    //       ),
-                    //       const SizedBox(height: AppSizes.paddingS),
-                    //       Row(
-                    //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    //         children: [
-                    //           const SizedBox.shrink(),
-                    //           Checkbox(
-                    //             value: _newlyRegisteredOnly,
-                    //             onChanged: (value) {
-                    //               setState(() {
-                    //                 _newlyRegisteredOnly = value ?? false;
-                    //               });
-                    //             },
-                    //             activeColor: AppColors.primary,
-                    //           ),
-                    //         ],
-                    //       ),
-                    //     ],
-                    //   ),
-                    // ),
-                    // const SizedBox(height: AppSizes.paddingL),
-                    // 성별
-                    _buildSection(
-                      title: '성별',
-                      isOptional: true,
-                      child: _buildDropdown(
-                        value: _selectedGender,
-                        hint: '성별을 선택해주세요',
-                        items: _genders,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedGender = value;
-                          });
-                        },
+                          ),
+
+                          const Divider(height: AppSizes.paddingL * 2),
+
+                          // 경력 정렬 방식
+                          _buildSectionTitle('경력 정렬 방식', isOptional: true),
+                          const SizedBox(height: AppSizes.paddingM),
+                          _buildDropdown(
+                            value: _selectedSortOrder,
+                            hint: '정렬 기준을 선택해주세요',
+                            items: _sortOrders,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedSortOrder = value;
+                              });
+                            },
+                          ),
+
+                          const Divider(height: AppSizes.paddingL * 2),
+
+                          // 성별
+                          _buildSectionTitle('성별', isOptional: true),
+                          const SizedBox(height: AppSizes.paddingM),
+                          _buildDropdown(
+                            value: _selectedGender,
+                            hint: '성별을 선택해주세요',
+                            items: _genders,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedGender = value;
+                              });
+                            },
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: AppSizes.paddingL),
@@ -326,6 +304,31 @@ class _ConsultationConditionPageState extends State<ConsultationConditionPage> {
     );
   }
 
+  Widget _buildSectionTitle(String title, {required bool isOptional}) {
+    return Row(
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: AppSizes.fontM,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        if (isOptional) ...[
+          const SizedBox(width: AppSizes.paddingS),
+          Text(
+            '(선택)',
+            style: TextStyle(
+              fontSize: AppSizes.fontS,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   Widget _buildSection({
     required String title,
     required bool isOptional,
@@ -341,28 +344,7 @@ class _ConsultationConditionPageState extends State<ConsultationConditionPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: AppSizes.fontM,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              if (isOptional) ...[
-                const SizedBox(width: AppSizes.paddingS),
-                Text(
-                  '(선택)',
-                  style: TextStyle(
-                    fontSize: AppSizes.fontS,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ],
-          ),
+          _buildSectionTitle(title, isOptional: isOptional),
           const SizedBox(height: AppSizes.paddingM),
           child,
         ],
