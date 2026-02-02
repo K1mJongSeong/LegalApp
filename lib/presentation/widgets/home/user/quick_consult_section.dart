@@ -22,7 +22,7 @@ class QuickConsultSectionHeader extends StatelessWidget {
           onPressed: () {
             Navigator.pushNamed(
               context,
-              '${AppRoutes.experts}?urgency=simple',
+                '${AppRoutes.experts}?urgency=simple&fromHome=true',
             );
           },
           child: const Text('전체보기'),
@@ -31,6 +31,7 @@ class QuickConsultSectionHeader extends StatelessWidget {
     );
   }
 }
+
 
 
 

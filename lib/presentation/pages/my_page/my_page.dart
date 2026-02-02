@@ -41,21 +41,6 @@ class _MyPageState extends State<MyPage> {
       listener: (context, state) {
         if (state is AuthUnauthenticated) {
           Navigator.pushReplacementNamed(context, AppRoutes.login);
-        } else if (state is AuthAccountDeleted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('회원탈퇴가 완료되었습니다'),
-              backgroundColor: AppColors.success,
-            ),
-          );
-          Navigator.pushReplacementNamed(context, AppRoutes.login);
-        } else if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-            ),
-          );
         }
       },
       child: Scaffold(
@@ -218,13 +203,8 @@ class _MyPageState extends State<MyPage> {
                                 );
                               },
                             ),
-                            _MenuItem(
-                              icon: Icons.description_outlined,
-                              title: '이용약관',
-                              onTap: () {
-                                Navigator.pushNamed(context, AppRoutes.termsOfService);
-                              },
-                            ),
+
+
                             _MenuItem(
                               icon: Icons.privacy_tip_outlined,
                               title: '개인정보처리방침',
@@ -242,11 +222,6 @@ class _MyPageState extends State<MyPage> {
                               icon: Icons.logout,
                               title: '로그아웃',
                               onTap: () => _handleLogout(context),
-                            ),
-                            _MenuItem(
-                              icon: Icons.person_remove_outlined,
-                              title: '회원탈퇴',
-                              onTap: () => _handleDeleteAccount(context, user),
                             ),
                           ],
                         ),
@@ -410,114 +385,6 @@ class _MyPageState extends State<MyPage> {
     if (confirmed == true && mounted) {
       context.read<AuthBloc>().add(AuthLogoutRequested());
     }
-  }
-
-  Future<void> _handleDeleteAccount(BuildContext context, user) async {
-    final loginProvider = user.loginProvider;
-    final isEmailLogin = loginProvider == null || loginProvider == 'email';
-
-    // 1단계: 경고 다이얼로그
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('회원탈퇴'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '정말 탈퇴하시겠습니까?',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: AppSizes.paddingM),
-            Text(
-              '탈퇴 시 다음 데이터가 영구 삭제됩니다:',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-            SizedBox(height: AppSizes.paddingS),
-            Text('• 계정 정보'),
-            Text('• 등록한 사건 내역'),
-            Text('• 작성한 리뷰'),
-            Text('• 상담 신청 내역'),
-            SizedBox(height: AppSizes.paddingM),
-            Text(
-              '이 작업은 되돌릴 수 없습니다.',
-              style: TextStyle(
-                color: AppColors.error,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('취소'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
-            child: const Text('탈퇴하기'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true || !mounted) return;
-
-    // 2단계: 이메일 로그인인 경우 비밀번호 확인
-    String? password;
-    if (isEmailLogin) {
-      password = await showDialog<String>(
-        context: context,
-        builder: (dialogContext) {
-          final passwordController = TextEditingController();
-          return AlertDialog(
-            title: const Text('비밀번호 확인'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('본인 확인을 위해 비밀번호를 입력해주세요.'),
-                const SizedBox(height: AppSizes.paddingM),
-                TextField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    hintText: '비밀번호',
-                    prefixIcon: Icon(Icons.lock_outline),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, null),
-                child: const Text('취소'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(dialogContext, passwordController.text),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.error,
-                ),
-                child: const Text('확인'),
-              ),
-            ],
-          );
-        },
-      );
-
-      if (password == null || password.isEmpty || !mounted) return;
-    }
-
-    // 3단계: 탈퇴 처리
-    context.read<AuthBloc>().add(
-      AuthDeleteAccountRequested(
-        password: password,
-        loginProvider: loginProvider,
-      ),
-    );
   }
 
   Widget _buildMenuSection({

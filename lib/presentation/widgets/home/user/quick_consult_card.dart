@@ -48,7 +48,7 @@ class QuickConsultCard extends StatelessWidget {
             onPressed: () {
               Navigator.pushNamed(
                 context,
-                '${AppRoutes.experts}?urgency=simple',
+                '${AppRoutes.experts}?urgency=simple&fromHome=true',
               );
             },
             child: const Text(AppStrings.expertList),
@@ -58,6 +58,7 @@ class QuickConsultCard extends StatelessWidget {
     );
   }
 }
+
 
 
 

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -26,16 +28,33 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = 34
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
+
+    signingConfigs {
+        create("release") {
+            val keystoreProperties = Properties()
+            val keystorePropertiesFile = rootProject.file("key.properties")
+
+            keystoreProperties.load(keystorePropertiesFile.inputStream())
+
+            storeFile = file(keystoreProperties["storeFile"] as String)
+            storePassword = keystoreProperties["storePassword"] as String
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
+        }
+    }
+
 
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = false
+            isShrinkResources = false
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
@@ -50,18 +69,19 @@ flutter {
 }
 
 // Flutter가 기대하는 경로로 APK 복사
-tasks.whenTaskAdded {
-    if (name == "assembleDebug" || name == "assembleRelease" || name == "assembleProfile") {
-        doLast {
-            val buildType = name.removePrefix("assemble").lowercase()
-            val sourceApk = file("${project.layout.buildDirectory.get()}/outputs/apk/$buildType/app-$buildType.apk")
-            val targetDir = file("${project.rootDir}/../build/app/outputs/flutter-apk")
-            
-            if (sourceApk.exists()) {
-                targetDir.mkdirs()
-                sourceApk.copyTo(file("${targetDir}/app-$buildType.apk"), overwrite = true)
-                println("✅ APK copied to: ${targetDir}/app-$buildType.apk")
-            }
-        }
-    }
-}
+//tasks.whenTaskAdded {
+//    if (name == "assembleDebug" || name == "assembleRelease" || name == "assembleProfile") {
+//        doLast {
+//            val buildType = name.removePrefix("assemble").lowercase()
+//            val sourceApk = file("${project.layout.buildDirectory.get()}/outputs/apk/$buildType/app-$buildType.apk")
+//            val targetDir = file("${project.rootDir}/../build/app/outputs/flutter-apk")
+//
+//            if (sourceApk.exists()) {
+//                targetDir.mkdirs()
+//                sourceApk.copyTo(file("${targetDir}/app-$buildType.apk"), overwrite = true)
+//                println("✅ APK copied to: ${targetDir}/app-$buildType.apk")
+//            }
+//        }
+//    }
+//}
+
