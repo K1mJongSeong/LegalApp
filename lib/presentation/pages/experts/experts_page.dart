@@ -29,8 +29,14 @@ import '../../widgets/common/error_widget.dart';
 class ExpertsPage extends StatefulWidget {
   final String? urgency;
   final String? category;
+  final bool showHomeButton;
 
-  const ExpertsPage({super.key, this.urgency, this.category});
+  const ExpertsPage({
+    super.key,
+    this.urgency,
+    this.category,
+    this.showHomeButton = true,
+  });
 
   @override
   State<ExpertsPage> createState() => _ExpertsPageState();
@@ -116,11 +122,16 @@ class _ExpertsPageState extends State<ExpertsPage> with WidgetsBindingObserver {
       appBar: AppBar(
         // title: Text('$userName님을 위한 전문가 목록'),
         title: const Text('전문가 목록'),
-        leading: IconButton(
-          icon: const Icon(Icons.home),
-          // onPressed: () => Navigator.pop(context),
-          onPressed: () => _showExitDialog(context),
-        ),
+        leading: widget.showHomeButton
+            ? IconButton(
+                icon: const Icon(Icons.home),
+                // onPressed: () => Navigator.pop(context),
+                onPressed: () => _showExitDialog(context),
+              )
+            : IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              ),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list),

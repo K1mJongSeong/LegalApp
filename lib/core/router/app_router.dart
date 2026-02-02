@@ -119,10 +119,12 @@ class AppRouter {
         );
 
       case AppRoutes.experts:
+        final fromHome = queryParams['fromHome'] == 'true';
         return _buildRoute(
           ExpertsPage(
             urgency: queryParams['urgency'],
             category: queryParams['category'],
+            showHomeButton: !fromHome,
           ),
           settings,
         );
