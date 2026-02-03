@@ -369,10 +369,19 @@ $description
 
 ---
 
+#### 5️⃣ 법령/판례 검색 키워드 추출
+- 이 사건과 관련된 법령/판례를 검색하기 위한 키워드를 추출하세요.
+- 구체적인 법률명 (예: "주택임대차보호법", "민법", "형법")
+- 법률 용어 (예: "대항력", "보증금", "손해배상")
+- 2~5개의 키워드를 추출하세요.
+
+---
+
 📌 출력 형식 (반드시 JSON)
 다음 형식으로 JSON 응답해주세요:
 {
   "summary": "사건 요약 (2-3문장)",
+  "searchKeywords": ["키워드1", "키워드2", "키워드3"],
   "relatedLaws": [
     {
       "lawName": "관련 법률명",
@@ -392,6 +401,7 @@ $description
   "expertDescription": "전문가 추천 설명"
 }
 
+⚠️ searchKeywords는 반드시 포함해야 합니다. 법령/판례 검색에 사용됩니다.
 반드시 유효한 JSON 형식으로만 응답하세요.
 ''';
     try {
@@ -443,6 +453,7 @@ $description
       // 오류 시 기본 응답 반환
       return CaseSummaryResult(
         summary: '사용자 설명에 따르면 법률적 검토가 필요한 상황입니다. 전문가와 상담을 권장합니다.',
+        searchKeywords: [category], // 카테고리를 기본 키워드로 사용
         relatedLaws: [
           RelatedLaw(
             lawName: '관련 법률',
@@ -513,6 +524,7 @@ $description
 /// 사건 요약 결과
 class CaseSummaryResult {
   final String summary;
+  final List<String> searchKeywords; // GPT가 추출한 검색 키워드
   final List<RelatedLaw> relatedLaws;
   final List<SimilarCase> similarCases;
   final int expertCount;
@@ -520,6 +532,7 @@ class CaseSummaryResult {
 
   CaseSummaryResult({
     required this.summary,
+    required this.searchKeywords,
     required this.relatedLaws,
     required this.similarCases,
     required this.expertCount,
@@ -529,6 +542,10 @@ class CaseSummaryResult {
   factory CaseSummaryResult.fromJson(Map<String, dynamic> json) {
     return CaseSummaryResult(
       summary: json['summary'] ?? '',
+      searchKeywords: (json['searchKeywords'] as List?)
+          ?.map((e) => e.toString())
+          .toList() ??
+          [],
       relatedLaws: (json['relatedLaws'] as List?)
           ?.map((e) => RelatedLaw.fromJson(e))
           .toList() ??
