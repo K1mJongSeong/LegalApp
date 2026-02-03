@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/services/gpt_service.dart';
+import '../../../core/services/law_api_service.dart';
 import '../../../core/router/app_router.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_state.dart';
@@ -50,17 +51,27 @@ class CaseSummaryResultPage extends StatefulWidget {
 
 class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
   final GptService _gptService = GptService();
+  final LawApiService _lawApiService = LawApiService();
   CaseSummaryResult? _result;
   bool _isLoading = true;
   String? _error;
-  
+
+  // 법령 API 검색 결과
+  List<LawSummary> _lawResults = [];
+  Map<String, LawDetail?> _lawDetails = {};
+  bool _isLoadingLaws = false;
+
+  // 판례 API 검색 결과
+  List<PrecedentSummary> _precedentResults = [];
+  bool _isLoadingPrecedents = false;
+
   // Firebase에서 가져온 실제 전문가 수
   int _realExpertCount = 0;
-  
+
   // 사건 저장 여부
   bool _isCaseSaved = false;
   String? _savedCaseId;
-  
+
   // 사건 요약 수정용
   final TextEditingController _summaryController = TextEditingController();
   bool _isEditingSummary = false;
@@ -175,8 +186,8 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
 
       final result = await _gptService.analyzeLegalCase(
         category: widget.categoryName,
-        description: widget.description.isEmpty 
-            ? '${widget.categoryName} 관련 법률 상담이 필요합니다.' 
+        description: widget.description.isEmpty
+            ? '${widget.categoryName} 관련 법률 상담이 필요합니다.'
             : widget.description,
         urgency: _getUrgencyText(widget.urgency),
         progressItems: progressText,
@@ -187,13 +198,172 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
         _isLoading = false;
         _summaryController.text = result.summary;
       });
-      
+
+      // GPT 분석 완료 후 실제 법령/판례 API 호출
+      _loadLawsFromApi();
+      _loadPrecedentsFromApi();
+
       // 분석 완료 후 Firebase에 사건 저장
       _saveCase();
     } catch (e) {
       setState(() {
         _error = e.toString();
         _isLoading = false;
+      });
+    }
+  }
+
+  /// 법령 API에서 관련 법령 검색 (GPT 추출 키워드 사용)
+  Future<void> _loadLawsFromApi() async {
+    setState(() {
+      _isLoadingLaws = true;
+    });
+
+    try {
+      // GPT가 추출한 키워드 사용, 없으면 카테고리 이름에서 추출
+      final keywords = _result?.searchKeywords ?? [];
+      debugPrint('🔍 법령 검색 시작');
+      debugPrint('   GPT 추출 키워드: $keywords');
+
+      if (keywords.isEmpty) {
+        // 키워드가 없으면 카테고리 기반 검색
+        final fallbackKeyword = LawApiService.getKeywordFromCategoryName(widget.categoryName);
+        debugPrint('   폴백 키워드: $fallbackKeyword');
+
+        final response = await _lawApiService.searchLaws(
+          query: fallbackKeyword,
+          size: 3,
+        );
+
+        setState(() {
+          _lawResults = response.results;
+          _isLoadingLaws = false;
+        });
+
+        for (final law in response.results) {
+          _loadLawDetail(law.mst);
+        }
+        return;
+      }
+
+      // 각 키워드로 검색하여 결과 합치기 (중복 제거)
+      final Map<String, LawSummary> uniqueLaws = {};
+
+      for (final keyword in keywords.take(3)) { // 최대 3개 키워드만 사용
+        debugPrint('   검색 중: $keyword');
+        try {
+          final response = await _lawApiService.searchLaws(
+            query: keyword,
+            size: 2, // 키워드당 2개씩
+          );
+
+          for (final law in response.results) {
+            // mst로 중복 제거
+            if (!uniqueLaws.containsKey(law.mst)) {
+              uniqueLaws[law.mst] = law;
+            }
+          }
+        } catch (e) {
+          debugPrint('   키워드 "$keyword" 검색 실패: $e');
+        }
+      }
+
+      debugPrint('✅ 법령 검색 완료: ${uniqueLaws.length}건');
+
+      setState(() {
+        _lawResults = uniqueLaws.values.take(5).toList(); // 최대 5개
+        _isLoadingLaws = false;
+      });
+
+      // 각 법령의 상세 정보 (조문) 로드
+      for (final law in _lawResults) {
+        debugPrint('   - ${law.name} (${law.mst})');
+        _loadLawDetail(law.mst);
+      }
+    } catch (e) {
+      debugPrint('❌ 법령 검색 오류: $e');
+      setState(() {
+        _isLoadingLaws = false;
+      });
+    }
+  }
+
+  /// 법령 상세 정보 (조문) 로드
+  Future<void> _loadLawDetail(String mst) async {
+    try {
+      final detail = await _lawApiService.getLawDetail(mst);
+      setState(() {
+        _lawDetails[mst] = detail;
+      });
+    } catch (e) {
+      debugPrint('❌ 법령 상세 조회 오류 ($mst): $e');
+    }
+  }
+
+  /// 판례 API에서 유사 판례 검색 (GPT 추출 키워드 사용)
+  Future<void> _loadPrecedentsFromApi() async {
+    setState(() {
+      _isLoadingPrecedents = true;
+    });
+
+    try {
+      // GPT가 추출한 키워드 사용, 없으면 카테고리 이름에서 추출
+      final keywords = _result?.searchKeywords ?? [];
+      debugPrint('🔍 판례 검색 시작');
+      debugPrint('   GPT 추출 키워드: $keywords');
+
+      if (keywords.isEmpty) {
+        // 키워드가 없으면 카테고리 기반 검색
+        final fallbackKeyword = LawApiService.getKeywordFromCategoryName(widget.categoryName);
+        debugPrint('   폴백 키워드: $fallbackKeyword');
+
+        final response = await _lawApiService.searchPrecedents(
+          query: fallbackKeyword,
+          size: 3,
+        );
+
+        setState(() {
+          _precedentResults = response.results;
+          _isLoadingPrecedents = false;
+        });
+        return;
+      }
+
+      // 각 키워드로 검색하여 결과 합치기 (중복 제거)
+      final Map<String, PrecedentSummary> uniquePrecedents = {};
+
+      for (final keyword in keywords.take(3)) { // 최대 3개 키워드만 사용
+        debugPrint('   검색 중: $keyword');
+        try {
+          final response = await _lawApiService.searchPrecedents(
+            query: keyword,
+            size: 2, // 키워드당 2개씩
+          );
+
+          for (final prec in response.results) {
+            // 사건번호로 중복 제거
+            if (!uniquePrecedents.containsKey(prec.caseNumber)) {
+              uniquePrecedents[prec.caseNumber] = prec;
+            }
+          }
+        } catch (e) {
+          debugPrint('   키워드 "$keyword" 검색 실패: $e');
+        }
+      }
+
+      debugPrint('✅ 판례 검색 완료: ${uniquePrecedents.length}건');
+      for (final prec in uniquePrecedents.values) {
+        debugPrint('   - ${prec.caseNumber} (${prec.court})');
+      }
+
+      setState(() {
+        _precedentResults = uniquePrecedents.values.take(5).toList(); // 최대 5개
+        _isLoadingPrecedents = false;
+      });
+    } catch (e) {
+      debugPrint('❌ 판례 검색 오류: $e');
+      setState(() {
+        _isLoadingPrecedents = false;
       });
     }
   }
@@ -500,7 +670,34 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
             ],
           ),
           const SizedBox(height: AppSizes.paddingM),
-          ...(_result?.relatedLaws ?? []).map((law) => _buildLawCard(law)),
+          // API에서 로드한 법령 표시
+          if (_isLoadingLaws)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(AppSizes.paddingM),
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          else if (_lawResults.isNotEmpty)
+            ..._lawResults.map((law) => _buildApiLawCard(law))
+          else if ((_result?.relatedLaws ?? []).isNotEmpty)
+            // API 결과가 없으면 GPT 결과 표시 (폴백)
+            ...(_result?.relatedLaws ?? []).map((law) => _buildLawCard(law))
+          else
+            // 둘 다 없으면 빈 상태 메시지
+            Container(
+              padding: const EdgeInsets.all(AppSizes.paddingM),
+              child: Center(
+                child: Text(
+                  '관련 법령 정보를 불러오는 중 오류가 발생했습니다.\n잠시 후 다시 시도해 주세요.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: AppSizes.fontS,
+                  ),
+                ),
+              ),
+            ),
           const SizedBox(height: AppSizes.paddingS),
           Container(
             padding: const EdgeInsets.all(AppSizes.paddingS),
@@ -521,6 +718,115 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                     ),
                   ),
                 ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// API에서 받아온 법령 카드
+  Widget _buildApiLawCard(LawSummary law) {
+    final detail = _lawDetails[law.mst];
+    // 첫 번째 조문 가져오기 (있으면)
+    final firstArticle = detail?.articles.isNotEmpty == true
+        ? detail!.articles.first
+        : null;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSizes.paddingS),
+      padding: const EdgeInsets.all(AppSizes.paddingM),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusS),
+                ),
+                child: Text(
+                  law.lawType.isNotEmpty ? law.lawType : '법률',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: AppSizes.fontXS,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  law.name,
+                  style: const TextStyle(
+                    fontSize: AppSizes.fontM,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.paddingS),
+          if (firstArticle != null) ...[
+            Text(
+              '${firstArticle.number}${firstArticle.title.isNotEmpty ? ' (${firstArticle.title})' : ''}',
+              style: TextStyle(
+                fontSize: AppSizes.fontS,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              firstArticle.content.length > 150
+                  ? '${firstArticle.content.substring(0, 150)}...'
+                  : firstArticle.content,
+              style: TextStyle(
+                fontSize: AppSizes.fontS,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ] else ...[
+            Text(
+              '시행일: ${law.enforcementDate}',
+              style: TextStyle(
+                fontSize: AppSizes.fontS,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            Text(
+              '소관부처: ${law.department}',
+              style: TextStyle(
+                fontSize: AppSizes.fontS,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSizes.paddingS),
+          GestureDetector(
+            onTap: () {
+              // 법령 원문 보기 (국가법령정보센터 링크)
+              // TODO: URL launcher로 외부 링크 열기
+            },
+            child: Row(
+              children: [
+                Text(
+                  '법령 원문 보기',
+                  style: TextStyle(
+                    fontSize: AppSizes.fontS,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: AppColors.primary, size: 16),
               ],
             ),
           ),
@@ -621,7 +927,34 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
             ],
           ),
           const SizedBox(height: AppSizes.paddingM),
-          ...(_result?.similarCases ?? []).map((caseItem) => _buildCaseCard(caseItem)),
+          // API에서 로드한 판례 표시
+          if (_isLoadingPrecedents)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(AppSizes.paddingM),
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          else if (_precedentResults.isNotEmpty)
+            ..._precedentResults.map((prec) => _buildApiPrecedentCard(prec))
+          else if ((_result?.similarCases ?? []).isNotEmpty)
+            // API 결과가 없으면 GPT 결과 표시 (폴백)
+            ...(_result?.similarCases ?? []).map((caseItem) => _buildCaseCard(caseItem))
+          else
+            // 둘 다 없으면 빈 상태 메시지
+            Container(
+              padding: const EdgeInsets.all(AppSizes.paddingM),
+              child: Center(
+                child: Text(
+                  '유사 판례 정보를 불러오는 중 오류가 발생했습니다.\n잠시 후 다시 시도해 주세요.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: AppSizes.fontS,
+                  ),
+                ),
+              ),
+            ),
           const SizedBox(height: AppSizes.paddingS),
           Container(
             padding: const EdgeInsets.all(AppSizes.paddingS),
@@ -642,6 +975,96 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                     ),
                   ),
                 ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// API에서 받아온 판례 카드
+  Widget _buildApiPrecedentCard(PrecedentSummary prec) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSizes.paddingS),
+      padding: const EdgeInsets.all(AppSizes.paddingM),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.warning,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusS),
+                ),
+                child: Text(
+                  prec.court.isNotEmpty ? prec.court : '대법원',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: AppSizes.fontXS,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  prec.caseNumber,
+                  style: const TextStyle(
+                    fontSize: AppSizes.fontM,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (prec.caseName.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              prec.caseName,
+              style: TextStyle(
+                fontSize: AppSizes.fontS,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSizes.paddingS),
+          Text(
+            prec.summary.isNotEmpty
+                ? (prec.summary.length > 150
+                    ? '${prec.summary.substring(0, 150)}...'
+                    : prec.summary)
+                : '선고일: ${prec.judgmentDate}',
+            style: TextStyle(
+              fontSize: AppSizes.fontS,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingS),
+          GestureDetector(
+            onTap: () {
+              // 판례 상세보기 (국가법령정보센터 링크)
+              // TODO: URL launcher로 외부 링크 열기
+            },
+            child: Row(
+              children: [
+                Text(
+                  '판례 상세보기',
+                  style: TextStyle(
+                    fontSize: AppSizes.fontS,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: AppColors.primary, size: 16),
               ],
             ),
           ),
