@@ -69,19 +69,19 @@ flutter {
 }
 
 // Flutter가 기대하는 경로로 APK 복사
-//tasks.whenTaskAdded {
-//    if (name == "assembleDebug" || name == "assembleRelease" || name == "assembleProfile") {
-//        doLast {
-//            val buildType = name.removePrefix("assemble").lowercase()
-//            val sourceApk = file("${project.layout.buildDirectory.get()}/outputs/apk/$buildType/app-$buildType.apk")
-//            val targetDir = file("${project.rootDir}/../build/app/outputs/flutter-apk")
-//
-//            if (sourceApk.exists()) {
-//                targetDir.mkdirs()
-//                sourceApk.copyTo(file("${targetDir}/app-$buildType.apk"), overwrite = true)
-//                println("✅ APK copied to: ${targetDir}/app-$buildType.apk")
-//            }
-//        }
-//    }
-//}
+tasks.whenTaskAdded {
+    if (name == "assembleDebug" || name == "assembleRelease" || name == "assembleProfile") {
+        doLast {
+            val buildType = name.removePrefix("assemble").lowercase()
+            val sourceApk = file("${project.layout.buildDirectory.get()}/outputs/apk/$buildType/app-$buildType.apk")
+            val targetDir = file("${project.rootDir}/../build/app/outputs/flutter-apk")
+
+            if (sourceApk.exists()) {
+                targetDir.mkdirs()
+                sourceApk.copyTo(file("${targetDir}/app-$buildType.apk"), overwrite = true)
+                println("✅ APK copied to: ${targetDir}/app-$buildType.apk")
+            }
+        }
+    }
+}
 
