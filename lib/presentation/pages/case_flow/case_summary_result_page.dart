@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/services/gpt_service.dart';
@@ -812,10 +813,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
           ],
           const SizedBox(height: AppSizes.paddingS),
           GestureDetector(
-            onTap: () {
-              // 법령 원문 보기 (국가법령정보센터 링크)
-              // TODO: URL launcher로 외부 링크 열기
-            },
+            onTap: () => _showLawDetailPopup(law),
             child: Row(
               children: [
                 Text(
@@ -833,6 +831,176 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
         ],
       ),
     );
+  }
+
+  /// 법령 상세 팝업 표시
+  void _showLawDetailPopup(LawSummary law) {
+    final detail = _lawDetails[law.mst];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // 드래그 핸들
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // 헤더
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(AppSizes.radiusS),
+                      ),
+                      child: Text(
+                        law.lawType.isNotEmpty ? law.lawType : '법률',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: AppSizes.fontXS,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        law.name,
+                        style: const TextStyle(
+                          fontSize: AppSizes.fontL,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              // 조문 목록
+              Expanded(
+                child: detail != null && detail.articles.isNotEmpty
+                    ? ListView.builder(
+                        controller: scrollController,
+                        padding: const EdgeInsets.all(AppSizes.paddingM),
+                        itemCount: detail.articles.length,
+                        itemBuilder: (context, index) {
+                          final article = detail.articles[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: AppSizes.paddingM),
+                            padding: const EdgeInsets.all(AppSizes.paddingM),
+                            decoration: BoxDecoration(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${article.number}${article.title.isNotEmpty ? ' (${article.title})' : ''}',
+                                  style: const TextStyle(
+                                    fontSize: AppSizes.fontM,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  article.content,
+                                  style: TextStyle(
+                                    fontSize: AppSizes.fontS,
+                                    color: AppColors.textSecondary,
+                                    height: 1.6,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      )
+                    : Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSizes.paddingL),
+                          child: Text(
+                            '조문 정보를 불러오는 중...',
+                            style: TextStyle(color: AppColors.textSecondary),
+                          ),
+                        ),
+                      ),
+              ),
+              // 하단 버튼
+              Container(
+                padding: const EdgeInsets.all(AppSizes.paddingM),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: SafeArea(
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _openLawUrl(law.mst, law.name),
+                      icon: const Icon(Icons.open_in_new, size: 18),
+                      label: const Text('국가법령정보센터에서 전체 보기'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: BorderSide(color: AppColors.primary),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 국가법령정보센터 법령 페이지 열기
+  Future<void> _openLawUrl(String mst, String lawName) async {
+    // 국가법령정보센터 법령 상세 페이지 URL
+    final url = Uri.parse('https://www.law.go.kr/법령/${Uri.encodeComponent(lawName)}');
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('링크를 열 수 없습니다')),
+        );
+      }
+    }
   }
 
   Widget _buildLawCard(RelatedLaw law) {
@@ -1050,10 +1218,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
           ),
           const SizedBox(height: AppSizes.paddingS),
           GestureDetector(
-            onTap: () {
-              // 판례 상세보기 (국가법령정보센터 링크)
-              // TODO: URL launcher로 외부 링크 열기
-            },
+            onTap: () => _showPrecedentDetailPopup(prec),
             child: Row(
               children: [
                 Text(
@@ -1071,6 +1236,214 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
         ],
       ),
     );
+  }
+
+  /// 판례 상세 팝업 표시
+  void _showPrecedentDetailPopup(PrecedentSummary prec) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // 드래그 핸들
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // 헤더
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning,
+                        borderRadius: BorderRadius.circular(AppSizes.radiusS),
+                      ),
+                      child: Text(
+                        prec.court.isNotEmpty ? prec.court : '대법원',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: AppSizes.fontXS,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        prec.caseNumber,
+                        style: const TextStyle(
+                          fontSize: AppSizes.fontL,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              // 판례 내용
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(AppSizes.paddingM),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 사건명
+                      if (prec.caseName.isNotEmpty) ...[
+                        _buildPrecedentInfoRow('사건명', prec.caseName),
+                        const SizedBox(height: AppSizes.paddingM),
+                      ],
+                      // 사건종류
+                      if (prec.caseType.isNotEmpty) ...[
+                        _buildPrecedentInfoRow('사건종류', prec.caseType),
+                        const SizedBox(height: AppSizes.paddingM),
+                      ],
+                      // 선고일
+                      if (prec.judgmentDate.isNotEmpty) ...[
+                        _buildPrecedentInfoRow('선고일', _formatDate(prec.judgmentDate)),
+                        const SizedBox(height: AppSizes.paddingM),
+                      ],
+                      // 판시사항
+                      if (prec.summary.isNotEmpty) ...[
+                        const Text(
+                          '판시사항',
+                          style: TextStyle(
+                            fontSize: AppSizes.fontM,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(AppSizes.paddingM),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Text(
+                            prec.summary,
+                            style: TextStyle(
+                              fontSize: AppSizes.fontS,
+                              color: AppColors.textSecondary,
+                              height: 1.6,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              // 하단 버튼
+              Container(
+                padding: const EdgeInsets.all(AppSizes.paddingM),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: SafeArea(
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _openPrecedentUrl(prec.id, prec.caseNumber),
+                      icon: const Icon(Icons.open_in_new, size: 18),
+                      label: const Text('국가법령정보센터에서 전체 보기'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: BorderSide(color: AppColors.primary),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 판례 정보 행 위젯
+  Widget _buildPrecedentInfoRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 80,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: AppSizes.fontS,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: AppSizes.fontS,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 날짜 포맷팅 (YYYYMMDD → YYYY.MM.DD)
+  String _formatDate(String date) {
+    if (date.length == 8) {
+      return '${date.substring(0, 4)}.${date.substring(4, 6)}.${date.substring(6, 8)}';
+    }
+    return date;
+  }
+
+  /// 국가법령정보센터 판례 페이지 열기
+  Future<void> _openPrecedentUrl(String precId, String caseNumber) async {
+    // 국가법령정보센터 판례 상세 페이지 URL
+    // 형식: https://www.law.go.kr/판례/(사건번호)
+    final url = Uri.parse('https://www.law.go.kr/판례/(${Uri.encodeComponent(caseNumber)})');
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('링크를 열 수 없습니다')),
+        );
+      }
+    }
   }
 
   Widget _buildCaseCard(SimilarCase caseItem) {
