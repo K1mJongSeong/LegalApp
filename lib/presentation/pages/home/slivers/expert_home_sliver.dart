@@ -168,7 +168,7 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
           child: SizedBox(height: AppSizes.paddingS),
         ),
 
-        // 상담 글 섹션
+        // 상담 글 섹션 - Peek Carousel
         if (_isLoadingPosts)
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
@@ -184,27 +184,8 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
             ),
           )
         else
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final post = _posts[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: AppSizes.paddingS),
-                    child: ConsultationCard(
-                      category: post.category ?? '기타',
-                      categoryColor: _getCategoryColor(post.category),
-                      time: _formatTimeAgo(post.createdAt),
-                      title: post.title,
-                      views: post.views,
-                      comments: post.comments,
-                    ),
-                  );
-                },
-                childCount: _posts.length,
-              ),
-            ),
+          SliverToBoxAdapter(
+            child: _buildConsultationCarousel(),
           ),
 
         // 상담 글 후 여백
@@ -318,6 +299,65 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Peek Carousel 형태의 상담글 섹션
+  Widget _buildConsultationCarousel() {
+    // 다른 섹션과 동일한 카드 너비: 화면 너비 - 양쪽 패딩(paddingM * 2)
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth = screenWidth - (AppSizes.paddingM * 3.2);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 200,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+            itemCount: _posts.length,
+            itemBuilder: (context, index) {
+              final post = _posts[index];
+
+              return Container(
+                width: cardWidth,
+                margin: EdgeInsets.only(
+                  right: index < _posts.length - 1 ? AppSizes.paddingS : 0,
+                ),
+                child: ConsultationCard(
+                  category: post.category ?? '기타',
+                  categoryColor: _getCategoryColor(post.category),
+                  time: _formatTimeAgo(post.createdAt),
+                  title: post.title,
+                  views: post.views,
+                  comments: post.comments,
+                ),
+              );
+            },
+          ),
+        ),
+        // 페이지 인디케이터 (2개 이상일 때만 표시)
+        if (_posts.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSizes.paddingS),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                _posts.length,
+                (index) => Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 

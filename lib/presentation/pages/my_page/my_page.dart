@@ -206,6 +206,13 @@ class _MyPageState extends State<MyPage> {
 
 
                             _MenuItem(
+                              icon: Icons.description_outlined,
+                              title: '이용약관',
+                              onTap: () {
+                                Navigator.pushNamed(context, AppRoutes.termsOfService);
+                              },
+                            ),
+                            _MenuItem(
                               icon: Icons.privacy_tip_outlined,
                               title: '개인정보처리방침',
                               onTap: () {
@@ -222,6 +229,11 @@ class _MyPageState extends State<MyPage> {
                               icon: Icons.logout,
                               title: '로그아웃',
                               onTap: () => _handleLogout(context),
+                            ),
+                            _MenuItem(
+                              icon: Icons.person_remove_outlined,
+                              title: '회원탈퇴',
+                              onTap: () => _handleDeleteAccount(context, user),
                             ),
                           ],
                         ),
@@ -384,6 +396,40 @@ class _MyPageState extends State<MyPage> {
 
     if (confirmed == true && mounted) {
       context.read<AuthBloc>().add(AuthLogoutRequested());
+    }
+  }
+
+  Future<void> _handleDeleteAccount(BuildContext context, dynamic user) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('회원탈퇴'),
+        content: const Text(
+          '정말 탈퇴하시겠습니까?\n\n탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('탈퇴'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      context.read<AuthBloc>().add(
+        AuthDeleteAccountRequested(
+          loginProvider: user.loginProvider,
+        ),
+      );
     }
   }
 
