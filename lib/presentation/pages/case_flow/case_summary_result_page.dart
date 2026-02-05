@@ -1,7 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:http/http.dart' as http_client;
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/services/gpt_service.dart';
@@ -76,6 +82,10 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
   // 사건 요약 수정용
   final TextEditingController _summaryController = TextEditingController();
   bool _isEditingSummary = false;
+
+  // 전문가 상담 전 질문 리스트
+  List<String> _consultationQuestions = [];
+  bool _isLoadingQuestions = false;
 
   @override
   void initState() {
@@ -203,6 +213,9 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
       // GPT 분석 완료 후 실제 법령/판례 API 호출
       _loadLawsFromApi();
       _loadPrecedentsFromApi();
+
+      // 전문가 상담 전 질문 리스트 생성
+      _loadConsultationQuestions();
 
       // 분석 완료 후 Firebase에 사건 저장
       _saveCase();
@@ -369,6 +382,35 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
     }
   }
 
+  /// 전문가 상담 전 질문 리스트 로드
+  Future<void> _loadConsultationQuestions() async {
+    setState(() {
+      _isLoadingQuestions = true;
+    });
+
+    try {
+      final questions = await _gptService.generateConsultationQuestions(
+        category: widget.categoryName,
+        description: widget.description.isEmpty
+            ? '${widget.categoryName} 관련 법률 상담이 필요합니다.'
+            : widget.description,
+        summary: _result?.summary ?? '',
+      );
+
+      setState(() {
+        _consultationQuestions = questions;
+        _isLoadingQuestions = false;
+      });
+
+      debugPrint('✅ 상담 질문 로드 완료: ${questions.length}개');
+    } catch (e) {
+      debugPrint('❌ 상담 질문 로드 오류: $e');
+      setState(() {
+        _isLoadingQuestions = false;
+      });
+    }
+  }
+
   String _getUrgencyText(String urgency) {
     switch (urgency) {
       case 'urgent':
@@ -486,6 +528,9 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
               children: [
                 // AI 사건 요약
                 _buildSummarySection(),
+                const SizedBox(height: AppSizes.paddingL),
+                // 전문가 상담 전 질문 리스트
+                _buildQuestionsSection(),
                 const SizedBox(height: AppSizes.paddingL),
                 // 관련 법령
                 _buildLawsSection(),
@@ -640,6 +685,150 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuestionsSection() {
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.paddingM),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.radiusL),
+        border: Border.all(color: AppColors.success.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.help_outline, color: AppColors.success),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  '전문가에게 물어보세요',
+                  style: TextStyle(
+                    fontSize: AppSizes.fontL,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.paddingS),
+          Text(
+            '상담 전 아래 질문들을 참고하여 준비하시면 더 효율적인 상담이 가능합니다.',
+            style: TextStyle(
+              fontSize: AppSizes.fontS,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingM),
+          if (_isLoadingQuestions)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(AppSizes.paddingM),
+                child: Column(
+                  children: [
+                    CircularProgressIndicator(strokeWidth: 2),
+                    SizedBox(height: 8),
+                    Text(
+                      '질문 리스트를 생성 중입니다...',
+                      style: TextStyle(
+                        fontSize: AppSizes.fontS,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else if (_consultationQuestions.isNotEmpty)
+            ...List.generate(_consultationQuestions.length, (index) {
+              return _buildQuestionCard(index + 1, _consultationQuestions[index]);
+            })
+          else
+            Container(
+              padding: const EdgeInsets.all(AppSizes.paddingM),
+              child: Center(
+                child: Text(
+                  '질문 리스트를 불러올 수 없습니다.',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: AppSizes.fontS,
+                  ),
+                ),
+              ),
+            ),
+          const SizedBox(height: AppSizes.paddingS),
+          Container(
+            padding: const EdgeInsets.all(AppSizes.paddingS),
+            decoration: BoxDecoration(
+              color: AppColors.success.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppSizes.radiusS),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.lightbulb_outline, color: AppColors.success, size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'AI가 생성한 질문입니다. 본인의 상황에 맞게 수정하여 활용하세요.',
+                    style: TextStyle(
+                      fontSize: AppSizes.fontXS,
+                      color: AppColors.success,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuestionCard(int index, String question) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSizes.paddingS),
+      padding: const EdgeInsets.all(AppSizes.paddingM),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: AppColors.success,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                '$index',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: AppSizes.fontS,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              question,
+              style: const TextStyle(
+                fontSize: AppSizes.fontM,
+                height: 1.4,
+              ),
             ),
           ),
         ],
@@ -1245,7 +1434,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
+        initialChildSize: 0.85,
         minChildSize: 0.5,
         maxChildSize: 0.95,
         builder: (context, scrollController) => Container(
@@ -1253,143 +1442,390 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          child: Column(
-            children: [
-              // 드래그 핸들
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              // 헤더
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.warning,
-                        borderRadius: BorderRadius.circular(AppSizes.radiusS),
-                      ),
-                      child: Text(
-                        prec.court.isNotEmpty ? prec.court : '대법원',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: AppSizes.fontXS,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+          child: FutureBuilder<PrecedentDetail>(
+            future: _lawApiService.getPrecedentDetail(prec.id),
+            builder: (context, snapshot) {
+              return Column(
+                children: [
+                  // 드래그 핸들
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        prec.caseNumber,
-                        style: const TextStyle(
-                          fontSize: AppSizes.fontL,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(),
-              // 판례 내용
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(AppSizes.paddingM),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 사건명
-                      if (prec.caseName.isNotEmpty) ...[
-                        _buildPrecedentInfoRow('사건명', prec.caseName),
-                        const SizedBox(height: AppSizes.paddingM),
-                      ],
-                      // 사건종류
-                      if (prec.caseType.isNotEmpty) ...[
-                        _buildPrecedentInfoRow('사건종류', prec.caseType),
-                        const SizedBox(height: AppSizes.paddingM),
-                      ],
-                      // 선고일
-                      if (prec.judgmentDate.isNotEmpty) ...[
-                        _buildPrecedentInfoRow('선고일', _formatDate(prec.judgmentDate)),
-                        const SizedBox(height: AppSizes.paddingM),
-                      ],
-                      // 판시사항
-                      if (prec.summary.isNotEmpty) ...[
-                        const Text(
-                          '판시사항',
-                          style: TextStyle(
-                            fontSize: AppSizes.fontM,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
+                  ),
+                  // 헤더
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+                    child: Row(
+                      children: [
                         Container(
-                          padding: const EdgeInsets.all(AppSizes.paddingM),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.background,
-                            borderRadius: BorderRadius.circular(AppSizes.radiusM),
-                            border: Border.all(color: AppColors.border),
+                            color: AppColors.warning,
+                            borderRadius: BorderRadius.circular(AppSizes.radiusS),
                           ),
                           child: Text(
-                            prec.summary,
-                            style: TextStyle(
-                              fontSize: AppSizes.fontS,
-                              color: AppColors.textSecondary,
-                              height: 1.6,
+                            prec.court.isNotEmpty ? prec.court : '대법원',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: AppSizes.fontXS,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            prec.caseNumber,
+                            style: const TextStyle(
+                              fontSize: AppSizes.fontL,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
                       ],
-                    ],
-                  ),
-                ),
-              ),
-              // 하단 버튼
-              Container(
-                padding: const EdgeInsets.all(AppSizes.paddingM),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -2),
                     ),
-                  ],
-                ),
-                child: SafeArea(
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _openPrecedentUrl(prec.id, prec.caseNumber),
-                      icon: const Icon(Icons.open_in_new, size: 18),
-                      label: const Text('국가법령정보센터에서 전체 보기'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        side: BorderSide(color: AppColors.primary),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  const Divider(),
+                  // 판례 내용
+                  Expanded(
+                    child: snapshot.connectionState == ConnectionState.waiting
+                        ? const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircularProgressIndicator(),
+                                SizedBox(height: 16),
+                                Text('판례 정보를 불러오는 중...'),
+                              ],
+                            ),
+                          )
+                        : snapshot.hasError
+                            ? Center(
+                                child: Text(
+                                  '판례 정보를 불러올 수 없습니다.\n${snapshot.error}',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: AppColors.error),
+                                ),
+                              )
+                            : _buildPrecedentDetailContent(
+                                snapshot.data!,
+                                scrollController,
+                              ),
+                  ),
+                  // 하단 버튼
+                  Container(
+                    padding: const EdgeInsets.all(AppSizes.paddingM),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, -2),
+                        ),
+                      ],
+                    ),
+                    child: SafeArea(
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: snapshot.hasData
+                              ? () => _downloadPrecedentPdf(snapshot.data!)
+                              : null,
+                          icon: const Icon(Icons.download, size: 18),
+                          label: const Text('전체 내용 PDF 다운'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
         ),
       ),
+    );
+  }
+
+  // 폰트 캐시
+  static pw.Font? _cachedFont;
+  static pw.Font? _cachedFontBold;
+
+  /// 한글 폰트 로드
+  Future<pw.Font> _loadKoreanFont({bool bold = false}) async {
+    if (bold && _cachedFontBold != null) return _cachedFontBold!;
+    if (!bold && _cachedFont != null) return _cachedFont!;
+
+    try {
+      // Google Fonts CDN에서 NotoSansKR 다운로드
+      final fontUrl = bold
+          ? 'https://fonts.gstatic.com/s/notosanskr/v36/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzuozeLTq8H4hfeE.ttf'
+          : 'https://fonts.gstatic.com/s/notosanskr/v36/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzuoyeLTq8H4hfeE.ttf';
+
+      final response = await http_client.get(Uri.parse(fontUrl));
+      if (response.statusCode == 200) {
+        final font = pw.Font.ttf(response.bodyBytes.buffer.asByteData());
+        if (bold) {
+          _cachedFontBold = font;
+        } else {
+          _cachedFont = font;
+        }
+        return font;
+      }
+    } catch (e) {
+      debugPrint('폰트 로드 실패: $e');
+    }
+
+    // 폴백: 기본 폰트 (한글 미지원)
+    return bold ? pw.Font.helveticaBold() : pw.Font.helvetica();
+  }
+
+  /// 판례 PDF 다운로드
+  Future<void> _downloadPrecedentPdf(PrecedentDetail detail) async {
+    try {
+      // 로딩 표시
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // 한글 폰트 로드
+      final ttf = await _loadKoreanFont();
+      final ttfBold = await _loadKoreanFont(bold: true);
+
+      // PDF 생성
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(40),
+          build: (context) => [
+            // 제목
+            pw.Header(
+              level: 0,
+              child: pw.Text(
+                detail.caseNumber,
+                style: pw.TextStyle(font: ttfBold, fontSize: 20),
+              ),
+            ),
+            pw.SizedBox(height: 10),
+
+            // 기본 정보
+            _buildPdfInfoRow('사건명', detail.caseName, ttf, ttfBold),
+            _buildPdfInfoRow('법원', detail.court, ttf, ttfBold),
+            _buildPdfInfoRow('사건종류', detail.caseType, ttf, ttfBold),
+            _buildPdfInfoRow('선고일', _formatDate(detail.judgmentDate), ttf, ttfBold),
+            _buildPdfInfoRow('선고', detail.verdict, ttf, ttfBold),
+            _buildPdfInfoRow('판결유형', detail.verdictType, ttf, ttfBold),
+            pw.SizedBox(height: 20),
+
+            // 판시사항
+            if (detail.holding.isNotEmpty) ...[
+              _buildPdfSection('판시사항', detail.holding, ttf, ttfBold),
+              pw.SizedBox(height: 15),
+            ],
+
+            // 판결요지
+            if (detail.summary.isNotEmpty) ...[
+              _buildPdfSection('판결요지', detail.summary, ttf, ttfBold),
+              pw.SizedBox(height: 15),
+            ],
+
+            // 참조조문
+            if (detail.refArticles.isNotEmpty) ...[
+              _buildPdfSection('참조조문', detail.refArticles, ttf, ttfBold),
+              pw.SizedBox(height: 15),
+            ],
+
+            // 참조판례
+            if (detail.refCases.isNotEmpty) ...[
+              _buildPdfSection('참조판례', detail.refCases, ttf, ttfBold),
+              pw.SizedBox(height: 15),
+            ],
+
+            // 판례내용
+            if (detail.content.isNotEmpty) ...[
+              _buildPdfSection('판례내용', detail.content, ttf, ttfBold),
+            ],
+          ],
+        ),
+      );
+
+      // 파일 저장
+      final output = await getTemporaryDirectory();
+      final fileName = '판례_${detail.caseNumber.replaceAll(RegExp(r'[^\w가-힣]'), '_')}.pdf';
+      final file = File('${output.path}/$fileName');
+      await file.writeAsBytes(await pdf.save());
+
+      // 로딩 닫기
+      if (mounted) Navigator.pop(context);
+
+      // 공유/저장
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: '판례: ${detail.caseNumber}',
+      );
+    } catch (e) {
+      // 로딩 닫기
+      if (mounted) Navigator.pop(context);
+
+      debugPrint('PDF 생성 오류: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('PDF 생성 실패: $e')),
+        );
+      }
+    }
+  }
+
+  /// PDF 정보 행
+  pw.Widget _buildPdfInfoRow(String label, String value, pw.Font font, pw.Font fontBold) {
+    if (value.isEmpty) return pw.SizedBox.shrink();
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 2),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.SizedBox(
+            width: 80,
+            child: pw.Text(label, style: pw.TextStyle(font: fontBold, fontSize: 10)),
+          ),
+          pw.Expanded(
+            child: pw.Text(value, style: pw.TextStyle(font: font, fontSize: 10)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// PDF 섹션
+  pw.Widget _buildPdfSection(String title, String content, pw.Font font, pw.Font fontBold) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(title, style: pw.TextStyle(font: fontBold, fontSize: 12)),
+        pw.SizedBox(height: 5),
+        pw.Container(
+          padding: const pw.EdgeInsets.all(10),
+          decoration: pw.BoxDecoration(
+            border: pw.Border.all(color: PdfColors.grey400),
+            borderRadius: pw.BorderRadius.circular(4),
+          ),
+          child: pw.Text(
+            content,
+            style: pw.TextStyle(font: font, fontSize: 9, lineSpacing: 3),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 판례 상세 내용 위젯
+  Widget _buildPrecedentDetailContent(
+    PrecedentDetail detail,
+    ScrollController scrollController,
+  ) {
+    return SingleChildScrollView(
+      controller: scrollController,
+      padding: const EdgeInsets.all(AppSizes.paddingM),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 기본 정보
+          _buildPrecedentInfoRow('사건명', detail.caseName),
+          const SizedBox(height: AppSizes.paddingS),
+          _buildPrecedentInfoRow('사건종류', detail.caseType),
+          const SizedBox(height: AppSizes.paddingS),
+          _buildPrecedentInfoRow('선고일', _formatDate(detail.judgmentDate)),
+          const SizedBox(height: AppSizes.paddingS),
+          _buildPrecedentInfoRow('선고', detail.verdict),
+          const SizedBox(height: AppSizes.paddingS),
+          _buildPrecedentInfoRow('판결유형', detail.verdictType),
+          const SizedBox(height: AppSizes.paddingL),
+
+          // 판시사항
+          if (detail.holding.isNotEmpty) ...[
+            _buildPrecedentSection('판시사항', detail.holding),
+            const SizedBox(height: AppSizes.paddingL),
+          ],
+
+          // 판결요지
+          if (detail.summary.isNotEmpty) ...[
+            _buildPrecedentSection('판결요지', detail.summary),
+            const SizedBox(height: AppSizes.paddingL),
+          ],
+
+          // 참조조문
+          if (detail.refArticles.isNotEmpty) ...[
+            _buildPrecedentSection('참조조문', detail.refArticles),
+            const SizedBox(height: AppSizes.paddingL),
+          ],
+
+          // 참조판례
+          if (detail.refCases.isNotEmpty) ...[
+            _buildPrecedentSection('참조판례', detail.refCases),
+            const SizedBox(height: AppSizes.paddingL),
+          ],
+
+          // 판례내용 (전문)
+          if (detail.content.isNotEmpty) ...[
+            _buildPrecedentSection('판례내용', detail.content),
+            const SizedBox(height: AppSizes.paddingL),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 판례 섹션 위젯
+  Widget _buildPrecedentSection(String title, String content) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: AppSizes.fontM,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSizes.paddingM),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: SelectableText(
+            content,
+            style: TextStyle(
+              fontSize: AppSizes.fontS,
+              color: AppColors.textSecondary,
+              height: 1.6,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

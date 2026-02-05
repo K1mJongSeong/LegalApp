@@ -69,6 +69,20 @@ class LawApiService {
     }
   }
 
+  /// 판례 상세 조회
+  Future<PrecedentDetail> getPrecedentDetail(String id) async {
+    try {
+      if (kIsWeb) {
+        return await _getPrecedentDetailViaEdgeFunction(id);
+      } else {
+        return await _getPrecedentDetailDirect(id);
+      }
+    } catch (e) {
+      debugPrint('LawApiService.getPrecedentDetail error: $e');
+      rethrow;
+    }
+  }
+
   // =====================================================
   // 웹: Supabase Edge Function 호출
   // =====================================================
@@ -136,6 +150,24 @@ class LawApiService {
       return PrecedentSearchResponse.fromJsonEdgeFunction(data);
     } else {
       throw Exception('판례 검색 실패: ${response.statusCode}');
+    }
+  }
+
+  Future<PrecedentDetail> _getPrecedentDetailViaEdgeFunction(String id) async {
+    final response = await http.post(
+      Uri.parse(_edgeFunctionUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'action': 'getPrecedentDetail',
+        'id': id,
+      }),
+    ).timeout(const Duration(seconds: 30));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return PrecedentDetail.fromJsonEdgeFunction(data);
+    } else {
+      throw Exception('판례 조회 실패: ${response.statusCode}');
     }
   }
 
@@ -212,6 +244,26 @@ class LawApiService {
       return PrecedentSearchResponse.fromJsonDirect(data);
     } else {
       throw Exception('판례 검색 실패: ${response.statusCode}');
+    }
+  }
+
+  Future<PrecedentDetail> _getPrecedentDetailDirect(String id) async {
+    final uri = Uri.parse('$_lawApiBase/lawService.do').replace(
+      queryParameters: {
+        'OC': _lawApiKey,
+        'target': 'prec',
+        'ID': id,
+        'type': 'JSON',
+      },
+    );
+
+    final response = await http.get(uri).timeout(const Duration(seconds: 30));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return PrecedentDetail.fromJsonDirect(data);
+    } else {
+      throw Exception('판례 조회 실패: ${response.statusCode}');
     }
   }
 
@@ -562,5 +614,85 @@ class PrecedentSummary {
       caseType: json['사건종류명'] ?? '',
       summary: json['판시사항'] ?? json['판결요지'] ?? '',
     );
+  }
+}
+
+/// 판례 상세 정보
+class PrecedentDetail {
+  final String id;
+  final String caseNumber;
+  final String caseName;
+  final String court;
+  final String judgmentDate;
+  final String caseType;
+  final String verdict;         // 선고
+  final String verdictType;     // 판결유형
+  final String holding;         // 판시사항
+  final String summary;         // 판결요지
+  final String refArticles;     // 참조조문
+  final String refCases;        // 참조판례
+  final String content;         // 판례내용 (전문)
+
+  PrecedentDetail({
+    required this.id,
+    required this.caseNumber,
+    required this.caseName,
+    required this.court,
+    required this.judgmentDate,
+    required this.caseType,
+    required this.verdict,
+    required this.verdictType,
+    required this.holding,
+    required this.summary,
+    required this.refArticles,
+    required this.refCases,
+    required this.content,
+  });
+
+  factory PrecedentDetail.fromJsonEdgeFunction(Map<String, dynamic> json) {
+    return PrecedentDetail(
+      id: json['id']?.toString() ?? '',
+      caseNumber: json['caseNumber'] ?? '',
+      caseName: json['caseName'] ?? '',
+      court: json['court'] ?? '대법원',
+      judgmentDate: json['judgmentDate'] ?? '',
+      caseType: json['caseType'] ?? '',
+      verdict: json['verdict'] ?? '',
+      verdictType: json['verdictType'] ?? '',
+      holding: json['holding'] ?? '',
+      summary: json['summary'] ?? '',
+      refArticles: json['refArticles'] ?? '',
+      refCases: json['refCases'] ?? '',
+      content: json['content'] ?? '',
+    );
+  }
+
+  factory PrecedentDetail.fromJsonDirect(Map<String, dynamic> json) {
+    final prec = json['PrecService'] ?? {};
+    return PrecedentDetail(
+      id: prec['판례정보일련번호']?.toString() ?? '',
+      caseNumber: prec['사건번호'] ?? '',
+      caseName: prec['사건명'] ?? '',
+      court: prec['법원명'] ?? '대법원',
+      judgmentDate: prec['선고일자'] ?? '',
+      caseType: prec['사건종류명'] ?? '',
+      verdict: prec['선고'] ?? '',
+      verdictType: prec['판결유형'] ?? '',
+      holding: _cleanHtml(prec['판시사항'] ?? ''),
+      summary: _cleanHtml(prec['판결요지'] ?? ''),
+      refArticles: _cleanHtml(prec['참조조문'] ?? ''),
+      refCases: _cleanHtml(prec['참조판례'] ?? ''),
+      content: _cleanHtml(prec['판례내용'] ?? ''),
+    );
+  }
+
+  /// HTML 태그 정리
+  static String _cleanHtml(String text) {
+    return text
+        .replaceAll('<br/>', '\n')
+        .replaceAll('<br>', '\n')
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .trim();
   }
 }
