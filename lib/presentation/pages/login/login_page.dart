@@ -264,7 +264,7 @@ class _LoginPageState extends State<LoginPage>
               foregroundColor: const Color(0xFF000000), // 검정색 텍스트
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                borderRadius: BorderRadius.circular(AppSizes.radiusL),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16),
             ),
@@ -312,7 +312,7 @@ class _LoginPageState extends State<LoginPage>
               side: const BorderSide(color: Color(0xFF747775), width: 1),
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                borderRadius: BorderRadius.circular(AppSizes.radiusL),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16),
             ),

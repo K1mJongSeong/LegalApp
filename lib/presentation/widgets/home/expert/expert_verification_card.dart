@@ -12,7 +12,8 @@ class ExpertVerificationCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSizes.paddingL),
       decoration: BoxDecoration(
-        color: Colors.amber[50],
+        // color: Colors.amber[50],
+        color: Colors.white,
         borderRadius: BorderRadius.circular(AppSizes.radiusXL),
         border: Border.all(color: Colors.amber[200]!),
       ),
@@ -54,7 +55,7 @@ class ExpertVerificationCard extends StatelessWidget {
           // 즉시 인증 버튼
           _VerificationOption(
             icon: Icons.flash_on,
-            iconColor: Colors.amber,
+            iconColor: Colors.grey,
             title: '신분증 정보로 즉시 인증',
             subtitle: '대한변협 신분증 정보로 즉시 인증',
             onTap: () {

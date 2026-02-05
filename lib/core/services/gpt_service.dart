@@ -519,6 +519,126 @@ $description
       }),
     );
   }
+
+  /// 전문가 상담 전 질문 리스트 생성
+  ///
+  /// 사용자의 사건 정보를 바탕으로 변호사에게 물어볼 만한 질문 5개를 생성합니다.
+  Future<List<String>> generateConsultationQuestions({
+    required String category,
+    required String description,
+    required String summary,
+  }) async {
+    final prompt = '''
+당신은 법률 상담을 준비하는 사용자를 돕는 AI 어시스턴트입니다.
+사용자가 변호사와 상담하기 전에 미리 준비하면 좋을 질문들을 생성해주세요.
+
+⚠️ 반드시 지켜야 할 규칙
+1. 법률적 판단이나 조언을 하지 마세요.
+2. 질문은 사용자가 변호사에게 직접 물어볼 수 있는 형태로 작성하세요.
+3. 질문은 해당 사건에 특화되어야 합니다.
+4. 각 질문은 한 문장으로 간결하게 작성하세요.
+5. 질문 끝에는 반드시 물음표(?)를 붙이세요.
+
+---
+📌 사건 정보
+[사건 분야]: $category
+[사건 요약]: $summary
+[사건 상세]:
+$description
+
+---
+📌 출력 형식 (반드시 JSON)
+다음 형식으로 정확히 5개의 질문을 JSON 배열로 응답하세요:
+{
+  "questions": [
+    "질문 1?",
+    "질문 2?",
+    "질문 3?",
+    "질문 4?",
+    "질문 5?"
+  ]
+}
+
+질문 예시 (참고용):
+- 제 상황에서 법적으로 보호받을 수 있는 권리가 있나요?
+- 상대방에게 손해배상을 청구할 수 있는 근거가 있을까요?
+- 이 사건의 해결에 예상되는 절차와 기간은 어느 정도인가요?
+- 합의를 하는 것과 소송을 진행하는 것 중 어떤 것이 유리할까요?
+- 증거 자료로 어떤 것들을 준비해야 하나요?
+
+반드시 유효한 JSON 형식으로만 응답하세요.
+''';
+
+    try {
+      final response = kIsWeb
+          ? await _callWebProxyForQuestions(
+              category: category,
+              description: description,
+              summary: summary,
+            )
+          : await _callOpenAiDirect(prompt);
+
+      if (response.statusCode == 200) {
+        final body = response.body;
+        final data = jsonDecode(body);
+
+        if (kIsWeb) {
+          // 웹 프록시 응답 처리
+          final questions = data['questions'] as List?;
+          return questions?.map((e) => e.toString()).toList() ?? _getDefaultQuestions(category);
+        }
+
+        // 모바일(OpenAI 직접 호출) 응답 파싱
+        final content = data['choices'][0]['message']['content'] as String;
+
+        // JSON 파싱
+        final jsonStart = content.indexOf('{');
+        final jsonEnd = content.lastIndexOf('}') + 1;
+        final jsonStr = content.substring(jsonStart, jsonEnd);
+        final result = jsonDecode(jsonStr);
+
+        final questions = result['questions'] as List?;
+        return questions?.map((e) => e.toString()).toList() ?? _getDefaultQuestions(category);
+      } else {
+        print('질문 생성 API 오류: ${response.statusCode}');
+        return _getDefaultQuestions(category);
+      }
+    } catch (e) {
+      print('질문 생성 오류: $e');
+      return _getDefaultQuestions(category);
+    }
+  }
+
+  /// 웹에서 질문 생성용 프록시 호출
+  Future<http.Response> _callWebProxyForQuestions({
+    required String category,
+    required String description,
+    required String summary,
+  }) {
+    return http.post(
+      Uri.parse('$_webProxyUrl/questions'),
+      headers: const {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'category': category,
+        'description': description,
+        'summary': summary,
+        'type': 'consultation_questions',
+      }),
+    );
+  }
+
+  /// 기본 질문 리스트 (API 실패 시 폴백)
+  List<String> _getDefaultQuestions(String category) {
+    return [
+      '제 상황에서 법적으로 보호받을 수 있는 권리가 있나요?',
+      '이 사건의 해결에 예상되는 절차와 기간은 어느 정도인가요?',
+      '합의를 하는 것과 소송을 진행하는 것 중 어떤 것이 유리할까요?',
+      '증거 자료로 어떤 것들을 준비해야 하나요?',
+      '상담 후 제가 바로 취해야 할 조치가 있을까요?',
+    ];
+  }
 }
 
 /// 사건 요약 결과

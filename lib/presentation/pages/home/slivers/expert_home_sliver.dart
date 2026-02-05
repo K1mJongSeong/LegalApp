@@ -155,6 +155,19 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
           child: SizedBox(height: AppSizes.paddingL),
         ),
 
+        // 하단 퀵 메뉴
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+          sliver: const SliverToBoxAdapter(
+            child: ExpertQuickMenu(),
+          ),
+        ),
+
+        // 하단 여백
+        const SliverToBoxAdapter(
+          child: SizedBox(height: AppSizes.paddingL),
+        ),
+
         // 상담글 섹션 헤더
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
@@ -194,6 +207,20 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
             child: SizedBox(height: AppSizes.paddingM),
           ),
 
+        // 전문가 인증 카드 (미인증 시)
+        if (!widget.isVerified)
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+            sliver: const SliverToBoxAdapter(
+              child: ExpertVerificationCard(),
+            ),
+          ),
+
+        if (!widget.isVerified)
+          const SliverToBoxAdapter(
+            child: SizedBox(height: AppSizes.paddingL),
+          ),
+
         // 추천 카드
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
@@ -218,33 +245,6 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
         // 공지사항 카드 후 여백
         const SliverToBoxAdapter(
           child: SizedBox(height: AppSizes.paddingM),
-        ),
-
-        // 전문가 인증 카드 (미인증 시)
-        if (!widget.isVerified)
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
-            sliver: const SliverToBoxAdapter(
-              child: ExpertVerificationCard(),
-            ),
-          ),
-
-        if (!widget.isVerified)
-          const SliverToBoxAdapter(
-            child: SizedBox(height: AppSizes.paddingL),
-          ),
-
-        // 하단 퀵 메뉴
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
-          sliver: const SliverToBoxAdapter(
-            child: ExpertQuickMenu(),
-          ),
-        ),
-
-        // 하단 여백
-        const SliverToBoxAdapter(
-          child: SizedBox(height: AppSizes.paddingL),
         ),
       ],
     );

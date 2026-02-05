@@ -56,7 +56,7 @@ class ExpertProfileCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSizes.paddingS),
           Text(
-            '프로필을 모두 작성한 상태에서만 노출되어\n구글 검색결과로도 상위 노출됩니다.',
+            '프로필을 모두 작성한 상태에서만 노출되어\n사용자에게 검색결과로도 상위 노출됩니다.',
             style: TextStyle(
               fontSize: AppSizes.fontS,
               color: Colors.white.withValues(alpha: 0.85),
@@ -70,7 +70,7 @@ class ExpertProfileCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(AppSizes.paddingM),
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(AppSizes.radiusL),
             ),
             child: Column(
@@ -98,7 +98,7 @@ class ExpertProfileCard extends StatelessWidget {
                                 width: avatarSize,
                                 height: avatarSize,
                                 decoration: BoxDecoration(
-                                  color: Colors.grey[200],
+                                  color: Colors.grey[300],
                                   shape: BoxShape.circle,
                                 ),
                                 child: Center(
@@ -121,8 +121,7 @@ class ExpertProfileCard extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
                                         fontSize: statusFontSize,
-                                        // color: AppColors.textSecondary,
-                                        color: Colors.white,
+                                        color: AppColors.textSecondary,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -134,7 +133,7 @@ class ExpertProfileCard extends StatelessWidget {
                                       style: TextStyle(
                                         fontSize: nameFontSize,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                                        color: AppColors.textPrimary,
                                       ),
                                     ),
                                   ],
@@ -170,7 +169,7 @@ class ExpertProfileCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: Colors.white,
+                                color: AppColors.textPrimary,
                                 fontSize: buttonFontSize,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -189,7 +188,7 @@ class ExpertProfileCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: _calculatedCompletion / 100,
-                    backgroundColor: Colors.grey[200],
+                    backgroundColor: Colors.grey,
                     valueColor: const AlwaysStoppedAnimation<Color>(
                       AppColors.primaryLight,
                     ),
@@ -203,7 +202,7 @@ class ExpertProfileCard extends StatelessWidget {
                     '$_calculatedCompletion%완성',
                     style: TextStyle(
                       fontSize: AppSizes.fontS,
-                      color: Colors.white
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ),
