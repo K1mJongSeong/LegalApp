@@ -87,6 +87,11 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
   List<String> _consultationQuestions = [];
   bool _isLoadingQuestions = false;
 
+  // 각 질문별 새로고침 남은 횟수 (최대 3회)
+  List<int> _questionRefreshCounts = [];
+  // 각 질문별 로딩 상태
+  List<bool> _questionRefreshLoading = [];
+
   @override
   void initState() {
     super.initState();
@@ -400,6 +405,9 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
       setState(() {
         _consultationQuestions = questions;
         _isLoadingQuestions = false;
+        // 각 질문별 새로고침 횟수 초기화 (3회씩)
+        _questionRefreshCounts = List.filled(questions.length, 3);
+        _questionRefreshLoading = List.filled(questions.length, false);
       });
 
       debugPrint('✅ 상담 질문 로드 완료: ${questions.length}개');
@@ -407,6 +415,41 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
       debugPrint('❌ 상담 질문 로드 오류: $e');
       setState(() {
         _isLoadingQuestions = false;
+      });
+    }
+  }
+
+  /// 개별 질문 새로고침
+  Future<void> _refreshSingleQuestion(int index) async {
+    if (_questionRefreshCounts[index] <= 0) return;
+    if (_questionRefreshLoading[index]) return;
+
+    setState(() {
+      _questionRefreshLoading[index] = true;
+    });
+
+    try {
+      final newQuestion = await _gptService.regenerateSingleQuestion(
+        category: widget.categoryName,
+        description: widget.description.isEmpty
+            ? '${widget.categoryName} 관련 법률 상담이 필요합니다.'
+            : widget.description,
+        summary: _result?.summary ?? '',
+        currentQuestion: _consultationQuestions[index],
+        questionIndex: index + 1,
+      );
+
+      setState(() {
+        _consultationQuestions[index] = newQuestion;
+        _questionRefreshCounts[index]--;
+        _questionRefreshLoading[index] = false;
+      });
+
+      debugPrint('✅ 질문 ${index + 1} 새로고침 완료 (남은 횟수: ${_questionRefreshCounts[index]})');
+    } catch (e) {
+      debugPrint('❌ 질문 새로고침 오류: $e');
+      setState(() {
+        _questionRefreshLoading[index] = false;
       });
     }
   }
@@ -792,46 +835,124 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
   }
 
   Widget _buildQuestionCard(int index, String question) {
+    final listIndex = index - 1; // 0-based index
+    final refreshCount = listIndex < _questionRefreshCounts.length
+        ? _questionRefreshCounts[listIndex]
+        : 0;
+    final isLoading = listIndex < _questionRefreshLoading.length
+        ? _questionRefreshLoading[listIndex]
+        : false;
+    final isEnabled = refreshCount > 0 && !isLoading;
+
     return Container(
       margin: const EdgeInsets.only(bottom: AppSizes.paddingS),
-      padding: const EdgeInsets.all(AppSizes.paddingM),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(AppSizes.radiusM),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: AppColors.success,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                '$index',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: AppSizes.fontS,
-                  fontWeight: FontWeight.bold,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 질문 카드 영역
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(AppSizes.paddingM),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(AppSizes.radiusM),
+                    bottomLeft: Radius.circular(AppSizes.radiusM),
+                  ),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: AppColors.success,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$index',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: AppSizes.fontS,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        question,
+                        style: const TextStyle(
+                          fontSize: AppSizes.fontM,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              question,
-              style: const TextStyle(
-                fontSize: AppSizes.fontM,
-                height: 1.4,
+            // 새로고침 버튼 영역
+            GestureDetector(
+              onTap: isEnabled ? () => _refreshSingleQuestion(listIndex) : null,
+              child: Container(
+                width: 48,
+                decoration: BoxDecoration(
+                  color: isEnabled
+                      ? AppColors.success.withOpacity(0.1)
+                      : AppColors.border.withOpacity(0.3),
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(AppSizes.radiusM),
+                    bottomRight: Radius.circular(AppSizes.radiusM),
+                  ),
+                  border: Border.all(
+                    color: isEnabled
+                        ? AppColors.success.withOpacity(0.3)
+                        : AppColors.border,
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (isLoading)
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.success,
+                        ),
+                      )
+                    else
+                      Icon(
+                        Icons.refresh,
+                        size: 20,
+                        color: isEnabled
+                            ? AppColors.success
+                            : AppColors.textSecondary.withOpacity(0.5),
+                      ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$refreshCount',
+                      style: TextStyle(
+                        fontSize: AppSizes.fontXS,
+                        fontWeight: FontWeight.bold,
+                        color: isEnabled
+                            ? AppColors.success
+                            : AppColors.textSecondary.withOpacity(0.5),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

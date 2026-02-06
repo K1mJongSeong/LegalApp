@@ -639,6 +639,108 @@ $description
       '상담 후 제가 바로 취해야 할 조치가 있을까요?',
     ];
   }
+
+  /// 개별 질문 재생성
+  ///
+  /// 특정 질문 하나만 새로운 질문으로 교체합니다.
+  Future<String> regenerateSingleQuestion({
+    required String category,
+    required String description,
+    required String summary,
+    required String currentQuestion,
+    required int questionIndex,
+  }) async {
+    final prompt = '''
+당신은 법률 상담을 준비하는 사용자를 돕는 AI 어시스턴트입니다.
+사용자가 변호사와 상담하기 전에 미리 준비하면 좋을 질문을 생성해주세요.
+
+⚠️ 반드시 지켜야 할 규칙
+1. 법률적 판단이나 조언을 하지 마세요.
+2. 질문은 사용자가 변호사에게 직접 물어볼 수 있는 형태로 작성하세요.
+3. 질문은 해당 사건에 특화되어야 합니다.
+4. 질문은 한 문장으로 간결하게 작성하세요.
+5. 질문 끝에는 반드시 물음표(?)를 붙이세요.
+6. 현재 질문과는 다른 새로운 질문을 생성하세요.
+
+---
+📌 사건 정보
+[사건 분야]: $category
+[사건 요약]: $summary
+[사건 상세]:
+$description
+
+📌 현재 질문 (이 질문과 다른 새로운 질문을 생성하세요):
+$currentQuestion
+
+---
+📌 출력 형식 (반드시 JSON)
+다음 형식으로 새로운 질문 1개를 JSON으로 응답하세요:
+{
+  "question": "새로운 질문?"
+}
+
+반드시 유효한 JSON 형식으로만 응답하세요.
+''';
+
+    try {
+      final response = kIsWeb
+          ? await _callWebProxyForSingleQuestion(
+              category: category,
+              description: description,
+              summary: summary,
+              currentQuestion: currentQuestion,
+            )
+          : await _callOpenAiDirect(prompt);
+
+      if (response.statusCode == 200) {
+        final body = response.body;
+        final data = jsonDecode(body);
+
+        if (kIsWeb) {
+          return data['question']?.toString() ?? currentQuestion;
+        }
+
+        // 모바일(OpenAI 직접 호출) 응답 파싱
+        final content = data['choices'][0]['message']['content'] as String;
+
+        // JSON 파싱
+        final jsonStart = content.indexOf('{');
+        final jsonEnd = content.lastIndexOf('}') + 1;
+        final jsonStr = content.substring(jsonStart, jsonEnd);
+        final result = jsonDecode(jsonStr);
+
+        return result['question']?.toString() ?? currentQuestion;
+      } else {
+        print('질문 재생성 API 오류: ${response.statusCode}');
+        return currentQuestion;
+      }
+    } catch (e) {
+      print('질문 재생성 오류: $e');
+      return currentQuestion;
+    }
+  }
+
+  /// 웹에서 단일 질문 재생성용 프록시 호출
+  Future<http.Response> _callWebProxyForSingleQuestion({
+    required String category,
+    required String description,
+    required String summary,
+    required String currentQuestion,
+  }) {
+    return http.post(
+      Uri.parse('$_webProxyUrl/regenerate-question'),
+      headers: const {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'category': category,
+        'description': description,
+        'summary': summary,
+        'currentQuestion': currentQuestion,
+        'type': 'regenerate_single_question',
+      }),
+    );
+  }
 }
 
 /// 사건 요약 결과
