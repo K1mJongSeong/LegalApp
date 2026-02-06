@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:pdf/pdf.dart';
@@ -91,6 +93,12 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
   List<int> _questionRefreshCounts = [];
   // 각 질문별 로딩 상태
   List<bool> _questionRefreshLoading = [];
+
+  // 설문조사 완료 여부
+  bool _isSurveyCompleted = false;
+
+  // 설문조사 문서 ID (콘텐츠 피드백 설문과 연결용)
+  String? _surveyDocId;
 
   @override
   void initState() {
@@ -572,14 +580,14 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                 // AI 사건 요약
                 _buildSummarySection(),
                 const SizedBox(height: AppSizes.paddingL),
-                // 전문가 상담 전 질문 리스트
-                _buildQuestionsSection(),
-                const SizedBox(height: AppSizes.paddingL),
                 // 관련 법령
                 _buildLawsSection(),
                 const SizedBox(height: AppSizes.paddingL),
                 // 유사 판례
                 _buildCasesSection(),
+                const SizedBox(height: AppSizes.paddingL),
+                // 전문가 상담 전 질문 리스트
+                _buildQuestionsSection(),
                 const SizedBox(height: AppSizes.paddingL),
                 // 추천 전문가
                 // _buildExpertsSection(),
@@ -601,29 +609,87 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
               ),
             ],
           ),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                // 상담 글 작성 팝업 표시
-                _showConsultationPostDialog();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.radiusL),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 설문조사 버튼 (설문 미완료 시에만 표시)
+              if (!_isSurveyCompleted) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showSurveyDialog(),
+                    icon: const Icon(Icons.assignment, size: 20),
+                    label: const Text(
+                      '설문 조사하고 내용 보기',
+                      style: TextStyle(
+                        fontSize: AppSizes.fontM,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.success,
+                      side: BorderSide(color: AppColors.success, width: 2),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSizes.radiusL),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+              // 콘텐츠 피드백 버튼 (설문 완료 후에만 표시)
+              if (_isSurveyCompleted) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showContentFeedbackDialog(),
+                    icon: const Icon(Icons.thumb_up_alt_outlined, size: 20),
+                    label: const Text(
+                      '추가 설문 작성하고 무료 상담 쿠폰받기!',
+                      style: TextStyle(
+                        fontSize: AppSizes.fontM,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.warning,
+                      side: BorderSide(color: AppColors.warning, width: 2),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSizes.radiusL),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+              // 상담 글 등록 버튼
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // 상담 글 작성 팝업 표시
+                    _showConsultationPostDialog();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSizes.radiusL),
+                    ),
+                  ),
+                  child: const Text(
+                    '상담 글 등록 및 전문가 목록 보기',
+                    style: TextStyle(
+                      fontSize: AppSizes.fontM,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
-              child: const Text(
-                '상담 글 등록 및 전문가 목록 보기',
-                style: TextStyle(
-                  fontSize: AppSizes.fontM,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+            ],
           ),
         ),
       ],
@@ -770,64 +836,121 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
             ),
           ),
           const SizedBox(height: AppSizes.paddingM),
-          if (_isLoadingQuestions)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(AppSizes.paddingM),
+          // 블러 처리가 적용되는 질문 리스트 영역
+          Stack(
+            children: [
+              ImageFiltered(
+                imageFilter: _isSurveyCompleted
+                    ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
+                    : ImageFilter.blur(sigmaX: 5, sigmaY: 5),
                 child: Column(
                   children: [
-                    CircularProgressIndicator(strokeWidth: 2),
-                    SizedBox(height: 8),
-                    Text(
-                      '질문 리스트를 생성 중입니다...',
-                      style: TextStyle(
-                        fontSize: AppSizes.fontS,
-                        color: Colors.grey,
+                    if (_isLoadingQuestions)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(AppSizes.paddingM),
+                          child: Column(
+                            children: [
+                              CircularProgressIndicator(strokeWidth: 2),
+                              SizedBox(height: 8),
+                              Text(
+                                '질문 리스트를 생성 중입니다...',
+                                style: TextStyle(
+                                  fontSize: AppSizes.fontS,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if (_consultationQuestions.isNotEmpty)
+                      ...List.generate(_consultationQuestions.length, (index) {
+                        return _buildQuestionCard(index + 1, _consultationQuestions[index]);
+                      })
+                    else
+                      Container(
+                        padding: const EdgeInsets.all(AppSizes.paddingM),
+                        child: Center(
+                          child: Text(
+                            '질문 리스트를 불러올 수 없습니다.',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: AppSizes.fontS,
+                            ),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: AppSizes.paddingS),
+                    Container(
+                      padding: const EdgeInsets.all(AppSizes.paddingS),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(AppSizes.radiusS),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.lightbulb_outline, color: AppColors.success, size: 16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'AI가 생성한 질문입니다. 본인의 상황에 맞게 수정하여 활용하세요.',
+                              style: TextStyle(
+                                fontSize: AppSizes.fontXS,
+                                color: AppColors.success,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-            )
-          else if (_consultationQuestions.isNotEmpty)
-            ...List.generate(_consultationQuestions.length, (index) {
-              return _buildQuestionCard(index + 1, _consultationQuestions[index]);
-            })
-          else
-            Container(
-              padding: const EdgeInsets.all(AppSizes.paddingM),
-              child: Center(
-                child: Text(
-                  '질문 리스트를 불러올 수 없습니다.',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: AppSizes.fontS,
-                  ),
-                ),
-              ),
-            ),
-          const SizedBox(height: AppSizes.paddingS),
-          Container(
-            padding: const EdgeInsets.all(AppSizes.paddingS),
-            decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(AppSizes.radiusS),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.lightbulb_outline, color: AppColors.success, size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'AI가 생성한 질문입니다. 본인의 상황에 맞게 수정하여 활용하세요.',
-                    style: TextStyle(
-                      fontSize: AppSizes.fontXS,
-                      color: AppColors.success,
+              // 잠금 오버레이
+              if (!_isSurveyCompleted)
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('설문조사를 완료해야 질문 리스트를 확인할 수 있습니다.'),
+                          action: SnackBarAction(
+                            label: '설문 참여',
+                            onPressed: () => _showSurveyDialog(),
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      color: Colors.transparent,
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.lock, color: Colors.white, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                '설문조사 후 확인 가능',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
         ],
       ),
@@ -1056,6 +1179,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 제목 영역 (항상 보임)
           Row(
             children: [
               Container(
@@ -1086,59 +1210,109 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
             ],
           ),
           const SizedBox(height: AppSizes.paddingS),
-          if (firstArticle != null) ...[
-            Text(
-              '${firstArticle.number}${firstArticle.title.isNotEmpty ? ' (${firstArticle.title})' : ''}',
-              style: TextStyle(
-                fontSize: AppSizes.fontS,
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
+          // 내용 영역 (블러 처리)
+          Stack(
+            children: [
+              // 실제 내용
+              ImageFiltered(
+                imageFilter: _isSurveyCompleted
+                    ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
+                    : ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (firstArticle != null) ...[
+                      Text(
+                        '${firstArticle.number}${firstArticle.title.isNotEmpty ? ' (${firstArticle.title})' : ''}',
+                        style: TextStyle(
+                          fontSize: AppSizes.fontS,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        firstArticle.content.length > 150
+                            ? '${firstArticle.content.substring(0, 150)}...'
+                            : firstArticle.content,
+                        style: TextStyle(
+                          fontSize: AppSizes.fontS,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ] else ...[
+                      Text(
+                        '시행일: ${law.enforcementDate}',
+                        style: TextStyle(
+                          fontSize: AppSizes.fontS,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      Text(
+                        '소관부처: ${law.department}',
+                        style: TextStyle(
+                          fontSize: AppSizes.fontS,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: AppSizes.paddingS),
+                    Row(
+                      children: [
+                        Text(
+                          '법령 원문 보기',
+                          style: TextStyle(
+                            fontSize: AppSizes.fontS,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Icon(Icons.chevron_right, color: AppColors.primary, size: 16),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              firstArticle.content.length > 150
-                  ? '${firstArticle.content.substring(0, 150)}...'
-                  : firstArticle.content,
-              style: TextStyle(
-                fontSize: AppSizes.fontS,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ] else ...[
-            Text(
-              '시행일: ${law.enforcementDate}',
-              style: TextStyle(
-                fontSize: AppSizes.fontS,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            Text(
-              '소관부처: ${law.department}',
-              style: TextStyle(
-                fontSize: AppSizes.fontS,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-          const SizedBox(height: AppSizes.paddingS),
-          GestureDetector(
-            onTap: () => _showLawDetailPopup(law),
-            child: Row(
-              children: [
-                Text(
-                  '법령 원문 보기',
-                  style: TextStyle(
-                    fontSize: AppSizes.fontS,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w500,
+              // 오버레이 (설문 완료 여부에 따라 다른 동작)
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: _isSurveyCompleted
+                      ? () => _showLawDetailPopup(law)
+                      : () => _showSurveyRequiredMessage(),
+                  child: Container(
+                    color: Colors.transparent,
+                    child: !_isSurveyCompleted
+                        ? Center(
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.6),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.lock,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                          )
+                        : null,
                   ),
                 ),
-                Icon(Icons.chevron_right, color: AppColors.primary, size: 16),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  /// 설문 필요 메시지 표시
+  void _showSurveyRequiredMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('설문조사를 완료하면 내용을 볼 수 있습니다.'),
+        duration: Duration(seconds: 2),
       ),
     );
   }
@@ -1210,56 +1384,107 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                 ),
               ),
               const Divider(),
-              // 조문 목록
+              // 조문 목록 (블러 처리)
               Expanded(
-                child: detail != null && detail.articles.isNotEmpty
-                    ? ListView.builder(
-                        controller: scrollController,
-                        padding: const EdgeInsets.all(AppSizes.paddingM),
-                        itemCount: detail.articles.length,
-                        itemBuilder: (context, index) {
-                          final article = detail.articles[index];
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: AppSizes.paddingM),
-                            padding: const EdgeInsets.all(AppSizes.paddingM),
-                            decoration: BoxDecoration(
-                              color: AppColors.background,
-                              borderRadius: BorderRadius.circular(AppSizes.radiusM),
-                              border: Border.all(color: AppColors.border),
+                child: Stack(
+                  children: [
+                    ImageFiltered(
+                      imageFilter: _isSurveyCompleted
+                          ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
+                          : ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      child: detail != null && detail.articles.isNotEmpty
+                          ? ListView.builder(
+                              controller: scrollController,
+                              padding: const EdgeInsets.all(AppSizes.paddingM),
+                              itemCount: detail.articles.length,
+                              itemBuilder: (context, index) {
+                                final article = detail.articles[index];
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: AppSizes.paddingM),
+                                  padding: const EdgeInsets.all(AppSizes.paddingM),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.background,
+                                    borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                                    border: Border.all(color: AppColors.border),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${article.number}${article.title.isNotEmpty ? ' (${article.title})' : ''}',
+                                        style: const TextStyle(
+                                          fontSize: AppSizes.fontM,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        article.content,
+                                        style: TextStyle(
+                                          fontSize: AppSizes.fontS,
+                                          color: AppColors.textSecondary,
+                                          height: 1.6,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            )
+                          : Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(AppSizes.paddingL),
+                                child: Text(
+                                  '조문 정보를 불러오는 중...',
+                                  style: TextStyle(color: AppColors.textSecondary),
+                                ),
+                              ),
                             ),
+                    ),
+                    // 자물쇠 오버레이 (설문 미완료 시)
+                    if (!_isSurveyCompleted)
+                      Positioned.fill(
+                        child: Container(
+                          color: Colors.white.withOpacity(0.3),
+                          child: Center(
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(
-                                  '${article.number}${article.title.isNotEmpty ? ' (${article.title})' : ''}',
-                                  style: const TextStyle(
-                                    fontSize: AppSizes.fontM,
-                                    fontWeight: FontWeight.bold,
+                                Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.7),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.lock,
+                                    color: Colors.white,
+                                    size: 40,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  article.content,
-                                  style: TextStyle(
-                                    fontSize: AppSizes.fontS,
-                                    color: AppColors.textSecondary,
-                                    height: 1.6,
+                                const SizedBox(height: 16),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.7),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: const Text(
+                                    '설문조사 완료 후 열람 가능',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: AppSizes.fontS,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                          );
-                        },
-                      )
-                    : Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppSizes.paddingL),
-                          child: Text(
-                            '조문 정보를 불러오는 중...',
-                            style: TextStyle(color: AppColors.textSecondary),
                           ),
                         ),
                       ),
+                  ],
+                ),
               ),
               // 하단 버튼
               Container(
@@ -1275,18 +1500,41 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                   ],
                 ),
                 child: SafeArea(
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _openLawUrl(law.mst, law.name),
-                      icon: const Icon(Icons.open_in_new, size: 18),
-                      label: const Text('국가법령정보센터에서 전체 보기'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        side: BorderSide(color: AppColors.primary),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // PDF 다운로드 버튼 (설문 완료 시에만 활성화)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _isSurveyCompleted && detail != null && detail.articles.isNotEmpty
+                              ? () => _downloadLawPdf(law, detail)
+                              : null,
+                          icon: Icon(_isSurveyCompleted ? Icons.download : Icons.lock, size: 18),
+                          label: Text(_isSurveyCompleted ? '전체 내용 PDF 다운' : '설문 완료 후 다운로드 가능'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _isSurveyCompleted ? AppColors.primary : Colors.grey,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      // 국가법령정보센터 링크 버튼
+                      // SizedBox(
+                      //   width: double.infinity,
+                      //   child: OutlinedButton.icon(
+                      //     onPressed: () => _openLawUrl(law.mst, law.name),
+                      //     icon: const Icon(Icons.open_in_new, size: 18),
+                      //     label: const Text('국가법령정보센터에서 전체 보기'),
+                      //     style: OutlinedButton.styleFrom(
+                      //       foregroundColor: AppColors.primary,
+                      //       side: BorderSide(color: AppColors.primary),
+                      //       padding: const EdgeInsets.symmetric(vertical: 12),
+                      //     ),
+                      //   ),
+                      // ),
+                    ],
                   ),
                 ),
               ),
@@ -1308,6 +1556,103 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('링크를 열 수 없습니다')),
+        );
+      }
+    }
+  }
+
+  /// 법령 PDF 다운로드
+  Future<void> _downloadLawPdf(LawSummary law, LawDetail detail) async {
+    try {
+      // 로딩 표시
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // 한글 폰트 로드
+      final ttf = await _loadKoreanFont();
+      final ttfBold = await _loadKoreanFont(bold: true);
+
+      // PDF 생성
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(40),
+          build: (context) => [
+            // 제목
+            pw.Header(
+              level: 0,
+              child: pw.Text(
+                law.name,
+                style: pw.TextStyle(font: ttfBold, fontSize: 20),
+              ),
+            ),
+            pw.SizedBox(height: 10),
+
+            // 기본 정보
+            _buildPdfInfoRow('법령 유형', law.lawType, ttf, ttfBold),
+            _buildPdfInfoRow('시행일', law.enforcementDate, ttf, ttfBold),
+            _buildPdfInfoRow('소관부처', law.department, ttf, ttfBold),
+            pw.SizedBox(height: 20),
+
+            // 조문 목록
+            pw.Text('조문 내용', style: pw.TextStyle(font: ttfBold, fontSize: 14)),
+            pw.SizedBox(height: 10),
+
+            ...detail.articles.map((article) => pw.Container(
+              margin: const pw.EdgeInsets.only(bottom: 15),
+              padding: const pw.EdgeInsets.all(10),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: PdfColors.grey400),
+                borderRadius: pw.BorderRadius.circular(4),
+              ),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    '${article.number}${article.title.isNotEmpty ? ' (${article.title})' : ''}',
+                    style: pw.TextStyle(font: ttfBold, fontSize: 11),
+                  ),
+                  pw.SizedBox(height: 5),
+                  pw.Text(
+                    article.content,
+                    style: pw.TextStyle(font: ttf, fontSize: 9, lineSpacing: 3),
+                  ),
+                ],
+              ),
+            )),
+          ],
+        ),
+      );
+
+      // 파일 저장
+      final output = await getTemporaryDirectory();
+      final fileName = '법령_${law.name.replaceAll(RegExp(r'[^\w가-힣]'), '_')}.pdf';
+      final file = File('${output.path}/$fileName');
+      await file.writeAsBytes(await pdf.save());
+
+      // 로딩 닫기
+      if (mounted) Navigator.pop(context);
+
+      // 공유/저장
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: '법령: ${law.name}',
+      );
+    } catch (e) {
+      // 로딩 닫기
+      if (mounted) Navigator.pop(context);
+
+      debugPrint('PDF 생성 오류: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('PDF 생성 실패: $e')),
         );
       }
     }
@@ -1474,6 +1819,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 제목 영역 (항상 보임)
           Row(
             children: [
               Container(
@@ -1503,45 +1849,85 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
               ),
             ],
           ),
-          if (prec.caseName.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              prec.caseName,
-              style: TextStyle(
-                fontSize: AppSizes.fontS,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
+          const SizedBox(height: AppSizes.paddingS),
+          // 내용 영역 (블러 처리)
+          Stack(
+            children: [
+              // 실제 내용
+              ImageFiltered(
+                imageFilter: _isSurveyCompleted
+                    ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
+                    : ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (prec.caseName.isNotEmpty) ...[
+                      Text(
+                        prec.caseName,
+                        style: TextStyle(
+                          fontSize: AppSizes.fontS,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                    Text(
+                      prec.summary.isNotEmpty
+                          ? (prec.summary.length > 150
+                              ? '${prec.summary.substring(0, 150)}...'
+                              : prec.summary)
+                          : '선고일: ${prec.judgmentDate}',
+                      style: TextStyle(
+                        fontSize: AppSizes.fontS,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.paddingS),
+                    Row(
+                      children: [
+                        Text(
+                          '판례 상세보기',
+                          style: TextStyle(
+                            fontSize: AppSizes.fontS,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Icon(Icons.chevron_right, color: AppColors.primary, size: 16),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-          const SizedBox(height: AppSizes.paddingS),
-          Text(
-            prec.summary.isNotEmpty
-                ? (prec.summary.length > 150
-                    ? '${prec.summary.substring(0, 150)}...'
-                    : prec.summary)
-                : '선고일: ${prec.judgmentDate}',
-            style: TextStyle(
-              fontSize: AppSizes.fontS,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: AppSizes.paddingS),
-          GestureDetector(
-            onTap: () => _showPrecedentDetailPopup(prec),
-            child: Row(
-              children: [
-                Text(
-                  '판례 상세보기',
-                  style: TextStyle(
-                    fontSize: AppSizes.fontS,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w500,
+              // 오버레이 (설문 완료 여부에 따라 다른 동작)
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: _isSurveyCompleted
+                      ? () => _showPrecedentDetailPopup(prec)
+                      : () => _showSurveyRequiredMessage(),
+                  child: Container(
+                    color: Colors.transparent,
+                    child: !_isSurveyCompleted
+                        ? Center(
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.6),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.lock,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                          )
+                        : null,
                   ),
                 ),
-                Icon(Icons.chevron_right, color: AppColors.primary, size: 16),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1616,31 +2002,82 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                     ),
                   ),
                   const Divider(),
-                  // 판례 내용
+                  // 판례 내용 (블러 처리)
                   Expanded(
-                    child: snapshot.connectionState == ConnectionState.waiting
-                        ? const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CircularProgressIndicator(),
-                                SizedBox(height: 16),
-                                Text('판례 정보를 불러오는 중...'),
-                              ],
-                            ),
-                          )
-                        : snapshot.hasError
-                            ? Center(
-                                child: Text(
-                                  '판례 정보를 불러올 수 없습니다.\n${snapshot.error}',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(color: AppColors.error),
+                    child: Stack(
+                      children: [
+                        ImageFiltered(
+                          imageFilter: _isSurveyCompleted
+                              ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
+                              : ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                          child: snapshot.connectionState == ConnectionState.waiting
+                              ? const Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      CircularProgressIndicator(),
+                                      SizedBox(height: 16),
+                                      Text('판례 정보를 불러오는 중...'),
+                                    ],
+                                  ),
+                                )
+                              : snapshot.hasError
+                                  ? Center(
+                                      child: Text(
+                                        '판례 정보를 불러올 수 없습니다.\n${snapshot.error}',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(color: AppColors.error),
+                                      ),
+                                    )
+                                  : _buildPrecedentDetailContent(
+                                      snapshot.data!,
+                                      scrollController,
+                                    ),
+                        ),
+                        // 자물쇠 오버레이 (설문 미완료 시)
+                        if (!_isSurveyCompleted)
+                          Positioned.fill(
+                            child: Container(
+                              color: Colors.white.withOpacity(0.3),
+                              child: Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(20),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.7),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.lock,
+                                        color: Colors.white,
+                                        size: 40,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.7),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: const Text(
+                                        '설문조사 완료 후 열람 가능',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: AppSizes.fontS,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              )
-                            : _buildPrecedentDetailContent(
-                                snapshot.data!,
-                                scrollController,
                               ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                   // 하단 버튼
                   Container(
@@ -1659,13 +2096,13 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                       child: SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: snapshot.hasData
+                          onPressed: _isSurveyCompleted && snapshot.hasData
                               ? () => _downloadPrecedentPdf(snapshot.data!)
                               : null,
-                          icon: const Icon(Icons.download, size: 18),
-                          label: const Text('전체 내용 PDF 다운'),
+                          icon: Icon(_isSurveyCompleted ? Icons.download : Icons.lock, size: 18),
+                          label: Text(_isSurveyCompleted ? '전체 내용 PDF 다운' : '설문 완료 후 다운로드 가능'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
+                            backgroundColor: _isSurveyCompleted ? AppColors.primary : Colors.grey,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
@@ -2128,6 +2565,60 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
     );
   }
 
+  /// 설문조사 다이얼로그 표시
+  Future<void> _showSurveyDialog() async {
+    final result = await Navigator.push<String?>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SurveyPage(),
+      ),
+    );
+
+    // result가 문서 ID인 경우 (설문 완료)
+    if (result != null && result.isNotEmpty && mounted) {
+      setState(() {
+        _isSurveyCompleted = true;
+        _surveyDocId = result;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('설문조사를 완료했습니다. 이제 모든 내용을 볼 수 있습니다.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  /// 콘텐츠 피드백 설문 다이얼로그 표시 (Q2, Q3, Q4, Q5)
+  Future<void> _showContentFeedbackDialog() async {
+    if (_surveyDocId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('설문조사를 먼저 완료해주세요.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => ContentFeedbackPage(surveyDocId: _surveyDocId!),
+      ),
+    );
+
+    if (result == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('피드백을 주셔서 감사합니다!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
   /// 상담 글 작성 팝업 표시
   Future<void> _showConsultationPostDialog() async {
     final result = await showDialog<bool>(
@@ -2155,5 +2646,884 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
   }
 }
 
+/// 설문조사 페이지
+class SurveyPage extends StatefulWidget {
+  const SurveyPage({super.key});
 
+  @override
+  State<SurveyPage> createState() => _SurveyPageState();
+}
 
+class _SurveyPageState extends State<SurveyPage> {
+  final _formKey = GlobalKey<FormState>();
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  // 설문 응답 저장 (Q2, Q3, Q4, Q5 제거 - 콘텐츠 피드백 설문으로 분리)
+  List<String> _usageReasons = [];
+  String _usageReasonOther = ''; // Q1 기타
+  String _feltLikeJudgment = '';
+  String _judgmentReason = '';
+  String _rolePerception = '';
+  String _rolePerceptionOther = ''; // Q8 기타
+  int _trustRating = 3;
+  String _wouldRecommend = '';
+  String _recommendReason = '';
+  String _improvementSuggestion = '';
+
+  final List<String> _usageReasonOptions = [
+    '내 상황이 법적으로 어떤 문제인지 확인하고 싶어서',
+    '사건을 정리하고 상담 전 사전 준비를 싶어서',
+    '변호사/전문가 상담이 부담스러워서',
+    '사건 관련 법률 정보를 빠르게 알고 싶어서',
+    '기타',
+  ];
+
+  final List<String> _feltLikeJudgmentOptions = [
+    '전혀 그렇지 않았다',
+    '가끔 그렇게 느껴졌다',
+    '판단처럼 느껴졌다',
+  ];
+
+  final List<String> _rolePerceptionOptions = [
+    '상담 전 상황 정리 및 사전 준비 도구',
+    '법률 정보 (법조항,유사판례 & 질문리스트) 탐색 도구',
+    '전문가 상담 필요 여부를 판단하는 도구',
+    '바로 상담을 연결해주는 서비스',
+    '잘 모르겠음',
+    '기타',
+  ];
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _nextPage() {
+    // 현재 페이지의 필수 항목 검증
+    if (!_validateCurrentPage()) {
+      return;
+    }
+
+    if (_currentPage < 2) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  bool _validateCurrentPage() {
+    switch (_currentPage) {
+      case 0: // Page 1: Q1 필수
+        if (_usageReasons.isEmpty) {
+          _showValidationError('Q1. 사용 이유를 하나 이상 선택해주세요.');
+          return false;
+        }
+        return true;
+      case 1: // Page 2: Q6, Q8 필수 (Q7 선택)
+        if (_feltLikeJudgment.isEmpty) {
+          _showValidationError('Q6. 법적 판단처럼 느껴졌는지 선택해주세요.');
+          return false;
+        }
+        if (_rolePerception.isEmpty) {
+          _showValidationError('Q8. 로디코드의 역할에 대해 선택해주세요.');
+          return false;
+        }
+        return true;
+      default:
+        return true;
+    }
+  }
+
+  bool _validateFinalPage() {
+    // Page 3: Q9 (슬라이더 - 기본값 있음), Q10 필수 (Q11, Q12 선택)
+    if (_wouldRecommend.isEmpty) {
+      _showValidationError('Q10. 추천 의향을 선택해주세요.');
+      return false;
+    }
+    return true;
+  }
+
+  void _validateAndSubmit() {
+    if (_validateFinalPage()) {
+      _submitSurvey();
+    }
+  }
+
+  void _showValidationError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.orange,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _prevPage() {
+    if (_currentPage > 0) {
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  bool _isSubmitting = false;
+
+  Future<void> _submitSurvey() async {
+    if (_isSubmitting) return;
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    _formKey.currentState?.save();
+
+    try {
+      // 현재 로그인한 사용자 정보 가져오기
+      final currentUser = FirebaseAuth.instance.currentUser;
+
+      // Firestore users 컬렉션에서 사용자 이름 가져오기
+      String userName = '';
+      if (currentUser != null) {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .get();
+        if (userDoc.exists) {
+          userName = userDoc.data()?['name'] ?? '';
+        }
+      }
+
+      // Firebase에 설문 데이터 저장 (Q2-Q5는 콘텐츠 피드백 설문으로 분리)
+      final docRef = await FirebaseFirestore.instance.collection('surveys').add({
+        // 사용자 정보
+        'user_id': currentUser?.uid ?? 'anonymous',
+        'user_email': currentUser?.email ?? '',
+        'user_name': userName,
+        // 설문 응답
+        'q1_usage_reasons': _usageReasons,
+        'q1_usage_reasons_other': _usageReasonOther,
+        'q6_felt_like_judgment': _feltLikeJudgment,
+        'q7_judgment_reason': _judgmentReason,
+        'q8_role_perception': _rolePerception,
+        'q8_role_perception_other': _rolePerceptionOther,
+        'q9_trust_rating': _trustRating,
+        'q10_would_recommend': _wouldRecommend,
+        'q11_recommend_reason': _recommendReason,
+        'q12_improvement_suggestion': _improvementSuggestion,
+        'content_feedback_completed': false, // 콘텐츠 피드백 미완료 상태
+        'submitted_at': FieldValue.serverTimestamp(),
+      });
+
+      debugPrint('설문 제출 완료 - Firebase 저장 성공, 문서 ID: ${docRef.id}');
+      if (mounted) {
+        Navigator.pop(context, docRef.id); // 문서 ID 반환
+      }
+    } catch (e) {
+      debugPrint('설문 저장 오류: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('설문 저장 중 오류가 발생했습니다: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('로디코드 설문조사'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context, null), // 취소 시 null 반환
+        ),
+      ),
+      body: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            // 진행률 표시
+            LinearProgressIndicator(
+              value: (_currentPage + 1) / 3,
+              backgroundColor: AppColors.border,
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AppSizes.paddingM),
+              child: Text(
+                '${_currentPage + 1} / 3',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: AppSizes.fontS,
+                ),
+              ),
+            ),
+            // 설문 내용
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentPage = index;
+                  });
+                },
+                children: [
+                  _buildPage1(),
+                  _buildPage2(),
+                  _buildPage3(),
+                ],
+              ),
+            ),
+            // 하단 버튼
+            Container(
+              padding: const EdgeInsets.all(AppSizes.paddingM),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  if (_currentPage > 0)
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _prevPage,
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text('이전'),
+                      ),
+                    ),
+                  if (_currentPage > 0) const SizedBox(width: 12),
+                  Expanded(
+                    flex: 1,
+                    child: ElevatedButton(
+                      onPressed: _isSubmitting
+                          ? null
+                          : (_currentPage < 2 ? _nextPage : _validateAndSubmit),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(_currentPage < 2 ? '다음' : '완료'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPage1() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSizes.paddingM),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 설문 안내
+          Container(
+            padding: const EdgeInsets.all(AppSizes.paddingM),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: AppColors.primary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '설문 완료 시 법조항, 유사판례, 질문리스트를 열람할 수 있습니다.',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: AppSizes.fontS,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildSectionTitle('Q1. 로디코드를 사용하게 된 이유는 무엇인가요? (복수 선택)'),
+          const SizedBox(height: 8),
+          ..._usageReasonOptions.map((option) => CheckboxListTile(
+                title: Text(option, style: const TextStyle(fontSize: AppSizes.fontM)),
+                value: _usageReasons.contains(option),
+                onChanged: (value) {
+                  setState(() {
+                    if (value == true) {
+                      _usageReasons.add(option);
+                    } else {
+                      _usageReasons.remove(option);
+                    }
+                  });
+                },
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              )),
+          // Q1 기타 입력 필드
+          if (_usageReasons.contains('기타')) ...[
+            Padding(
+              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+              child: TextFormField(
+                decoration: InputDecoration(
+                  hintText: '기타 이유를 입력해주세요',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                onChanged: (value) => _usageReasonOther = value,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPage2() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSizes.paddingM),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle('Q6. 제공된 정보가 법적 판단처럼 느껴진 적이 있나요?'),
+          const SizedBox(height: 8),
+          ..._feltLikeJudgmentOptions.map((option) => RadioListTile<String>(
+                title: Text(option, style: const TextStyle(fontSize: AppSizes.fontM)),
+                value: option,
+                groupValue: _feltLikeJudgment,
+                onChanged: (value) => setState(() => _feltLikeJudgment = value ?? ''),
+                contentPadding: EdgeInsets.zero,
+              )),
+          const SizedBox(height: 16),
+          _buildSectionTitle('Q7. 6번에서"판단처럼 느껴졌다" 선택하신 분만 그렇게 느낀 이유를 알려주세요 (선택)'),
+          const SizedBox(height: 8),
+          TextFormField(
+            decoration: InputDecoration(
+              hintText: '자유롭게 작성해주세요',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSizes.radiusM),
+              ),
+            ),
+            maxLines: 3,
+            onChanged: (value) => _judgmentReason = value,
+          ),
+          const SizedBox(height: 24),
+          _buildSectionTitle('Q8. 전문가 상담 전 로디코드의 역할은 무엇이라고 생각하시나요?'),
+          const SizedBox(height: 8),
+          ..._rolePerceptionOptions.map((option) => RadioListTile<String>(
+                title: Text(option, style: const TextStyle(fontSize: AppSizes.fontM)),
+                value: option,
+                groupValue: _rolePerception,
+                onChanged: (value) => setState(() => _rolePerception = value ?? ''),
+                contentPadding: EdgeInsets.zero,
+              )),
+          // Q8 기타 입력 필드
+          if (_rolePerception == '기타') ...[
+            Padding(
+              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+              child: TextFormField(
+                decoration: InputDecoration(
+                  hintText: '기타 의견을 입력해주세요',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                onChanged: (value) => _rolePerceptionOther = value,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPage3() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSizes.paddingM),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle('Q9. 로디코드를 통해 제공된 정보는 얼마나 신뢰할 수 있다고 느끼셨나요?'),
+          const SizedBox(height: 8),
+          _buildRatingSlider(
+            value: _trustRating,
+            onChanged: (value) => setState(() => _trustRating = value.round()),
+            minLabel: '전혀 신뢰 안됨',
+            maxLabel: '매우 신뢰됨',
+          ),
+          const SizedBox(height: 24),
+          _buildSectionTitle('Q10. 법률 문제에 빠진 지인에게 로디코드를 추천할 의향이 있나요?'),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: RadioListTile<String>(
+                  title: const Text('있음'),
+                  value: '있음',
+                  groupValue: _wouldRecommend,
+                  onChanged: (value) => setState(() => _wouldRecommend = value ?? ''),
+                ),
+              ),
+              Expanded(
+                child: RadioListTile<String>(
+                  title: const Text('없음'),
+                  value: '없음',
+                  groupValue: _wouldRecommend,
+                  onChanged: (value) => setState(() => _wouldRecommend = value ?? ''),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildSectionTitle('Q11. 추천 또는 비추천 이유가 있다면 자유롭게 적어주세요.'),
+          const SizedBox(height: 8),
+          TextFormField(
+            decoration: InputDecoration(
+              hintText: '자유롭게 작성해주세요',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSizes.radiusM),
+              ),
+            ),
+            maxLines: 2,
+            onSaved: (value) => _recommendReason = value ?? '',
+          ),
+          const SizedBox(height: 24),
+          _buildSectionTitle('Q12. 이용하면서 불편했거나 개선이 또는 추가 되었으면 하는 기능이 있다면 자세히 알려주세요.'),
+          const SizedBox(height: 8),
+          TextFormField(
+            decoration: InputDecoration(
+              hintText: '바라는 점이 있다면 알려주세요',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSizes.radiusM),
+              ),
+            ),
+            maxLines: 3,
+            onSaved: (value) => _improvementSuggestion = value ?? '',
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(AppSizes.paddingM),
+            decoration: BoxDecoration(
+              color: AppColors.success.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.lock_open, color: AppColors.success),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '설문 완료 시 법조항, 유사판례, 질문리스트를 열람할 수 있습니다!',
+                    style: TextStyle(
+                      color: AppColors.success,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: AppSizes.fontM,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  Widget _buildRatingSlider({
+    required int value,
+    required ValueChanged<double> onChanged,
+    required String minLabel,
+    required String maxLabel,
+  }) {
+    return Column(
+      children: [
+        Slider(
+          value: value.toDouble(),
+          min: 1,
+          max: 5,
+          divisions: 4,
+          activeColor: AppColors.primary,
+          onChanged: onChanged,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(minLabel, style: TextStyle(fontSize: AppSizes.fontXS, color: AppColors.textSecondary)),
+            Text('$value점', style: TextStyle(fontSize: AppSizes.fontM, fontWeight: FontWeight.bold, color: AppColors.primary)),
+            Text(maxLabel, style: TextStyle(fontSize: AppSizes.fontXS, color: AppColors.textSecondary)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// 콘텐츠 피드백 설문 페이지 (Q2, Q3, Q4, Q5)
+class ContentFeedbackPage extends StatefulWidget {
+  final String surveyDocId;
+
+  const ContentFeedbackPage({super.key, required this.surveyDocId});
+
+  @override
+  State<ContentFeedbackPage> createState() => _ContentFeedbackPageState();
+}
+
+class _ContentFeedbackPageState extends State<ContentFeedbackPage> {
+  final _formKey = GlobalKey<FormState>();
+
+  // 설문 응답 저장
+  int _helpfulnessRating = 3; // Q2
+  String _lawExplanation = ''; // Q3
+  String _lawExplanationOther = '';
+  String _precedentHelp = ''; // Q4
+  String _precedentHelpOther = '';
+  int _questionListRating = 3; // Q5
+
+  final List<String> _lawExplanationOptions = [
+    '이해하기 쉬웠다',
+    '대략적인 맥락을 파악하는 데 도움이 됐다',
+    '정보는 있었지만 어렵게 느껴졌다',
+    '잘 이해되지 않았다',
+    '기타',
+  ];
+
+  final List<String> _precedentHelpOptions = [
+    '내 상황이 특이한지 아닌지 판단',
+    '나와 비슷한 사건이 실제로 다뤄졌다는 점',
+    '전문가 상담 전에 질문을 정리',
+    '큰 도움은 없었다',
+    '기타',
+  ];
+
+  bool _isSubmitting = false;
+
+  bool _validateFeedback() {
+    // Q2, Q5는 슬라이더 (기본값 있음) - 항상 유효
+    // Q3, Q4는 라디오 버튼 - 필수 선택
+    if (_lawExplanation.isEmpty) {
+      _showValidationError('Q3. 법조항 방식에 대해 선택해주세요.');
+      return false;
+    }
+    if (_precedentHelp.isEmpty) {
+      _showValidationError('Q4. 유사 판례 도움에 대해 선택해주세요.');
+      return false;
+    }
+    return true;
+  }
+
+  void _showValidationError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.orange,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _submitFeedback() async {
+    if (_isSubmitting) return;
+
+    // 필수 항목 검증
+    if (!_validateFeedback()) {
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    _formKey.currentState?.save();
+
+    try {
+      // 기존 설문 문서에 콘텐츠 피드백 데이터 추가 (업데이트)
+      await FirebaseFirestore.instance
+          .collection('surveys')
+          .doc(widget.surveyDocId)
+          .update({
+        'q2_helpfulness_rating': _helpfulnessRating,
+        'q3_law_explanation': _lawExplanation,
+        'q3_law_explanation_other': _lawExplanationOther,
+        'q4_precedent_help': _precedentHelp,
+        'q4_precedent_help_other': _precedentHelpOther,
+        'q5_question_list_rating': _questionListRating,
+        'content_feedback_completed': true,
+        'content_feedback_at': FieldValue.serverTimestamp(),
+      });
+
+      debugPrint('콘텐츠 피드백 제출 완료 - 기존 문서 업데이트 성공');
+      if (mounted) {
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      debugPrint('피드백 저장 오류: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('피드백 저장 중 오류가 발생했습니다: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('내용 피드백'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context, false),
+        ),
+      ),
+      body: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSizes.paddingM),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 안내 메시지
+                    Container(
+                      padding: const EdgeInsets.all(AppSizes.paddingM),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.star, color: AppColors.warning),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              '법조항, 판례, 질문리스트에 대한 피드백을 남겨주세요!\n설문 완료 시, 추첨을 통해 무료 상담 쿠폰 지급 (정식 출시 후 지급 예정)',
+                              style: TextStyle(
+                                color: AppColors.warning,
+                                fontSize: AppSizes.fontS,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Q2
+                    _buildSectionTitle('Q2. 사건 요약 결과, 법조항, 유사 판례 및 질문리스트를 통해 본인의 상황을 이해하는 데 도움이 되었나요?'),
+                    const SizedBox(height: 8),
+                    _buildRatingSlider(
+                      value: _helpfulnessRating,
+                      onChanged: (value) => setState(() => _helpfulnessRating = value.round()),
+                      minLabel: '전혀 도움 안됨',
+                      maxLabel: '매우 도움됨',
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Q3
+                    _buildSectionTitle('Q3. 관련 법조항을 보여주는 방식은 어떻게 느끼셨나요?'),
+                    const SizedBox(height: 8),
+                    ..._lawExplanationOptions.map((option) => RadioListTile<String>(
+                          title: Text(option, style: const TextStyle(fontSize: AppSizes.fontM)),
+                          value: option,
+                          groupValue: _lawExplanation,
+                          onChanged: (value) => setState(() => _lawExplanation = value ?? ''),
+                          contentPadding: EdgeInsets.zero,
+                        )),
+                    if (_lawExplanation == '기타') ...[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                        child: TextFormField(
+                          decoration: InputDecoration(
+                            hintText: '기타 의견을 입력해주세요',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          ),
+                          onChanged: (value) => _lawExplanationOther = value,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+
+                    // Q4
+                    _buildSectionTitle('Q4. 유사 판례 정보는 어떤 부분으로 도움이 되었나요?'),
+                    const SizedBox(height: 8),
+                    ..._precedentHelpOptions.map((option) => RadioListTile<String>(
+                          title: Text(option, style: const TextStyle(fontSize: AppSizes.fontM)),
+                          value: option,
+                          groupValue: _precedentHelp,
+                          onChanged: (value) => setState(() => _precedentHelp = value ?? ''),
+                          contentPadding: EdgeInsets.zero,
+                        )),
+                    if (_precedentHelp == '기타') ...[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                        child: TextFormField(
+                          decoration: InputDecoration(
+                            hintText: '기타 의견을 입력해주세요',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          ),
+                          onChanged: (value) => _precedentHelpOther = value,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+
+                    // Q5
+                    _buildSectionTitle('Q5. 질문리스트가 얼마나 필요하다고 느끼셨나요?'),
+                    const SizedBox(height: 8),
+                    _buildRatingSlider(
+                      value: _questionListRating,
+                      onChanged: (value) => setState(() => _questionListRating = value.round()),
+                      minLabel: '전혀 필요 없음',
+                      maxLabel: '매우 필요함',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // 제출 버튼
+            Container(
+              padding: const EdgeInsets.all(AppSizes.paddingM),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submitFeedback,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.warning,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          '피드백 제출하기',
+                          style: TextStyle(
+                            fontSize: AppSizes.fontM,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: AppSizes.fontM,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  Widget _buildRatingSlider({
+    required int value,
+    required ValueChanged<double> onChanged,
+    required String minLabel,
+    required String maxLabel,
+  }) {
+    return Column(
+      children: [
+        Slider(
+          value: value.toDouble(),
+          min: 1,
+          max: 5,
+          divisions: 4,
+          activeColor: AppColors.warning,
+          onChanged: onChanged,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(minLabel, style: TextStyle(fontSize: AppSizes.fontXS, color: AppColors.textSecondary)),
+            Text('$value점', style: TextStyle(fontSize: AppSizes.fontM, fontWeight: FontWeight.bold, color: AppColors.warning)),
+            Text(maxLabel, style: TextStyle(fontSize: AppSizes.fontXS, color: AppColors.textSecondary)),
+          ],
+        ),
+      ],
+    );
+  }
+}
