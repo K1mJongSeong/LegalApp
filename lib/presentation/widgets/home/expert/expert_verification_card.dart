@@ -12,62 +12,52 @@ class ExpertVerificationCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSizes.paddingL),
       decoration: BoxDecoration(
-        // color: Colors.amber[50],
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppSizes.radiusXL),
-        border: Border.all(color: Colors.amber[200]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.green,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Text(
-              '가입승인 필수',
-              style: TextStyle(
-                fontSize: AppSizes.fontXS,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSizes.paddingM),
           const Text(
-            '전문가 인증을 완료해주세요',
+            '전문가 인증을 완료해 주세요!',
             style: TextStyle(
-              fontSize: AppSizes.fontXL,
+              fontSize: AppSizes.fontL,
               fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: AppSizes.paddingS),
-          const Text(
-            '인증이 완료되면 모든 서비스를 이용할 수 있습니다',
+          const SizedBox(height: AppSizes.paddingXS),
+          Text(
+            '인증이 완료되면 모든 서비스를 이용할 수 있습니다.',
             style: TextStyle(
               fontSize: AppSizes.fontS,
-              color: AppColors.textSecondary,
+              color: Colors.grey[500],
             ),
           ),
           const SizedBox(height: AppSizes.paddingL),
-          // 즉시 인증 버튼
+          // 즉시 인증 옵션
           _VerificationOption(
             icon: Icons.flash_on,
-            iconColor: Colors.grey,
+            iconColor: Colors.grey[600]!,
             title: '신분증 정보로 즉시 인증',
             subtitle: '대한변협 신분증 정보로 즉시 인증',
             onTap: () {
               Navigator.pushNamed(context, AppRoutes.expertCertification);
             },
           ),
-          const SizedBox(height: AppSizes.paddingS),
-          // 서류 인증 버튼
+          Divider(color: Colors.grey[200], height: 1),
+          // 서류 인증 옵션
           _VerificationOption(
             icon: Icons.description_outlined,
-            iconColor: Colors.grey,
-            title: '증빙 서류 제출',
+            iconColor: Colors.grey[600]!,
+            title: '증빙서류 제출',
             subtitle: '등록 증명원 또는 신분증 제출',
             onTap: () {
               Navigator.pushNamed(context, AppRoutes.expertCertification);
@@ -97,24 +87,14 @@ class _VerificationOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(AppSizes.paddingM),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppSizes.radiusL),
-        ),
+      borderRadius: BorderRadius.circular(AppSizes.radiusL),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingM),
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: iconColor),
-            ),
+            Icon(icon, color: iconColor, size: 24),
             const SizedBox(width: AppSizes.paddingM),
             Expanded(
               child: Column(
@@ -124,7 +104,8 @@ class _VerificationOption extends StatelessWidget {
                     title,
                     style: const TextStyle(
                       fontSize: AppSizes.fontM,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -145,26 +126,3 @@ class _VerificationOption extends StatelessWidget {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

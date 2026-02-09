@@ -21,8 +21,6 @@ import '../../../widgets/home/expert/expert_verification_card.dart';
 import '../../../widgets/home/expert/expert_quick_menu.dart';
 
 /// 전문가 홈 Sliver 위젯
-///
-/// SliverMainAxisGroup으로 각 섹션을 개별 Sliver로 구성
 class ExpertHomeSliver extends StatefulWidget {
   final String name;
   final bool isVerified;
@@ -125,11 +123,38 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
   }
 
   Widget _buildProfileCard() {
-    // 로딩 중이든 아니든 항상 동일한 위젯 구조 유지 (높이 일관성)
     return ExpertProfileCard(
       name: widget.name,
       isVerified: widget.isVerified,
       profile: _isLoadingProfile ? null : _profile,
+    );
+  }
+
+  /// 섹션 헤더 위젯 (제목 + 더보기)
+  Widget _buildSectionHeader(String title, {VoidCallback? onMore}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: AppSizes.fontXL,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        if (onMore != null)
+          GestureDetector(
+            onTap: onMore,
+            child: Text(
+              '더보기 >',
+              style: TextStyle(
+                fontSize: AppSizes.fontS,
+                color: Colors.grey[500],
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -155,7 +180,7 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
           child: SizedBox(height: AppSizes.paddingL),
         ),
 
-        // 하단 퀵 메뉴
+        // 퀵 메뉴
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
           sliver: const SliverToBoxAdapter(
@@ -163,7 +188,6 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
           ),
         ),
 
-        // 하단 여백
         const SliverToBoxAdapter(
           child: SizedBox(height: AppSizes.paddingL),
         ),
@@ -176,7 +200,6 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
           ),
         ),
 
-        // 섹션 헤더 후 여백
         const SliverToBoxAdapter(
           child: SizedBox(height: AppSizes.paddingS),
         ),
@@ -202,24 +225,33 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
           ),
 
         // 상담 글 후 여백
-        if (_posts.isNotEmpty)
+        const SliverToBoxAdapter(
+          child: SizedBox(height: AppSizes.paddingL),
+        ),
+
+        // 전문가 인증 섹션 (미인증 시)
+        if (!widget.isVerified) ...[
+          // 섹션 헤더
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+            sliver: SliverToBoxAdapter(
+              child: _buildSectionHeader('전문가 인증'),
+            ),
+          ),
           const SliverToBoxAdapter(
             child: SizedBox(height: AppSizes.paddingM),
           ),
-
-        // 전문가 인증 카드 (미인증 시)
-        if (!widget.isVerified)
+          // 인증 카드
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
             sliver: const SliverToBoxAdapter(
               child: ExpertVerificationCard(),
             ),
           ),
-
-        if (!widget.isVerified)
           const SliverToBoxAdapter(
             child: SizedBox(height: AppSizes.paddingL),
           ),
+        ],
 
         // 추천 카드
         SliverPadding(
@@ -229,7 +261,25 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
           ),
         ),
 
-        // 추천 카드 후 여백
+        const SliverToBoxAdapter(
+          child: SizedBox(height: AppSizes.paddingL),
+        ),
+
+        // 공지사항 섹션 헤더
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
+          sliver: SliverToBoxAdapter(
+            child: _buildSectionHeader(
+              '공지사항',
+              onMore: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('공지사항 목록은 준비 중입니다')),
+                );
+              },
+            ),
+          ),
+        ),
+
         const SliverToBoxAdapter(
           child: SizedBox(height: AppSizes.paddingM),
         ),
@@ -242,9 +292,9 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
           ),
         ),
 
-        // 공지사항 카드 후 여백
+        // 하단 여백
         const SliverToBoxAdapter(
-          child: SizedBox(height: AppSizes.paddingM),
+          child: SizedBox(height: AppSizes.paddingXL),
         ),
       ],
     );
@@ -253,14 +303,13 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
   Widget _buildLoadingConsultation() {
     return Container(
       padding: const EdgeInsets.all(AppSizes.paddingL),
-      margin: const EdgeInsets.only(bottom: AppSizes.paddingM),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppSizes.radiusL),
+        borderRadius: BorderRadius.circular(AppSizes.radiusXL),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
@@ -278,14 +327,13 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
   Widget _buildEmptyConsultation() {
     return Container(
       padding: const EdgeInsets.all(AppSizes.paddingL),
-      margin: const EdgeInsets.only(bottom: AppSizes.paddingM),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppSizes.radiusL),
+        borderRadius: BorderRadius.circular(AppSizes.radiusXL),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
@@ -304,7 +352,6 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
 
   /// Peek Carousel 형태의 상담글 섹션
   Widget _buildConsultationCarousel() {
-    // 다른 섹션과 동일한 카드 너비: 화면 너비 - 양쪽 패딩(paddingM * 2)
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = screenWidth - (AppSizes.paddingM * 3.2);
 
@@ -337,7 +384,6 @@ class _ExpertHomeSliverState extends State<ExpertHomeSliver> {
             },
           ),
         ),
-        // 페이지 인디케이터 (2개 이상일 때만 표시)
         if (_posts.length > 1)
           Padding(
             padding: const EdgeInsets.only(top: AppSizes.paddingS),

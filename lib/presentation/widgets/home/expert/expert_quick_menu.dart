@@ -10,43 +10,52 @@ class ExpertQuickMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _QuickMenuItem(
-          icon: Icons.person_outline,
-          label: '프로필 편집',
-          onTap: () {
-            Navigator.pushNamed(context, AppRoutes.expertDashboard);
-          },
+        Expanded(
+          child: _QuickMenuItem(
+            icon: Icons.person_outline,
+            label: '프로필 편집',
+            onTap: () {
+              Navigator.pushNamed(context, AppRoutes.expertProfileManage);
+            },
+          ),
         ),
-        _QuickMenuItem(
-          icon: Icons.calendar_today_outlined,
-          label: '상담 일정',
-          color: Colors.amber,
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('상담 일정 기능은 준비 중입니다')),
-            );
-          },
+        const SizedBox(width: AppSizes.paddingS),
+        Expanded(
+          child: _QuickMenuItem(
+            icon: Icons.calendar_today_outlined,
+            label: '상담 일정',
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('상담 일정 기능은 준비 중입니다')),
+              );
+            },
+          ),
         ),
-        _QuickMenuItem(
-          icon: Icons.bar_chart_outlined,
-          label: '통계 분석',
-          color: AppColors.primary,
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('통계 분석 기능은 준비 중입니다')),
-            );
-          },
+        const SizedBox(width: AppSizes.paddingS),
+        Expanded(
+          child: _QuickMenuItem(
+            icon: Icons.bar_chart_outlined,
+            label: '통계 분석',
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('통계 분석 기능은 준비 중입니다')),
+              );
+            },
+          ),
         ),
-        _QuickMenuItem(
-          icon: Icons.edit_outlined,
-          label: '포스트 작성',
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('포스트 작성 기능은 준비 중입니다')),
-            );
-          },
+        const SizedBox(width: AppSizes.paddingS),
+        Expanded(
+          child: _QuickMenuItem(
+            icon: Icons.edit_outlined,
+            label: '포스트 작성',
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('포스트 작성 기능은 준비 중입니다')),
+              );
+            },
+          ),
         ),
       ],
     );
@@ -57,13 +66,11 @@ class ExpertQuickMenu extends StatelessWidget {
 class _QuickMenuItem extends StatelessWidget {
   final IconData icon;
   final String label;
-  final Color? color;
   final VoidCallback onTap;
 
   const _QuickMenuItem({
     required this.icon,
     required this.label,
-    this.color,
     required this.onTap,
   });
 
@@ -75,12 +82,13 @@ class _QuickMenuItem extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(14),
+            width: 70,
+            height: 70,
             decoration: BoxDecoration(
-              color: (color ?? Colors.grey).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
+              color: AppColors.textOnPrimary,
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: color ?? Colors.grey[600], size: 28),
+            child: Icon(icon, color: Colors.grey[800], size: 26),
           ),
           const SizedBox(height: 8),
           Text(
