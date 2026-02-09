@@ -70,6 +70,7 @@ class AuthRepositoryImpl implements AuthRepository {
           'profile_image': null,
           'is_expert': false,
           'created_at': DateTime.now().toIso8601String(),
+          'login_provider': 'email',
         };
         await _usersCollection.doc(user.uid).set(userData);
         
