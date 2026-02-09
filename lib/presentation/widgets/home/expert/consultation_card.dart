@@ -115,7 +115,8 @@ class ConsultationCard extends StatelessWidget {
                 );
               },
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                backgroundColor: AppColors.primary,
                 side: BorderSide(color: AppColors.primary),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSizes.radiusL),
