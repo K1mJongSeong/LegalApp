@@ -1,0 +1,314 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1774490595828,
+  "projectRoot": "C:\\Users\\82102\\AndroidStudioProjects\\law_decode",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "assets",
+      "docs",
+      "lib",
+      "test"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "ai-proxy": {
+      "path": "ai-proxy",
+      "purpose": null,
+      "fileCount": 5,
+      "lastAccessed": 1774490595820,
+      "keyFiles": [
+        "index.js",
+        "package-lock.json",
+        "package.json"
+      ]
+    },
+    "android": {
+      "path": "android",
+      "purpose": null,
+      "fileCount": 9,
+      "lastAccessed": 1774490595820,
+      "keyFiles": [
+        "build.gradle.kts",
+        "gradle.properties",
+        "gradlew",
+        "gradlew.bat",
+        "key.properties"
+      ]
+    },
+    "assets": {
+      "path": "assets",
+      "purpose": "Static assets",
+      "fileCount": 7,
+      "lastAccessed": 1774490595820,
+      "keyFiles": [
+        "android_light_sq_SI@1x.png",
+        "android_light_sq_SI@2x.png",
+        "android_light_sq_SI@3x.png",
+        "kakaotalk_sharing_btn_small.png",
+        "kakao_login_medium_wide.png"
+      ]
+    },
+    "build": {
+      "path": "build",
+      "purpose": "Build output",
+      "fileCount": 2,
+      "lastAccessed": 1774490595821,
+      "keyFiles": [
+        "f872507f30e2ff2523f0f1d19160266e.cache.dill.track.dill",
+        "last_build_run.json"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 3,
+      "lastAccessed": 1774490595821,
+      "keyFiles": [
+        "features_summary.md",
+        "firestore_structure.md",
+        "PRD.md"
+      ]
+    },
+    "functions": {
+      "path": "functions",
+      "purpose": null,
+      "fileCount": 5,
+      "lastAccessed": 1774490595821,
+      "keyFiles": [
+        "index.js",
+        "package-lock.json",
+        "package.json"
+      ]
+    },
+    "ios": {
+      "path": "ios",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1774490595821,
+      "keyFiles": []
+    },
+    "lib": {
+      "path": "lib",
+      "purpose": "Library code",
+      "fileCount": 2,
+      "lastAccessed": 1774490595822,
+      "keyFiles": [
+        "firebase_options.dart",
+        "main.dart"
+      ]
+    },
+    "test": {
+      "path": "test",
+      "purpose": "Test files",
+      "fileCount": 1,
+      "lastAccessed": 1774490595822,
+      "keyFiles": [
+        "widget_test.dart"
+      ]
+    },
+    "web": {
+      "path": "web",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1774490595822,
+      "keyFiles": [
+        "favicon.png",
+        "index.html",
+        "manifest.json"
+      ]
+    },
+    "ai-proxy\\node_modules": {
+      "path": "ai-proxy\\node_modules",
+      "purpose": "Dependencies",
+      "fileCount": 1,
+      "lastAccessed": 1774490595823,
+      "keyFiles": []
+    },
+    "android\\app": {
+      "path": "android\\app",
+      "purpose": "Application code",
+      "fileCount": 3,
+      "lastAccessed": 1774490595824,
+      "keyFiles": [
+        "build.gradle.kts",
+        "google-services.json",
+        "lawdecode-release.keystore"
+      ]
+    },
+    "build\\app": {
+      "path": "build\\app",
+      "purpose": "Application code",
+      "fileCount": 0,
+      "lastAccessed": 1774490595824,
+      "keyFiles": []
+    },
+    "functions\\node_modules": {
+      "path": "functions\\node_modules",
+      "purpose": "Dependencies",
+      "fileCount": 1,
+      "lastAccessed": 1774490595825,
+      "keyFiles": []
+    },
+    "lib\\data": {
+      "path": "lib\\data",
+      "purpose": "Data files",
+      "fileCount": 1,
+      "lastAccessed": 1774490595826,
+      "keyFiles": [
+        "data.dart"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "lib\\presentation\\pages\\case_flow\\case_summary_result_page.dart",
+      "accessCount": 26,
+      "lastAccessed": 1774499835565,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\pages\\login\\login_page.dart",
+      "accessCount": 14,
+      "lastAccessed": 1774514715860,
+      "type": "file"
+    },
+    {
+      "path": "lib\\data\\repositories\\auth_repository_impl.dart",
+      "accessCount": 7,
+      "lastAccessed": 1774510751818,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\blocs\\auth\\auth_bloc.dart",
+      "accessCount": 6,
+      "lastAccessed": 1774508835343,
+      "type": "file"
+    },
+    {
+      "path": "pubspec.yaml",
+      "accessCount": 3,
+      "lastAccessed": 1774502967885,
+      "type": "directory"
+    },
+    {
+      "path": "lib\\presentation\\blocs\\auth\\auth_event.dart",
+      "accessCount": 3,
+      "lastAccessed": 1774502976897,
+      "type": "file"
+    },
+    {
+      "path": "lib\\domain\\repositories\\auth_repository.dart",
+      "accessCount": 3,
+      "lastAccessed": 1774508985132,
+      "type": "file"
+    },
+    {
+      "path": "ios\\Runner.xcodeproj\\project.pbxproj",
+      "accessCount": 3,
+      "lastAccessed": 1774514624677,
+      "type": "directory"
+    },
+    {
+      "path": "lib\\presentation\\blocs\\expert_certification\\expert_certification_event.dart",
+      "accessCount": 2,
+      "lastAccessed": 1774490847908,
+      "type": "file"
+    },
+    {
+      "path": "lib\\core\\services\\payapp_service.dart",
+      "accessCount": 2,
+      "lastAccessed": 1774498108971,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\blocs\\auth\\auth_state.dart",
+      "accessCount": 2,
+      "lastAccessed": 1774502279763,
+      "type": "directory"
+    },
+    {
+      "path": "lib\\domain\\entities\\user.dart",
+      "accessCount": 2,
+      "lastAccessed": 1774502287695,
+      "type": "directory"
+    },
+    {
+      "path": "ios\\Flutter\\AppFrameworkInfo.plist",
+      "accessCount": 2,
+      "lastAccessed": 1774514556200,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\blocs\\auth",
+      "accessCount": 1,
+      "lastAccessed": 1774497934780,
+      "type": "directory"
+    },
+    {
+      "path": "lib\\presentation\\widgets\\common\\signup_prompt_dialog.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774499662732,
+      "type": "directory"
+    },
+    {
+      "path": "lib",
+      "accessCount": 1,
+      "lastAccessed": 1774502276235,
+      "type": "directory"
+    },
+    {
+      "path": "lib\\firebase_options.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774502282347,
+      "type": "file"
+    },
+    {
+      "path": "lib\\main.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774502282576,
+      "type": "file"
+    },
+    {
+      "path": "lib\\data\\models",
+      "accessCount": 1,
+      "lastAccessed": 1774502285214,
+      "type": "directory"
+    },
+    {
+      "path": "lib\\data\\models\\user_model.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774502287514,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\pages\\signup\\signup_page.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774502292431,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "514654100338-nqvvp98k4g5gk3h8obtfchpmvbac0g7r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dailyprogress.lawdecode",
+            "certificate_hash": "1774a14f39ffcb8698a556d777ca1b94a0856a82"
+          }
+        },
+        {
           "client_id": "514654100338-cbf3d9u5qbhgmhbrbfn6a64so4e2b0ki.apps.googleusercontent.com",
           "client_type": 3
         }

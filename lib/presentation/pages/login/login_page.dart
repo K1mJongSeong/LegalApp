@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
@@ -234,6 +235,11 @@ class _LoginPageState extends State<LoginPage>
                       const SizedBox(height: AppSizes.paddingS),
                       // 구글 로그인 버튼
                       _buildGoogleLoginButton(),
+                      // 애플 로그인 버튼 (iOS만)
+                      if (Platform.isIOS) ...[
+                        const SizedBox(height: AppSizes.paddingS),
+                        _buildAppleLoginButton(),
+                      ],
                     ],
                   ),
                 ),
@@ -327,6 +333,49 @@ class _LoginPageState extends State<LoginPage>
                 const SizedBox(width: 12),
                 const Text(
                   'Sign in with Google',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAppleLoginButton() {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        return SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton(
+            onPressed: state is AuthLoading
+                ? null
+                : () {
+                    context.read<AuthBloc>().add(
+                          AuthAppleLoginRequested(isExpert: _isExpertTab),
+                        );
+                  },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSizes.radiusL),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.apple, size: 24, color: Colors.white),
+                SizedBox(width: 12),
+                Text(
+                  'Sign in with Apple',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,

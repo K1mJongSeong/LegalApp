@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:equatable/equatable.dart';
-
 /// ExpertCertification Events
 abstract class ExpertCertificationEvent extends Equatable {
   const ExpertCertificationEvent();
@@ -45,6 +44,7 @@ class SubmitInstantCertification extends ExpertCertificationEvent {
   List<Object?> get props =>
       [userId, registrationNumber, idNumber, expertAccountId];
 }
+
 
 
 

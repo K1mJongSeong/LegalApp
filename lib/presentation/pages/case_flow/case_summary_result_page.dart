@@ -22,6 +22,7 @@ import '../../blocs/case/case_event.dart';
 import '../../blocs/case/case_state.dart';
 import '../../widgets/common/signup_prompt_dialog.dart';
 import '../../widgets/common/consultation_post_dialog.dart';
+import '../../../core/services/payapp_service.dart';
 
 /// 사건 요약 결과 페이지
 class CaseSummaryResultPage extends StatefulWidget {
@@ -94,8 +95,11 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
   // 각 질문별 로딩 상태
   List<bool> _questionRefreshLoading = [];
 
-  // 설문조사 완료 여부
+  // 결제 완료 여부
   bool _isSurveyCompleted = false;
+
+  // 결제 요청번호 (PayApp)
+  String? _paymentMulNo;
 
   // 설문조사 문서 ID (콘텐츠 피드백 설문과 연결용)
   String? _surveyDocId;
@@ -612,15 +616,15 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 설문조사 버튼 (설문 미완료 시에만 표시)
+              // 결제 버튼 (결제 미완료 시에만 표시)
               if (!_isSurveyCompleted) ...[
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
-                    onPressed: () => _showSurveyDialog(),
-                    icon: const Icon(Icons.assignment, size: 20),
+                    onPressed: () => _startPayment(),
+                    icon: const Icon(Icons.payment, size: 20),
                     label: const Text(
-                      '설문 조사하고 내용 보기',
+                      '결제하고 내용 보기',
                       style: TextStyle(
                         fontSize: AppSizes.fontM,
                         fontWeight: FontWeight.bold,
@@ -914,10 +918,10 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: const Text('설문조사를 완료해야 질문 리스트를 확인할 수 있습니다.'),
+                          content: const Text('결제를 완료해야 질문 리스트를 확인할 수 있습니다.'),
                           action: SnackBarAction(
-                            label: '설문 참여',
-                            onPressed: () => _showSurveyDialog(),
+                            label: '결제하기',
+                            onPressed: () => _startPayment(),
                           ),
                         ),
                       );
@@ -937,7 +941,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                               Icon(Icons.lock, color: Colors.white, size: 20),
                               SizedBox(width: 8),
                               Text(
-                                '설문조사 후 확인 가능',
+                                '결제 후 확인 가능',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -1307,11 +1311,11 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
     );
   }
 
-  /// 설문 필요 메시지 표시
+  /// 결제 필요 메시지 표시
   void _showSurveyRequiredMessage() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('설문조사를 완료하면 내용을 볼 수 있습니다.'),
+        content: Text('결제를 완료하면 내용을 볼 수 있습니다.'),
         duration: Duration(seconds: 2),
       ),
     );
@@ -1470,7 +1474,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: const Text(
-                                    '설문조사 완료 후 열람 가능',
+                                    '결제 완료 후 열람 가능',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: AppSizes.fontS,
@@ -1511,7 +1515,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                               ? () => _downloadLawPdf(law, detail)
                               : null,
                           icon: Icon(_isSurveyCompleted ? Icons.download : Icons.lock, size: 18),
-                          label: Text(_isSurveyCompleted ? '전체 내용 PDF 다운' : '설문 완료 후 다운로드 가능'),
+                          label: Text(_isSurveyCompleted ? '전체 내용 PDF 다운' : '결제 완료 후 다운로드 가능'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _isSurveyCompleted ? AppColors.primary : Colors.grey,
                             foregroundColor: Colors.white,
@@ -1584,6 +1588,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(40),
+          maxPages: 200,
           build: (context) => [
             // 제목
             pw.Header(
@@ -1936,6 +1941,12 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
 
   /// 판례 상세 팝업 표시
   void _showPrecedentDetailPopup(PrecedentSummary prec) {
+    if (prec.id.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('해당 판례의 상세 정보를 조회할 수 없습니다.')),
+      );
+      return;
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -2063,7 +2074,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                                         borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: const Text(
-                                        '설문조사 완료 후 열람 가능',
+                                        '결제 완료 후 열람 가능',
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: AppSizes.fontS,
@@ -2100,7 +2111,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                               ? () => _downloadPrecedentPdf(snapshot.data!)
                               : null,
                           icon: Icon(_isSurveyCompleted ? Icons.download : Icons.lock, size: 18),
-                          label: Text(_isSurveyCompleted ? '전체 내용 PDF 다운' : '설문 완료 후 다운로드 가능'),
+                          label: Text(_isSurveyCompleted ? '전체 내용 PDF 다운' : '결제 완료 후 다운로드 가능'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _isSurveyCompleted ? AppColors.primary : Colors.grey,
                             foregroundColor: Colors.white,
@@ -2175,6 +2186,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(40),
+          maxPages: 200,
           build: (context) => [
             // 제목
             pw.Header(
@@ -2301,6 +2313,12 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
     PrecedentDetail detail,
     ScrollController scrollController,
   ) {
+    final hasContent = detail.holding.isNotEmpty ||
+        detail.summary.isNotEmpty ||
+        detail.refArticles.isNotEmpty ||
+        detail.refCases.isNotEmpty ||
+        detail.content.isNotEmpty;
+
     return SingleChildScrollView(
       controller: scrollController,
       padding: const EdgeInsets.all(AppSizes.paddingM),
@@ -2318,6 +2336,31 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
           const SizedBox(height: AppSizes.paddingS),
           _buildPrecedentInfoRow('판결유형', detail.verdictType),
           const SizedBox(height: AppSizes.paddingL),
+
+          if (!hasContent)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSizes.paddingL),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: const Column(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.grey, size: 40),
+                  SizedBox(height: 12),
+                  Text(
+                    '해당 판례의 상세 내용을 제공받지 못했습니다.\n국가법령정보센터에서 직접 확인해 주세요.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
           // 판시사항
           if (detail.holding.isNotEmpty) ...[
@@ -2565,6 +2608,153 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
     );
   }
 
+  /// PayApp 결제 시작
+  Future<void> _startPayment() async {
+    // 로그인 확인
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      showDialog(context: context, builder: (_) => const SignupPromptDialog());
+      return;
+    }
+
+    final user = authState.user;
+    String phone = user.phone ?? '';
+
+    // 전화번호가 없으면 입력받기
+    if (phone.isEmpty) {
+      final inputPhone = await showDialog<String>(
+        context: context,
+        builder: (context) {
+          final controller = TextEditingController();
+          return AlertDialog(
+            title: const Text('전화번호 입력'),
+            content: TextField(
+              controller: controller,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                hintText: '010-0000-0000',
+                labelText: '결제 수신 전화번호',
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('취소'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, controller.text),
+                child: const Text('확인'),
+              ),
+            ],
+          );
+        },
+      );
+      if (inputPhone == null || inputPhone.isEmpty || !mounted) return;
+      phone = inputPhone;
+    }
+
+    // 로딩 표시
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final result = await PayAppService.requestPayment(
+        goodName: '사건 요약 상세 열람 - ${widget.categoryName}',
+        price: 1000, // TODO: 실제 금액 설정
+        recvPhone: phone.replaceAll('-', ''),
+        memo: '로디코드 사건 요약 결제',
+        var1: user.id,
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context); // 로딩 닫기
+
+      if (result.success) {
+        _paymentMulNo = result.mulNo;
+
+        // 결제 URL을 브라우저에서 열기
+        final uri = Uri.parse(result.payUrl);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+          // 결제 완료 확인 다이얼로그
+          if (!mounted) return;
+          final confirmed = await showDialog<bool>(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              title: const Text('결제 확인'),
+              content: const Text('결제를 완료하셨나요?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('아니오'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('예, 완료했습니다'),
+                ),
+              ],
+            ),
+          );
+
+          if (confirmed == true && mounted) {
+            // 결제 상태 확인
+            final statusResult = await PayAppService.checkPaymentStatus(
+              mulNo: _paymentMulNo!,
+            );
+
+            if (statusResult.isPaid) {
+              setState(() {
+                _isSurveyCompleted = true;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('결제가 완료되었습니다. 이제 모든 내용을 볼 수 있습니다.'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('결제가 아직 완료되지 않았습니다. 잠시 후 다시 시도해주세요.'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('결제 페이지를 열 수 없습니다.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.errorMessage ?? '결제 요청에 실패했습니다.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // 로딩 닫기
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('결제 오류: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   /// 설문조사 다이얼로그 표시
   Future<void> _showSurveyDialog() async {
     final result = await Navigator.push<String?>(
@@ -2582,7 +2772,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('설문조사를 완료했습니다. 이제 모든 내용을 볼 수 있습니다.'),
+          content: Text('설문조사를 완료했습니다.'),
           backgroundColor: Colors.green,
         ),
       );

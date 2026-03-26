@@ -668,7 +668,15 @@ class PrecedentDetail {
   }
 
   factory PrecedentDetail.fromJsonDirect(Map<String, dynamic> json) {
-    final prec = json['PrecService'] ?? {};
+    var precData = json['PrecService'] ?? {};
+    // API 응답이 중첩 구조일 경우 처리 (PrecService > prec)
+    if (precData is Map && precData.containsKey('prec')) {
+      final inner = precData['prec'];
+      if (inner is Map<String, dynamic>) {
+        precData = inner;
+      }
+    }
+    final prec = precData is Map<String, dynamic> ? precData : <String, dynamic>{};
     return PrecedentDetail(
       id: prec['판례정보일련번호']?.toString() ?? '',
       caseNumber: prec['사건번호'] ?? '',
