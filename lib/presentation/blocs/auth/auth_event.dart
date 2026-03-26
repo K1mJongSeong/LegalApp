@@ -81,6 +81,16 @@ class AuthKakaoLoginRequested extends AuthEvent {
   List<Object?> get props => [isExpert];
 }
 
+/// 애플 로그인 요청
+class AuthAppleLoginRequested extends AuthEvent {
+  final bool isExpert;
+
+  const AuthAppleLoginRequested({this.isExpert = false});
+
+  @override
+  List<Object?> get props => [isExpert];
+}
+
 /// 회원탈퇴 요청
 class AuthDeleteAccountRequested extends AuthEvent {
   final String? password; // 이메일 로그인 사용자용

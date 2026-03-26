@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
+import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../models/user_model.dart';
@@ -266,6 +270,11 @@ class AuthRepositoryImpl implements AuthRepository {
   /// 카카오 로그인
   Future<User> loginWithKakao({bool isExpert = false}) async {
     try {
+      // 디버그: 카카오 SDK 상태 확인
+      debugPrint('🔑 [Kakao] origin: ${await kakao.KakaoSdk.origin}');
+      debugPrint('🔑 [Kakao] appKey: ${kakao.KakaoSdk.appKey}');
+      debugPrint('🔑 [Kakao] redirectUri: kakao${kakao.KakaoSdk.appKey}://oauth');
+
       // 웹 환경이거나 카카오톡 설치 여부 확인 실패 시 카카오 계정 로그인 사용
       bool useKakaoTalk = false;
       if (!kIsWeb) {
@@ -307,12 +316,20 @@ class AuthRepositoryImpl implements AuthRepository {
           password: kakaoPassword,
         );
       } on firebase_auth.FirebaseAuthException catch (e) {
-        if (e.code == 'user-not-found') {
-          // 신규 사용자 - 계정 생성
-          userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
-            email: email,
-            password: kakaoPassword,
-          );
+        if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
+          // 신규 사용자 - 계정 생성 시도
+          try {
+            userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
+              email: email,
+              password: kakaoPassword,
+            );
+          } on firebase_auth.FirebaseAuthException catch (createError) {
+            if (createError.code == 'email-already-in-use') {
+              // 이메일은 존재하지만 비밀번호가 다름 (이메일/비밀번호로 가입한 기존 사용자)
+              throw Exception('이미 이메일로 가입된 계정입니다.\n이메일과 비밀번호로 로그인해주세요.');
+            }
+            rethrow;
+          }
         } else if (e.code == 'wrong-password') {
           // 기존 이메일/비밀번호 사용자 - 카카오 연동 불가
           throw Exception('이미 이메일로 가입된 계정입니다.\n이메일과 비밀번호로 로그인해주세요.');
@@ -358,6 +375,91 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       rethrow;
     }
+  }
+
+  /// 애플 로그인
+  @override
+  Future<User> loginWithApple({bool isExpert = false}) async {
+    try {
+      // nonce 생성 (보안용)
+      final rawNonce = _generateNonce();
+      final nonce = _sha256ofString(rawNonce);
+
+      // Apple 로그인 요청
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: nonce,
+      );
+
+      // Firebase OAuthCredential 생성
+      final oauthCredential = firebase_auth.OAuthProvider('apple.com').credential(
+        idToken: appleCredential.identityToken,
+        rawNonce: rawNonce,
+      );
+
+      // Firebase에 로그인
+      final userCredential = await _firebaseAuth.signInWithCredential(oauthCredential);
+      final user = userCredential.user;
+
+      if (user == null) {
+        throw Exception('Apple 로그인에 실패했습니다');
+      }
+
+      // Apple은 최초 로그인 시에만 이름/이메일 제공
+      final displayName = appleCredential.givenName != null
+          ? '${appleCredential.familyName ?? ''} ${appleCredential.givenName}'.trim()
+          : null;
+      final email = appleCredential.email ?? user.email;
+
+      // Firestore에 사용자 정보 저장/업데이트
+      final doc = await _usersCollection.doc(user.uid).get();
+
+      if (!doc.exists) {
+        final userData = {
+          'email': email ?? '',
+          'name': displayName ?? email?.split('@').first ?? 'Apple 사용자',
+          'phone': null,
+          'profile_image': user.photoURL,
+          'is_expert': isExpert,
+          'created_at': DateTime.now().toIso8601String(),
+          'login_provider': 'apple',
+        };
+        await _usersCollection.doc(user.uid).set(userData);
+
+        return UserModel.fromJson({
+          'id': user.uid,
+          ...userData,
+        });
+      }
+
+      return UserModel.fromJson({
+        'id': user.uid,
+        ...doc.data()!,
+      });
+    } catch (e) {
+      if (e.toString().contains('cancelled') ||
+          e.toString().contains('AuthorizationErrorCode.canceled')) {
+        throw Exception('Apple 로그인이 취소되었습니다');
+      }
+      rethrow;
+    }
+  }
+
+  /// nonce 생성
+  String _generateNonce([int length = 32]) {
+    const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)]).join();
+  }
+
+  /// SHA256 해시
+  String _sha256ofString(String input) {
+    final bytes = utf8.encode(input);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
   }
 
   /// 회원탈퇴
@@ -513,7 +615,8 @@ class AuthRepositoryImpl implements AuthRepository {
   Exception _handleAuthException(firebase_auth.FirebaseAuthException e) {
     switch (e.code) {
       case 'user-not-found':
-        return Exception('등록되지 않은 이메일입니다');
+      case 'invalid-credential':
+        return Exception('등록되지 않은 이메일이거나 비밀번호가 올바르지 않습니다');
       case 'wrong-password':
         return Exception('비밀번호가 올바르지 않습니다');
       case 'email-already-in-use':

@@ -18,6 +18,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthErrorCleared>(_onErrorCleared);
     on<AuthGoogleLoginRequested>(_onGoogleLoginRequested);
     on<AuthKakaoLoginRequested>(_onKakaoLoginRequested);
+    on<AuthAppleLoginRequested>(_onAppleLoginRequested);
     on<AuthDeleteAccountRequested>(_onDeleteAccountRequested);
   }
 
@@ -125,6 +126,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       final user = await _authRepository.loginWithKakao(isExpert: event.isExpert);
+      emit(AuthAuthenticated(user));
+    } catch (e) {
+      emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onAppleLoginRequested(
+    AuthAppleLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final user = await _authRepository.loginWithApple(isExpert: event.isExpert);
       emit(AuthAuthenticated(user));
     } catch (e) {
       emit(AuthError(e.toString().replaceFirst('Exception: ', '')));

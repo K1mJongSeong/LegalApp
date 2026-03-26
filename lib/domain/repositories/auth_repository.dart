@@ -26,6 +26,9 @@ abstract class AuthRepository {
   /// 비밀번호 재설정 이메일 발송
   Future<void> sendPasswordResetEmail(String email);
 
+  /// 애플 로그인
+  Future<User> loginWithApple({bool isExpert = false});
+
   /// 인증 상태 스트림
   Stream<User?> get authStateChanges;
 }

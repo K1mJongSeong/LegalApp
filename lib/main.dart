@@ -77,6 +77,9 @@ void main() async {
           javaScriptAppKey: kakaoJsAppKey,
         );
         debugPrint('✅ Kakao SDK initialized (Mobile)');
+        // 디버그: 실제 키 해시 출력
+        final origin = await KakaoSdk.origin;
+        debugPrint('🔑 Kakao Key Hash (origin): $origin');
       } else {
         debugPrint('⚠️ Kakao SDK not initialized: KAKAO_NATIVE_APP_KEY not found in .env');
       }
