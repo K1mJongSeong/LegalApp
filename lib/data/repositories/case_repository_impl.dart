@@ -170,4 +170,19 @@ class CaseRepositoryImpl implements CaseRepository {
       throw Exception('결제 상태 업데이트에 실패했습니다');
     }
   }
+
+  @override
+  Future<void> saveAnalysisResult({
+    required String caseId,
+    required Map<String, dynamic> analysisResult,
+  }) async {
+    try {
+      await _casesCollection.doc(caseId).update({
+        'analysis_result': analysisResult,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      throw Exception('분석 결과 저장에 실패했습니다');
+    }
+  }
 }

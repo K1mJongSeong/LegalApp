@@ -9,6 +9,7 @@ class LegalCase {
   final CaseStatus status;
   final Expert? assignedExpert;
   final bool isPaid;
+  final Map<String, dynamic>? analysisResult;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -22,6 +23,7 @@ class LegalCase {
     this.status = CaseStatus.pending,
     this.assignedExpert,
     this.isPaid = false,
+    this.analysisResult,
     required this.createdAt,
     this.updatedAt,
   });
@@ -36,6 +38,7 @@ class LegalCase {
     CaseStatus? status,
     Expert? assignedExpert,
     bool? isPaid,
+    Map<String, dynamic>? analysisResult,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -49,6 +52,7 @@ class LegalCase {
       status: status ?? this.status,
       assignedExpert: assignedExpert ?? this.assignedExpert,
       isPaid: isPaid ?? this.isPaid,
+      analysisResult: analysisResult ?? this.analysisResult,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

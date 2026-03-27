@@ -362,6 +362,7 @@ class _SummaryPageState extends State<SummaryPage> {
                       description: caseItem.description,
                       urgency: caseItem.urgency,
                       isPaid: true,
+                      caseId: caseItem.id,
                     ),
                   ),
                 );

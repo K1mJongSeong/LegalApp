@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../data/repositories/case_repository_impl.dart';
 import 'case_event.dart';
@@ -16,6 +17,7 @@ class CaseBloc extends Bloc<CaseEvent, CaseState> {
     on<CaseExpertAssigned>(_onExpertAssigned);
     on<CaseDeleteRequested>(_onDeleteRequested);
     on<CasePaymentUpdated>(_onPaymentUpdated);
+    on<CaseAnalysisResultSaved>(_onAnalysisResultSaved);
     on<CaseErrorCleared>(_onErrorCleared);
   }
 
@@ -108,6 +110,21 @@ class CaseBloc extends Bloc<CaseEvent, CaseState> {
       );
     } catch (e) {
       emit(CaseError(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onAnalysisResultSaved(
+    CaseAnalysisResultSaved event,
+    Emitter<CaseState> emit,
+  ) async {
+    try {
+      await _caseRepository.saveAnalysisResult(
+        caseId: event.caseId,
+        analysisResult: event.analysisResult,
+      );
+    } catch (e) {
+      // 분석 결과 저장 실패는 조용히 처리 (핵심 플로우 방해 방지)
+      debugPrint('분석 결과 저장 실패: $e');
     }
   }
 

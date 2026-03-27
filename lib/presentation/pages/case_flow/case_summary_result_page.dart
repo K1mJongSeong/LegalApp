@@ -17,6 +17,7 @@ import '../../../core/services/law_api_service.dart';
 import '../../../core/router/app_router.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_state.dart';
+import '../../../data/repositories/case_repository_impl.dart';
 import '../../blocs/case/case_bloc.dart';
 import '../../blocs/case/case_event.dart';
 import '../../blocs/case/case_state.dart';
@@ -39,6 +40,7 @@ class CaseSummaryResultPage extends StatefulWidget {
   final bool freeConsultation;
   final String? availableTime;
   final bool isPaid;
+  final String? caseId;
 
   const CaseSummaryResultPage({
     super.key,
@@ -55,6 +57,7 @@ class CaseSummaryResultPage extends StatefulWidget {
     this.freeConsultation = false,
     this.availableTime,
     this.isPaid = false,
+    this.caseId,
   });
 
   @override
@@ -114,6 +117,8 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
       final authState = context.read<AuthBloc>().state;
       if (authState is! AuthAuthenticated) {
         _showSignupPrompt();
+      } else if (widget.isPaid && widget.caseId != null) {
+        _loadFromDb();
       } else {
         _analyzCase();
         _loadExpertCount();
@@ -185,6 +190,107 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
     } catch (e) {
       // 오류 시 0으로 유지
       debugPrint('Expert count load error: $e');
+    }
+  }
+
+  /// 분석 결과를 DB에 저장
+  void _saveAnalysisResultToDb(String caseId) {
+    if (_result == null) return;
+
+    final analysisData = <String, dynamic>{
+      'summary': _result!.summary,
+      'relatedLaws': _result!.relatedLaws
+          .map((e) => {
+                'lawName': e.lawName,
+                'article': e.article,
+                'title': e.title,
+                'content': e.content,
+              })
+          .toList(),
+      'similarCases': _result!.similarCases
+          .map((e) => {
+                'caseNumber': e.caseNumber,
+                'court': e.court,
+                'summary': e.summary,
+              })
+          .toList(),
+      'expertCount': _result!.expertCount,
+      'expertDescription': _result!.expertDescription,
+      'searchKeywords': _result!.searchKeywords,
+      'consultationQuestions': _consultationQuestions,
+    };
+
+    context.read<CaseBloc>().add(CaseAnalysisResultSaved(
+      caseId: caseId,
+      analysisResult: analysisData,
+    ));
+  }
+
+  /// DB에서 저장된 분석 결과를 로드 (재방문 시)
+  Future<void> _loadFromDb() async {
+    try {
+      final caseRepo = CaseRepositoryImpl();
+      final legalCase = await caseRepo.getCaseById(widget.caseId!);
+
+      if (legalCase.analysisResult != null) {
+        final data = legalCase.analysisResult!;
+        setState(() {
+          _result = CaseSummaryResult(
+            summary: data['summary'] as String? ?? '',
+            relatedLaws: (data['relatedLaws'] as List<dynamic>?)
+                    ?.map((e) => RelatedLaw(
+                          lawName: e['lawName'] as String? ?? '',
+                          article: e['article'] as String? ?? '',
+                          title: e['title'] as String? ?? '',
+                          content: e['content'] as String? ?? '',
+                        ))
+                    .toList() ??
+                [],
+            similarCases: (data['similarCases'] as List<dynamic>?)
+                    ?.map((e) => SimilarCase(
+                          caseNumber: e['caseNumber'] as String? ?? '',
+                          court: e['court'] as String? ?? '',
+                          summary: e['summary'] as String? ?? '',
+                        ))
+                    .toList() ??
+                [],
+            expertCount: data['expertCount'] as int? ?? 0,
+            expertDescription: data['expertDescription'] as String? ?? '',
+            searchKeywords: (data['searchKeywords'] as List<dynamic>?)
+                    ?.map((e) => e.toString())
+                    .toList() ??
+                [],
+          );
+          _summaryController.text = _result!.summary;
+          _isLoading = false;
+
+          // 저장된 상담 질문 복원
+          if (data['consultationQuestions'] != null) {
+            _consultationQuestions = (data['consultationQuestions'] as List<dynamic>)
+                .map((e) => e.toString())
+                .toList();
+            _questionRefreshCounts = List.filled(_consultationQuestions.length, 3);
+            _questionRefreshLoading = List.filled(_consultationQuestions.length, false);
+          }
+        });
+
+        // 법령/판례는 API에서 다시 로드 (캐시 없음)
+        _loadLawsFromApi();
+        _loadPrecedentsFromApi();
+        _loadExpertCount();
+
+        if (_consultationQuestions.isEmpty) {
+          _loadConsultationQuestions();
+        }
+      } else {
+        // 분석 결과가 DB에 없으면 새로 분석
+        _analyzCase();
+        _loadExpertCount();
+      }
+    } catch (e) {
+      // DB 로드 실패 시 새로 분석
+      _analyzCase();
+      _loadExpertCount();
     }
   }
 
@@ -490,6 +596,12 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
             _isCaseSaved = true;
             _savedCaseId = state.legalCase.id;
           });
+
+          // 분석 결과를 DB에 저장
+          if (_result != null) {
+            _saveAnalysisResultToDb(state.legalCase.id);
+          }
+
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('✅ 사건이 저장되었습니다'),

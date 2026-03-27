@@ -87,6 +87,20 @@ class CasePaymentUpdated extends CaseEvent {
   List<Object?> get props => [caseId, isPaid];
 }
 
+/// 분석 결과 저장
+class CaseAnalysisResultSaved extends CaseEvent {
+  final String caseId;
+  final Map<String, dynamic> analysisResult;
+
+  const CaseAnalysisResultSaved({
+    required this.caseId,
+    required this.analysisResult,
+  });
+
+  @override
+  List<Object?> get props => [caseId, analysisResult];
+}
+
 /// 에러 초기화
 class CaseErrorCleared extends CaseEvent {}
 

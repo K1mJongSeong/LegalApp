@@ -12,6 +12,7 @@ class LegalCaseModel extends LegalCase {
     super.status,
     super.assignedExpert,
     super.isPaid,
+    super.analysisResult,
     required super.createdAt,
     super.updatedAt,
   });
@@ -32,6 +33,7 @@ class LegalCaseModel extends LegalCase {
           ? ExpertModel.fromJson(json['assigned_expert'] as Map<String, dynamic>)
           : null,
       isPaid: json['is_paid'] as bool? ?? false,
+      analysisResult: json['analysis_result'] as Map<String, dynamic>?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String)
@@ -52,6 +54,7 @@ class LegalCaseModel extends LegalCase {
           ? ExpertModel.fromExpert(assignedExpert!).toJson()
           : null,
       'is_paid': isPaid,
+      'analysis_result': analysisResult,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
@@ -68,6 +71,7 @@ class LegalCaseModel extends LegalCase {
       status: legalCase.status,
       assignedExpert: legalCase.assignedExpert,
       isPaid: legalCase.isPaid,
+      analysisResult: legalCase.analysisResult,
       createdAt: legalCase.createdAt,
       updatedAt: legalCase.updatedAt,
     );
