@@ -185,8 +185,8 @@
   "hotPaths": [
     {
       "path": "lib\\presentation\\pages\\case_flow\\case_summary_result_page.dart",
-      "accessCount": 29,
-      "lastAccessed": 1774602866665,
+      "accessCount": 52,
+      "lastAccessed": 1774618994335,
       "type": "directory"
     },
     {
@@ -197,56 +197,62 @@
     },
     {
       "path": "lib\\core\\services\\payapp_service.dart",
-      "accessCount": 9,
-      "lastAccessed": 1774603792462,
+      "accessCount": 12,
+      "lastAccessed": 1774608483185,
       "type": "file"
     },
     {
       "path": "lib\\data\\models\\legal_case_model.dart",
-      "accessCount": 7,
-      "lastAccessed": 1774601069668,
-      "type": "file"
-    },
-    {
-      "path": "lib\\presentation\\pages\\summary\\summary_page.dart",
-      "accessCount": 5,
-      "lastAccessed": 1774601689926,
-      "type": "file"
-    },
-    {
-      "path": "lib\\domain\\entities\\legal_case.dart",
-      "accessCount": 4,
-      "lastAccessed": 1774600397588,
+      "accessCount": 12,
+      "lastAccessed": 1774617959209,
       "type": "file"
     },
     {
       "path": "lib\\presentation\\blocs\\case\\case_bloc.dart",
-      "accessCount": 4,
-      "lastAccessed": 1774601449994,
+      "accessCount": 8,
+      "lastAccessed": 1774618439682,
       "type": "file"
     },
     {
-      "path": "lib\\presentation\\widgets\\common\\consultation_cases_bottom_sheet.dart",
-      "accessCount": 4,
-      "lastAccessed": 1774605101396,
+      "path": "lib\\presentation\\pages\\summary\\summary_page.dart",
+      "accessCount": 8,
+      "lastAccessed": 1774618827671,
       "type": "file"
     },
     {
-      "path": "lib\\domain\\repositories\\case_repository.dart",
-      "accessCount": 3,
-      "lastAccessed": 1774601083693,
+      "path": "lib\\domain\\entities\\legal_case.dart",
+      "accessCount": 7,
+      "lastAccessed": 1774617862065,
       "type": "file"
     },
     {
       "path": "lib\\data\\repositories\\case_repository_impl.dart",
-      "accessCount": 3,
-      "lastAccessed": 1774601101670,
+      "accessCount": 7,
+      "lastAccessed": 1774618686375,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\pages\\login\\login_page.dart",
+      "accessCount": 5,
+      "lastAccessed": 1774608476400,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\widgets\\common\\consultation_cases_bottom_sheet.dart",
+      "accessCount": 5,
+      "lastAccessed": 1774608489252,
+      "type": "file"
+    },
+    {
+      "path": "lib\\domain\\repositories\\case_repository.dart",
+      "accessCount": 4,
+      "lastAccessed": 1774617967434,
       "type": "file"
     },
     {
       "path": "lib\\presentation\\blocs\\case\\case_event.dart",
-      "accessCount": 3,
-      "lastAccessed": 1774601166754,
+      "accessCount": 4,
+      "lastAccessed": 1774618211924,
       "type": "file"
     },
     {
@@ -286,6 +292,24 @@
       "type": "file"
     },
     {
+      "path": "lib\\presentation\\pages\\home\\home_page.dart",
+      "accessCount": 2,
+      "lastAccessed": 1774608476218,
+      "type": "file"
+    },
+    {
+      "path": "lib\\core\\router\\app_router.dart",
+      "accessCount": 2,
+      "lastAccessed": 1774608477237,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\pages\\consultation_cases\\consultation_post_detail_page.dart",
+      "accessCount": 2,
+      "lastAccessed": 1774608521553,
+      "type": "file"
+    },
+    {
       "path": "lib\\data\\models\\service_fee_model.dart",
       "accessCount": 1,
       "lastAccessed": 1774599998305,
@@ -296,12 +320,6 @@
       "accessCount": 1,
       "lastAccessed": 1774600000407,
       "type": "directory"
-    },
-    {
-      "path": "lib\\core\\router\\app_router.dart",
-      "accessCount": 1,
-      "lastAccessed": 1774604882938,
-      "type": "file"
     },
     {
       "path": "lib\\presentation\\pages\\my_case\\my_case_page.dart",
@@ -358,12 +376,6 @@
       "type": "file"
     },
     {
-      "path": "lib\\presentation\\pages\\home\\home_page.dart",
-      "accessCount": 1,
-      "lastAccessed": 1774604895170,
-      "type": "file"
-    },
-    {
       "path": "lib\\presentation\\widgets\\home\\expert\\consultation_section_header.dart",
       "accessCount": 1,
       "lastAccessed": 1774604895847,
@@ -394,10 +406,10 @@
       "type": "file"
     },
     {
-      "path": "lib\\presentation\\pages\\consultation_cases\\consultation_post_detail_page.dart",
+      "path": "lib\\presentation",
       "accessCount": 1,
-      "lastAccessed": 1774605049477,
-      "type": "file"
+      "lastAccessed": 1774608528436,
+      "type": "directory"
     }
   ],
   "userDirectives": []

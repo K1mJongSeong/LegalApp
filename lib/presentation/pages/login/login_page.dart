@@ -1,4 +1,4 @@
-import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
@@ -236,7 +236,7 @@ class _LoginPageState extends State<LoginPage>
                       // 구글 로그인 버튼
                       _buildGoogleLoginButton(),
                       // 애플 로그인 버튼 (iOS만)
-                      if (Platform.isIOS) ...[
+                      if (defaultTargetPlatform == TargetPlatform.iOS) ...[
                         const SizedBox(height: AppSizes.paddingS),
                         _buildAppleLoginButton(),
                       ],

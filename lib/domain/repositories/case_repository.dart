@@ -34,6 +34,12 @@ abstract class CaseRepository {
     required String caseId,
     required bool isPaid,
   });
+
+  /// 분석 결과 저장
+  Future<void> saveAnalysisResult({
+    required String caseId,
+    required Map<String, dynamic> analysisResult,
+  });
 }
 
 

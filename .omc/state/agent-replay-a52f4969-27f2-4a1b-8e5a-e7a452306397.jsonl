@@ -2,3 +2,5 @@
 {"t":0,"agent":"a0da0db","agent_type":"Explore","event":"agent_stop","success":true,"duration_ms":83977}
 {"t":0,"agent":"a8cb689","agent_type":"Explore","event":"agent_start","parent_mode":"none"}
 {"t":0,"agent":"a8cb689","agent_type":"Explore","event":"agent_stop","success":true,"duration_ms":33783}
+{"t":0,"agent":"a7c5d9e","agent_type":"ux-researcher","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"a7c5d9e","agent_type":"ux-researcher","event":"agent_stop","success":true,"duration_ms":173499}
