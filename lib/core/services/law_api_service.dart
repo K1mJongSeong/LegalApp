@@ -261,6 +261,11 @@ class LawApiService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+      // API가 200을 반환하지만 판례가 없는 경우 처리
+      if (data.containsKey('Law') && !data.containsKey('PrecService')) {
+        debugPrint('📋 판례 상세 조회 실패: 해당 판례일련번호($id)에 대한 상세 정보 없음');
+        throw Exception('해당 판례의 상세 정보를 조회할 수 없습니다.');
+      }
       return PrecedentDetail.fromJsonDirect(data);
     } else {
       throw Exception('판례 조회 실패: ${response.statusCode}');

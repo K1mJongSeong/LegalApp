@@ -38,6 +38,7 @@ class CaseSummaryResultPage extends StatefulWidget {
   final String? consultationFee;
   final bool freeConsultation;
   final String? availableTime;
+  final bool isPaid;
 
   const CaseSummaryResultPage({
     super.key,
@@ -53,6 +54,7 @@ class CaseSummaryResultPage extends StatefulWidget {
     this.consultationFee,
     this.freeConsultation = false,
     this.availableTime,
+    this.isPaid = false,
   });
 
   @override
@@ -96,7 +98,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
   List<bool> _questionRefreshLoading = [];
 
   // 결제 완료 여부
-  bool _isSurveyCompleted = false;
+  late bool _isSurveyCompleted = widget.isPaid;
 
   // 결제 요청번호 (PayApp)
   String? _paymentMulNo;
@@ -140,7 +142,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
   
   /// 사건을 Firebase에 저장
   Future<void> _saveCase() async {
-    if (_isCaseSaved) {
+    if (_isCaseSaved || widget.isPaid) {
       debugPrint('📌 Case already saved, skipping...');
       return;
     }
@@ -2702,29 +2704,26 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
           );
 
           if (confirmed == true && mounted) {
-            // 결제 상태 확인
-            final statusResult = await PayAppService.checkPaymentStatus(
-              mulNo: _paymentMulNo!,
-            );
+            // TODO: 추후 Firebase Cloud Functions + feedbackUrl 웹훅으로 서버 검증 전환
+            // 현재는 PayApp API에 결제 상태 조회 cmd가 없으므로 사용자 확인 기반으로 처리
+            setState(() {
+              _isSurveyCompleted = true;
+            });
 
-            if (statusResult.isPaid) {
-              setState(() {
-                _isSurveyCompleted = true;
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('결제가 완료되었습니다. 이제 모든 내용을 볼 수 있습니다.'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('결제가 아직 완료되지 않았습니다. 잠시 후 다시 시도해주세요.'),
-                  backgroundColor: Colors.orange,
-                ),
-              );
+            // Firebase에 결제 상태 저장
+            if (_savedCaseId != null) {
+              context.read<CaseBloc>().add(CasePaymentUpdated(
+                caseId: _savedCaseId!,
+                isPaid: true,
+              ));
             }
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('결제가 완료되었습니다. 이제 모든 내용을 볼 수 있습니다.'),
+                backgroundColor: Colors.green,
+              ),
+            );
           }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(

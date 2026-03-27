@@ -4,7 +4,7 @@ class PayAppService {
   static const String _apiUrl = 'https://api.payapp.kr/oapi/apiLoad.html';
 
   /// PayApp 판매자 아이디 (PayApp 가입 후 발급)
-  static const String sellerId = 'payapptest'; //테스트 아이디 : payapptest
+  static const String sellerId = 'miaer789'; //테스트 아이디 : payapptest
 
   /// 결제 요청을 생성하고 결제 URL을 반환합니다.
   ///
@@ -75,46 +75,7 @@ class PayAppService {
     }
   }
 
-  /// 결제 상태를 확인합니다.
-  ///
-  /// [mulNo] 결제요청번호
-  static Future<PayAppStatusResult> checkPaymentStatus({
-    required String mulNo,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse(_apiUrl),
-        body: {
-          'cmd': 'paycheck',
-          'userid': sellerId,
-          'mul_no': mulNo,
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final params = Uri.splitQueryString(response.body);
-        final state = params['state'];
-        final payState = params['pay_state'];
-
-        // pay_state: 4 = 결제완료
-        if (state == '1' && payState == '4') {
-          return PayAppStatusResult(
-            success: true,
-            isPaid: true,
-          );
-        } else {
-          return PayAppStatusResult(
-            success: true,
-            isPaid: false,
-          );
-        }
-      } else {
-        return PayAppStatusResult(success: false, isPaid: false);
-      }
-    } catch (e) {
-      return PayAppStatusResult(success: false, isPaid: false);
-    }
-  }
+  // TODO: 추후 Firebase Cloud Functions + feedbackUrl 웹훅으로 서버 기반 결제 검증 구현
 }
 
 class PayAppResult {
@@ -128,15 +89,5 @@ class PayAppResult {
     this.mulNo = '',
     this.payUrl = '',
     this.errorMessage,
-  });
-}
-
-class PayAppStatusResult {
-  final bool success;
-  final bool isPaid;
-
-  PayAppStatusResult({
-    required this.success,
-    required this.isPaid,
   });
 }
