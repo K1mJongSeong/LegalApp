@@ -8,6 +8,7 @@ import '../../blocs/case/case_bloc.dart';
 import '../../blocs/case/case_event.dart';
 import '../../blocs/case/case_state.dart';
 import '../../widgets/common/primary_button.dart';
+import '../case_flow/case_summary_result_page.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/empty_state_widget.dart';
@@ -347,6 +348,27 @@ class _SummaryPageState extends State<SummaryPage> {
             ],
           ),
           const SizedBox(height: AppSizes.paddingXL),
+          if (caseItem.isPaid)
+            PrimaryButton(
+              text: '사건 분석 결과 다시 보기',
+              icon: Icons.description,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CaseSummaryResultPage(
+                      category: caseItem.category,
+                      categoryName: _getCategoryLabel(caseItem.category),
+                      description: caseItem.description,
+                      urgency: caseItem.urgency,
+                      isPaid: true,
+                    ),
+                  ),
+                );
+              },
+            ),
+          if (caseItem.isPaid)
+            const SizedBox(height: AppSizes.paddingM),
           if (caseItem.assignedExpert != null)
             PrimaryButton(
               text: '전문가에게 메시지 보내기',

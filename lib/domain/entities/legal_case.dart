@@ -8,6 +8,7 @@ class LegalCase {
   final String description;
   final CaseStatus status;
   final Expert? assignedExpert;
+  final bool isPaid;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -20,6 +21,7 @@ class LegalCase {
     required this.description,
     this.status = CaseStatus.pending,
     this.assignedExpert,
+    this.isPaid = false,
     required this.createdAt,
     this.updatedAt,
   });
@@ -33,6 +35,7 @@ class LegalCase {
     String? description,
     CaseStatus? status,
     Expert? assignedExpert,
+    bool? isPaid,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -45,6 +48,7 @@ class LegalCase {
       description: description ?? this.description,
       status: status ?? this.status,
       assignedExpert: assignedExpert ?? this.assignedExpert,
+      isPaid: isPaid ?? this.isPaid,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

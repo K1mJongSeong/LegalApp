@@ -9,6 +9,7 @@ import '../../../data/repositories/consultation_post_repository_impl.dart';
 import '../../../data/datasources/consultation_post_remote_datasource.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_state.dart';
+import '../../pages/consultation_cases/consultation_post_detail_page.dart';
 
 /// 상담 사례 바텀 시트
 class ConsultationCasesBottomSheet extends StatefulWidget {
@@ -190,7 +191,18 @@ class _ConsultationCasesBottomSheetState extends State<ConsultationCasesBottomSh
                         shrinkWrap: true,
                         itemCount: _posts.length,
                         itemBuilder: (context, index) {
-                          return _buildConsultationCaseCard(_posts[index]);
+                          final post = _posts[index];
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ConsultationPostDetailPage(post: post),
+                                ),
+                              );
+                            },
+                            child: _buildConsultationCaseCard(post),
+                          );
                         },
                       ),
           ),

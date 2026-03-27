@@ -28,6 +28,12 @@ abstract class CaseRepository {
     required String caseId,
     required int expertId,
   });
+
+  /// 결제 상태 업데이트
+  Future<void> updatePaymentStatus({
+    required String caseId,
+    required bool isPaid,
+  });
 }
 
 

@@ -155,4 +155,19 @@ class CaseRepositoryImpl implements CaseRepository {
       throw Exception('전문가 배정에 실패했습니다');
     }
   }
+
+  @override
+  Future<void> updatePaymentStatus({
+    required String caseId,
+    required bool isPaid,
+  }) async {
+    try {
+      await _casesCollection.doc(caseId).update({
+        'is_paid': isPaid,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      throw Exception('결제 상태 업데이트에 실패했습니다');
+    }
+  }
 }

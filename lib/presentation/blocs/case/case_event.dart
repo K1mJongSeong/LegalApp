@@ -73,6 +73,20 @@ class CaseDeleteRequested extends CaseEvent {
   List<Object?> get props => [caseId];
 }
 
+/// 결제 상태 업데이트
+class CasePaymentUpdated extends CaseEvent {
+  final String caseId;
+  final bool isPaid;
+
+  const CasePaymentUpdated({
+    required this.caseId,
+    required this.isPaid,
+  });
+
+  @override
+  List<Object?> get props => [caseId, isPaid];
+}
+
 /// 에러 초기화
 class CaseErrorCleared extends CaseEvent {}
 

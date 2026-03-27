@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1774490595828,
+  "lastScanned": 1774591899541,
   "projectRoot": "C:\\Users\\82102\\AndroidStudioProjects\\law_decode",
   "techStack": {
     "languages": [],
@@ -38,7 +38,7 @@
       "path": "ai-proxy",
       "purpose": null,
       "fileCount": 5,
-      "lastAccessed": 1774490595820,
+      "lastAccessed": 1774591899531,
       "keyFiles": [
         "index.js",
         "package-lock.json",
@@ -49,7 +49,7 @@
       "path": "android",
       "purpose": null,
       "fileCount": 9,
-      "lastAccessed": 1774490595820,
+      "lastAccessed": 1774591899532,
       "keyFiles": [
         "build.gradle.kts",
         "gradle.properties",
@@ -62,7 +62,7 @@
       "path": "assets",
       "purpose": "Static assets",
       "fileCount": 7,
-      "lastAccessed": 1774490595820,
+      "lastAccessed": 1774591899532,
       "keyFiles": [
         "android_light_sq_SI@1x.png",
         "android_light_sq_SI@2x.png",
@@ -75,7 +75,7 @@
       "path": "build",
       "purpose": "Build output",
       "fileCount": 2,
-      "lastAccessed": 1774490595821,
+      "lastAccessed": 1774591899532,
       "keyFiles": [
         "f872507f30e2ff2523f0f1d19160266e.cache.dill.track.dill",
         "last_build_run.json"
@@ -85,7 +85,7 @@
       "path": "docs",
       "purpose": "Documentation",
       "fileCount": 3,
-      "lastAccessed": 1774490595821,
+      "lastAccessed": 1774591899533,
       "keyFiles": [
         "features_summary.md",
         "firestore_structure.md",
@@ -96,7 +96,7 @@
       "path": "functions",
       "purpose": null,
       "fileCount": 5,
-      "lastAccessed": 1774490595821,
+      "lastAccessed": 1774591899534,
       "keyFiles": [
         "index.js",
         "package-lock.json",
@@ -107,14 +107,14 @@
       "path": "ios",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1774490595821,
+      "lastAccessed": 1774591899534,
       "keyFiles": []
     },
     "lib": {
       "path": "lib",
       "purpose": "Library code",
       "fileCount": 2,
-      "lastAccessed": 1774490595822,
+      "lastAccessed": 1774591899534,
       "keyFiles": [
         "firebase_options.dart",
         "main.dart"
@@ -124,7 +124,7 @@
       "path": "test",
       "purpose": "Test files",
       "fileCount": 1,
-      "lastAccessed": 1774490595822,
+      "lastAccessed": 1774591899534,
       "keyFiles": [
         "widget_test.dart"
       ]
@@ -133,7 +133,7 @@
       "path": "web",
       "purpose": null,
       "fileCount": 3,
-      "lastAccessed": 1774490595822,
+      "lastAccessed": 1774591899534,
       "keyFiles": [
         "favicon.png",
         "index.html",
@@ -144,14 +144,14 @@
       "path": "ai-proxy\\node_modules",
       "purpose": "Dependencies",
       "fileCount": 1,
-      "lastAccessed": 1774490595823,
+      "lastAccessed": 1774591899535,
       "keyFiles": []
     },
     "android\\app": {
       "path": "android\\app",
       "purpose": "Application code",
       "fileCount": 3,
-      "lastAccessed": 1774490595824,
+      "lastAccessed": 1774591899536,
       "keyFiles": [
         "build.gradle.kts",
         "google-services.json",
@@ -162,21 +162,21 @@
       "path": "build\\app",
       "purpose": "Application code",
       "fileCount": 0,
-      "lastAccessed": 1774490595824,
+      "lastAccessed": 1774591899536,
       "keyFiles": []
     },
     "functions\\node_modules": {
       "path": "functions\\node_modules",
       "purpose": "Dependencies",
       "fileCount": 1,
-      "lastAccessed": 1774490595825,
+      "lastAccessed": 1774591899537,
       "keyFiles": []
     },
     "lib\\data": {
       "path": "lib\\data",
       "purpose": "Data files",
       "fileCount": 1,
-      "lastAccessed": 1774490595826,
+      "lastAccessed": 1774591899537,
       "keyFiles": [
         "data.dart"
       ]
@@ -185,128 +185,218 @@
   "hotPaths": [
     {
       "path": "lib\\presentation\\pages\\case_flow\\case_summary_result_page.dart",
-      "accessCount": 26,
-      "lastAccessed": 1774499835565,
-      "type": "file"
-    },
-    {
-      "path": "lib\\presentation\\pages\\login\\login_page.dart",
-      "accessCount": 14,
-      "lastAccessed": 1774514715860,
-      "type": "file"
-    },
-    {
-      "path": "lib\\data\\repositories\\auth_repository_impl.dart",
-      "accessCount": 7,
-      "lastAccessed": 1774510751818,
-      "type": "file"
-    },
-    {
-      "path": "lib\\presentation\\blocs\\auth\\auth_bloc.dart",
-      "accessCount": 6,
-      "lastAccessed": 1774508835343,
-      "type": "file"
-    },
-    {
-      "path": "pubspec.yaml",
-      "accessCount": 3,
-      "lastAccessed": 1774502967885,
+      "accessCount": 29,
+      "lastAccessed": 1774602866665,
       "type": "directory"
     },
     {
-      "path": "lib\\presentation\\blocs\\auth\\auth_event.dart",
-      "accessCount": 3,
-      "lastAccessed": 1774502976897,
-      "type": "file"
-    },
-    {
-      "path": "lib\\domain\\repositories\\auth_repository.dart",
-      "accessCount": 3,
-      "lastAccessed": 1774508985132,
-      "type": "file"
-    },
-    {
-      "path": "ios\\Runner.xcodeproj\\project.pbxproj",
-      "accessCount": 3,
-      "lastAccessed": 1774514624677,
+      "path": "lib\\core\\services\\law_api_service.dart",
+      "accessCount": 15,
+      "lastAccessed": 1774603804343,
       "type": "directory"
-    },
-    {
-      "path": "lib\\presentation\\blocs\\expert_certification\\expert_certification_event.dart",
-      "accessCount": 2,
-      "lastAccessed": 1774490847908,
-      "type": "file"
     },
     {
       "path": "lib\\core\\services\\payapp_service.dart",
+      "accessCount": 9,
+      "lastAccessed": 1774603792462,
+      "type": "file"
+    },
+    {
+      "path": "lib\\data\\models\\legal_case_model.dart",
+      "accessCount": 7,
+      "lastAccessed": 1774601069668,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\pages\\summary\\summary_page.dart",
+      "accessCount": 5,
+      "lastAccessed": 1774601689926,
+      "type": "file"
+    },
+    {
+      "path": "lib\\domain\\entities\\legal_case.dart",
+      "accessCount": 4,
+      "lastAccessed": 1774600397588,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\blocs\\case\\case_bloc.dart",
+      "accessCount": 4,
+      "lastAccessed": 1774601449994,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\widgets\\common\\consultation_cases_bottom_sheet.dart",
+      "accessCount": 4,
+      "lastAccessed": 1774605101396,
+      "type": "file"
+    },
+    {
+      "path": "lib\\domain\\repositories\\case_repository.dart",
+      "accessCount": 3,
+      "lastAccessed": 1774601083693,
+      "type": "file"
+    },
+    {
+      "path": "lib\\data\\repositories\\case_repository_impl.dart",
+      "accessCount": 3,
+      "lastAccessed": 1774601101670,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\blocs\\case\\case_event.dart",
+      "accessCount": 3,
+      "lastAccessed": 1774601166754,
+      "type": "file"
+    },
+    {
+      "path": "lib\\core\\services\\gpt_service.dart",
+      "accessCount": 3,
+      "lastAccessed": 1774604068059,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\blocs\\case\\case_state.dart",
       "accessCount": 2,
-      "lastAccessed": 1774498108971,
+      "lastAccessed": 1774600034935,
       "type": "file"
     },
     {
-      "path": "lib\\presentation\\blocs\\auth\\auth_state.dart",
+      "path": "lib\\domain\\entities\\consultation_request.dart",
       "accessCount": 2,
-      "lastAccessed": 1774502279763,
-      "type": "directory"
+      "lastAccessed": 1774604886160,
+      "type": "file"
     },
     {
-      "path": "lib\\domain\\entities\\user.dart",
+      "path": "lib\\data\\models\\consultation_request_model.dart",
       "accessCount": 2,
-      "lastAccessed": 1774502287695,
-      "type": "directory"
+      "lastAccessed": 1774604886620,
+      "type": "file"
     },
     {
-      "path": "ios\\Flutter\\AppFrameworkInfo.plist",
+      "path": "lib\\presentation\\widgets\\home\\expert\\consultation_card.dart",
       "accessCount": 2,
-      "lastAccessed": 1774514556200,
+      "lastAccessed": 1774604919024,
       "type": "file"
     },
     {
-      "path": "lib\\presentation\\blocs\\auth",
-      "accessCount": 1,
-      "lastAccessed": 1774497934780,
-      "type": "directory"
-    },
-    {
-      "path": "lib\\presentation\\widgets\\common\\signup_prompt_dialog.dart",
-      "accessCount": 1,
-      "lastAccessed": 1774499662732,
-      "type": "directory"
-    },
-    {
-      "path": "lib",
-      "accessCount": 1,
-      "lastAccessed": 1774502276235,
-      "type": "directory"
-    },
-    {
-      "path": "lib\\firebase_options.dart",
-      "accessCount": 1,
-      "lastAccessed": 1774502282347,
+      "path": "lib\\domain\\entities\\consultation_post.dart",
+      "accessCount": 2,
+      "lastAccessed": 1774604935869,
       "type": "file"
     },
     {
-      "path": "lib\\main.dart",
+      "path": "lib\\data\\models\\service_fee_model.dart",
       "accessCount": 1,
-      "lastAccessed": 1774502282576,
+      "lastAccessed": 1774599998305,
       "type": "file"
     },
     {
-      "path": "lib\\data\\models",
+      "path": "lib\\domain\\entities",
       "accessCount": 1,
-      "lastAccessed": 1774502285214,
+      "lastAccessed": 1774600000407,
       "type": "directory"
     },
     {
-      "path": "lib\\data\\models\\user_model.dart",
+      "path": "lib\\core\\router\\app_router.dart",
       "accessCount": 1,
-      "lastAccessed": 1774502287514,
+      "lastAccessed": 1774604882938,
       "type": "file"
     },
     {
-      "path": "lib\\presentation\\pages\\signup\\signup_page.dart",
+      "path": "lib\\presentation\\pages\\my_case\\my_case_page.dart",
       "accessCount": 1,
-      "lastAccessed": 1774502292431,
+      "lastAccessed": 1774604883752,
+      "type": "file"
+    },
+    {
+      "path": "lib\\data\\models\\consultation_post_model.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774604886368,
+      "type": "file"
+    },
+    {
+      "path": "lib\\domain\\repositories\\consultation_post_repository.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774604888589,
+      "type": "file"
+    },
+    {
+      "path": "lib\\data\\repositories\\consultation_post_repository_impl.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774604889016,
+      "type": "file"
+    },
+    {
+      "path": "lib\\data\\datasources\\consultation_post_remote_datasource.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774604889228,
+      "type": "file"
+    },
+    {
+      "path": "lib\\domain\\repositories\\consultation_request_repository.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774604889406,
+      "type": "file"
+    },
+    {
+      "path": "lib\\data\\datasources\\consultation_request_remote_datasource.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774604891695,
+      "type": "file"
+    },
+    {
+      "path": "lib\\data\\repositories\\consultation_request_repository_impl.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774604892354,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\widgets\\home\\user\\case_summary_card.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774604892737,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\pages\\home\\home_page.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774604895170,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\widgets\\home\\expert\\consultation_section_header.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774604895847,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\pages\\expert\\consult\\expert_consult_page.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774604895891,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\widgets\\common\\consultation_post_dialog.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774604899013,
+      "type": "file"
+    },
+    {
+      "path": "lib\\domain\\usecases\\get_consultation_requests_usecase.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774604899042,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\widgets\\common\\consultation_booking_modal.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774604899510,
+      "type": "file"
+    },
+    {
+      "path": "lib\\presentation\\pages\\consultation_cases\\consultation_post_detail_page.dart",
+      "accessCount": 1,
+      "lastAccessed": 1774605049477,
       "type": "file"
     }
   ],

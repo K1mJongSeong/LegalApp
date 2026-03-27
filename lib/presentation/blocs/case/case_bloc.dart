@@ -15,6 +15,7 @@ class CaseBloc extends Bloc<CaseEvent, CaseState> {
     on<CaseCreateRequested>(_onCreateRequested);
     on<CaseExpertAssigned>(_onExpertAssigned);
     on<CaseDeleteRequested>(_onDeleteRequested);
+    on<CasePaymentUpdated>(_onPaymentUpdated);
     on<CaseErrorCleared>(_onErrorCleared);
   }
 
@@ -91,6 +92,20 @@ class CaseBloc extends Bloc<CaseEvent, CaseState> {
     try {
       await _caseRepository.deleteCase(event.caseId);
       emit(CaseDeleted());
+    } catch (e) {
+      emit(CaseError(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onPaymentUpdated(
+    CasePaymentUpdated event,
+    Emitter<CaseState> emit,
+  ) async {
+    try {
+      await _caseRepository.updatePaymentStatus(
+        caseId: event.caseId,
+        isPaid: event.isPaid,
+      );
     } catch (e) {
       emit(CaseError(e.toString().replaceFirst('Exception: ', '')));
     }
