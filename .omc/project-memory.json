@@ -185,21 +185,27 @@
   "hotPaths": [
     {
       "path": "lib\\presentation\\pages\\case_flow\\case_summary_result_page.dart",
-      "accessCount": 52,
-      "lastAccessed": 1774618994335,
+      "accessCount": 86,
+      "lastAccessed": 1774684549609,
       "type": "directory"
+    },
+    {
+      "path": "lib\\core\\services\\payapp_service.dart",
+      "accessCount": 18,
+      "lastAccessed": 1774681582124,
+      "type": "file"
+    },
+    {
+      "path": "lib\\core\\services\\gpt_service.dart",
+      "accessCount": 18,
+      "lastAccessed": 1774685653888,
+      "type": "file"
     },
     {
       "path": "lib\\core\\services\\law_api_service.dart",
       "accessCount": 15,
       "lastAccessed": 1774603804343,
       "type": "directory"
-    },
-    {
-      "path": "lib\\core\\services\\payapp_service.dart",
-      "accessCount": 12,
-      "lastAccessed": 1774608483185,
-      "type": "file"
     },
     {
       "path": "lib\\data\\models\\legal_case_model.dart",
@@ -253,12 +259,6 @@
       "path": "lib\\presentation\\blocs\\case\\case_event.dart",
       "accessCount": 4,
       "lastAccessed": 1774618211924,
-      "type": "file"
-    },
-    {
-      "path": "lib\\core\\services\\gpt_service.dart",
-      "accessCount": 3,
-      "lastAccessed": 1774604068059,
       "type": "file"
     },
     {
@@ -410,6 +410,36 @@
       "accessCount": 1,
       "lastAccessed": 1774608528436,
       "type": "directory"
+    },
+    {
+      "path": "firebase.json",
+      "accessCount": 1,
+      "lastAccessed": 1774680769809,
+      "type": "file"
+    },
+    {
+      "path": "functions\\index.js",
+      "accessCount": 1,
+      "lastAccessed": 1774681076472,
+      "type": "file"
+    },
+    {
+      "path": "ai-proxy\\index.js",
+      "accessCount": 1,
+      "lastAccessed": 1774681077029,
+      "type": "file"
+    },
+    {
+      "path": "functions\\package.json",
+      "accessCount": 1,
+      "lastAccessed": 1774681086662,
+      "type": "file"
+    },
+    {
+      "path": "supabase-edge-functions\\payapp-callback\\index.ts",
+      "accessCount": 1,
+      "lastAccessed": 1774681448239,
+      "type": "file"
     }
   ],
   "userDirectives": []

@@ -294,7 +294,7 @@
 // }
 
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
@@ -696,27 +696,50 @@ $currentQuestion
         final body = response.body;
         final data = jsonDecode(body);
 
-        if (kIsWeb) {
-          return data['question']?.toString() ?? currentQuestion;
+        // 응답에서 content 추출 (웹 프록시 / 모바일 모두 동일)
+        String content;
+        if (data['question'] != null) {
+          // 직접 question 필드가 있는 경우
+          final question = data['question'].toString();
+          if (question.isEmpty) {
+            throw Exception('질문 재생성 응답이 비어있습니다.');
+          }
+          return question;
+        } else if (data['choices'] != null) {
+          // OpenAI 응답 형식
+          content = data['choices'][0]['message']['content'] as String;
+        } else if (data['content'] != null) {
+          // 프록시가 content만 전달하는 경우
+          content = data['content'] as String;
+        } else {
+          throw Exception('질문 재생성 응답이 비어있습니다.');
         }
-
-        // 모바일(OpenAI 직접 호출) 응답 파싱
-        final content = data['choices'][0]['message']['content'] as String;
 
         // JSON 파싱
         final jsonStart = content.indexOf('{');
         final jsonEnd = content.lastIndexOf('}') + 1;
+        if (jsonStart < 0 || jsonEnd <= jsonStart) {
+          // JSON이 아닌 경우 텍스트 자체를 질문으로 사용
+          final trimmed = content.trim();
+          if (trimmed.isEmpty) {
+            throw Exception('질문 재생성 응답이 비어있습니다.');
+          }
+          return trimmed;
+        }
         final jsonStr = content.substring(jsonStart, jsonEnd);
         final result = jsonDecode(jsonStr);
 
-        return result['question']?.toString() ?? currentQuestion;
+        final question = result['question']?.toString();
+        if (question == null || question.isEmpty) {
+          throw Exception('질문 재생성 응답이 비어있습니다.');
+        }
+        return question;
       } else {
-        print('질문 재생성 API 오류: ${response.statusCode}');
-        return currentQuestion;
+        throw Exception('질문 재생성 API 오류: ${response.statusCode}');
       }
     } catch (e) {
-      print('질문 재생성 오류: $e');
-      return currentQuestion;
+      debugPrint('❌ 질문 재생성 오류: $e');
+      rethrow;
     }
   }
 
