@@ -571,6 +571,14 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
       setState(() {
         _questionRefreshLoading[index] = false;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('질문 재생성에 실패했습니다: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -756,12 +764,12 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                 ),
                 const SizedBox(height: 10),
               ],
-              // 콘텐츠 피드백 버튼 (설문 완료 후에만 표시)
+              // 추가 설문 버튼 (결제 완료 후 표시)
               if (_isSurveyCompleted) ...[
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
-                    onPressed: () => _showContentFeedbackDialog(),
+                    onPressed: () => _showSurveyDialog(),
                     icon: const Icon(Icons.thumb_up_alt_outlined, size: 20),
                     label: const Text(
                       '추가 설문 작성하고 무료 상담 쿠폰받기!',
@@ -2780,6 +2788,7 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
         price: 1000, // TODO: 실제 금액 설정
         recvPhone: phone.replaceAll('-', ''),
         memo: '로디코드 사건 요약 결제',
+        feedbackUrl: PayAppService.feedbackUrl,
         var1: user.id,
       );
 
@@ -2788,6 +2797,14 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
 
       if (result.success) {
         _paymentMulNo = result.mulNo;
+
+        // Firestore에 mulNo 미리 저장 (콜백에서 매칭용)
+        if (_savedCaseId != null) {
+          await FirebaseFirestore.instance
+              .collection('cases')
+              .doc(_savedCaseId!)
+              .update({'paymentMulNo': result.mulNo});
+        }
 
         // 결제 URL을 브라우저에서 열기
         final uri = Uri.parse(result.payUrl);
@@ -2816,19 +2833,44 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
           );
 
           if (confirmed == true && mounted) {
-            // TODO: 추후 Firebase Cloud Functions + feedbackUrl 웹훅으로 서버 검증 전환
-            // 현재는 PayApp API에 결제 상태 조회 cmd가 없으므로 사용자 확인 기반으로 처리
+            if (_savedCaseId == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('사건 정보를 확인할 수 없습니다. 다시 시도해주세요.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+
+            // 로딩 표시
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => const Center(child: CircularProgressIndicator()),
+            );
+
+            // Firestore에서 결제 상태 확인 (PayApp 콜백이 업데이트한 값)
+            final stateResult = await PayAppService.checkPaymentState(
+              caseId: _savedCaseId!,
+            );
+
+            if (!mounted) return;
+            Navigator.pop(context); // 로딩 닫기
+
+            if (!stateResult.isPaid) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(stateResult.errorMessage ?? '결제가 완료되지 않았습니다.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+
             setState(() {
               _isSurveyCompleted = true;
             });
-
-            // Firebase에 결제 상태 저장
-            if (_savedCaseId != null) {
-              context.read<CaseBloc>().add(CasePaymentUpdated(
-                caseId: _savedCaseId!,
-                isPaid: true,
-              ));
-            }
 
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(

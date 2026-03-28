@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
@@ -8,6 +9,10 @@ class PayAppService {
   /// 웹에서 CORS 우회를 위한 Supabase Edge Function 프록시 URL
   static const String _webProxyUrl =
       'https://nbzchnwqlfthzfcfkgbz.supabase.co/functions/v1/payapp-proxy';
+
+  /// PayApp 결제 완료 콜백 URL (Supabase Edge Function)
+  static const String feedbackUrl =
+      'https://nbzchnwqlfthzfcfkgbz.supabase.co/functions/v1/payapp-callback';
 
   /// PayApp 판매자 아이디 (PayApp 가입 후 발급)
   static const String sellerId = 'miaer789'; //테스트 아이디 : payapptest
@@ -104,7 +109,39 @@ class PayAppService {
     );
   }
 
-  // TODO: 추후 Firebase Cloud Functions + feedbackUrl 웹훅으로 서버 기반 결제 검증 구현
+  /// Firestore에서 결제 상태를 확인합니다. (PayApp 콜백이 업데이트한 isPaid 필드)
+  static Future<PayAppStateResult> checkPaymentState({
+    required String caseId,
+  }) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('cases')
+          .doc(caseId)
+          .get();
+
+      if (!doc.exists) {
+        return PayAppStateResult(
+          isPaid: false,
+          errorMessage: '사건 정보를 찾을 수 없습니다.',
+        );
+      }
+
+      final isPaid = doc.data()?['isPaid'] == true;
+      if (isPaid) {
+        return PayAppStateResult(isPaid: true);
+      } else {
+        return PayAppStateResult(
+          isPaid: false,
+          errorMessage: '결제가 아직 완료되지 않았습니다. 잠시 후 다시 시도해주세요.',
+        );
+      }
+    } catch (e) {
+      return PayAppStateResult(
+        isPaid: false,
+        errorMessage: '결제 상태 확인 오류: $e',
+      );
+    }
+  }
 }
 
 class PayAppResult {
@@ -117,6 +154,16 @@ class PayAppResult {
     required this.success,
     this.mulNo = '',
     this.payUrl = '',
+    this.errorMessage,
+  });
+}
+
+class PayAppStateResult {
+  final bool isPaid;
+  final String? errorMessage;
+
+  PayAppStateResult({
+    required this.isPaid,
     this.errorMessage,
   });
 }
