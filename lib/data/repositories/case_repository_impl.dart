@@ -163,7 +163,7 @@ class CaseRepositoryImpl implements CaseRepository {
   }) async {
     try {
       await _casesCollection.doc(caseId).update({
-        'is_paid': isPaid,
+        'isPaid': isPaid,
         'updated_at': DateTime.now().toIso8601String(),
       });
     } catch (e) {
