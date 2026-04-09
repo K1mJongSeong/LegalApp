@@ -32,7 +32,7 @@ class LegalCaseModel extends LegalCase {
       assignedExpert: json['assigned_expert'] != null
           ? ExpertModel.fromJson(json['assigned_expert'] as Map<String, dynamic>)
           : null,
-      isPaid: json['is_paid'] as bool? ?? false,
+      isPaid: json['isPaid'] as bool? ?? json['is_paid'] as bool? ?? false,
       analysisResult: json['analysis_result'] as Map<String, dynamic>?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: json['updated_at'] != null

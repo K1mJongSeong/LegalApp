@@ -2156,10 +2156,37 @@ class _CaseSummaryResultPageState extends State<CaseSummaryResultPage> {
                                 )
                               : snapshot.hasError
                                   ? Center(
-                                      child: Text(
-                                        '판례 정보를 불러올 수 없습니다.\n${snapshot.error}',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(color: AppColors.error),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.info_outline,
+                                              size: 48,
+                                              color: Colors.grey[400],
+                                            ),
+                                            const SizedBox(height: 16),
+                                            const Text(
+                                              '해당 판례의 상세 정보가\n아직 제공되지 않고 있어요',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              '일부 판례는 법제처에서 상세 내용을\n제공하지 않을 수 있습니다.',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     )
                                   : _buildPrecedentDetailContent(
